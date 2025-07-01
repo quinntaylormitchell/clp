@@ -1,6 +1,7 @@
 #include "Grep.hpp"
 
 #include <algorithm>
+#include <iostream> //Q
 
 #include <log_surgeon/Constants.hpp>
 #include <string_utils/string_utils.hpp>
@@ -496,6 +497,32 @@ SubQueryMatchabilityResult generate_logtypes_and_vars_for_subquery(
 }
 }  // namespace
 
+//Q
+void replace_unescaped_wildcards(
+        std::string& search_string
+) {
+    std::cout << "replacing unescaped wildcards...\n";
+    
+    auto unescaped = [escaped = false](char c) mutable
+    {
+        bool should_replace = ('?' == c && !escaped);
+        if ('\\' == c) {
+            escaped = !escaped;
+        } else {
+            escaped = false;
+        }
+        return should_replace;
+    };
+    
+    std::replace_if(
+        search_string.begin(),
+        search_string.end(),
+        unescaped,
+        '*'
+    );
+}
+//Q
+
 std::optional<Query> Grep::process_raw_query(
         Archive const& archive,
         string const& search_string,
@@ -506,11 +533,16 @@ std::optional<Query> Grep::process_raw_query(
         log_surgeon::lexers::ByteLexer& reverse_lexer,
         bool use_heuristic
 ) {
+    
+    std::cout << "process_raw_query() in Grep.cpp: search_string is \""<< search_string << "\"\n"; //Q
+    
     // Add prefix and suffix '*' to make the search a sub-string match
     string processed_search_string = "*";
     processed_search_string += search_string;
     processed_search_string += '*';
     processed_search_string = clean_up_wildcard_search_string(processed_search_string);
+
+    std::cout << "process_raw_query() in Grep.cpp: processed_search_string is \""<< processed_search_string << "\"\n"; //Q
 
     // Split search_string into tokens with wildcards
     vector<QueryToken> query_tokens;
@@ -522,12 +554,11 @@ std::optional<Query> Grep::process_raw_query(
         // Replace '?' wildcards with '*' wildcards since we currently have no support for
         // generating sub-queries with '?' wildcards. The final wildcard match on the decompressed
         // message uses the original wildcards, so correctness will be maintained.
-        std::replace(
-                search_string_for_sub_queries.begin(),
-                search_string_for_sub_queries.end(),
-                '?',
-                '*'
-        );
+        // Use replace_special() to avoid changing escaped wildcard characters. //Q
+        replace_unescaped_wildcards(search_string_for_sub_queries); //Q
+
+        std::cout << "search string after replacement is " << search_string_for_sub_queries << "\n"; //Q
+
         // Clean-up in case any instances of "?*" or "*?" were changed into "**"
         search_string_for_sub_queries
                 = clean_up_wildcard_search_string(search_string_for_sub_queries);
@@ -553,6 +584,12 @@ std::optional<Query> Grep::process_raw_query(
             query_tokens.emplace_back(search_string_for_sub_queries, begin_pos, end_pos, is_var);
         }
     }
+
+    std::cout << "process_raw_query() in Grep.cpp: vector query_tokens has following elements:\n"; //Q
+    //Q
+    for (auto& query_token : query_tokens) { //Q
+        std::cout << "\"" << query_token.get_value() << "\"\n"; //Q
+    }//Q
 
     // Get pointers to all ambiguous tokens. Exclude tokens with wildcards in the middle since we
     // fall-back to decompression + wildcard matching for those.

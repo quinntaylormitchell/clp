@@ -62,7 +62,7 @@ def run_query_task(
         task_command,
         preexec_fn=os.setpgrp,
         close_fds=True,
-        stdout=subprocess.PIPE,
+        #stdout=subprocess.PIPE, #Q
         stderr=clo_log_file,
         env=env_vars,
     )

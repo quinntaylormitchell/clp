@@ -332,6 +332,7 @@ bool search(CommandLineArguments const& command_line_args) {
     }
 
     try {
+        std::cout << "Calling search_archive() from search()\n"; //Q
         return search_archive(command_line_args, std::move(output_handler));
     } catch (TraceableException& e) {
         auto error_code = e.get_error_code();
@@ -496,6 +497,7 @@ static bool search_archive(
     auto search_begin_ts = command_line_args.get_search_begin_ts();
     auto search_end_ts = command_line_args.get_search_end_ts();
 
+    std::cout << "Calling process_raw_query() from search_archive()\n"; //Q
     auto query_processing_result = Grep::process_raw_query(
             archive_reader,
             command_line_args.get_search_string(),
@@ -579,7 +581,9 @@ int main(int argc, char const* argv[]) {
     mongocxx::instance mongocxx_instance{};
     auto const& command = command_line_args.get_command();
     if (CommandLineArguments::Command::Search == command) {
+        std::cout << "\n" <<  "Calling search() from main() in clo.cpp\n"; //Q
         if (false == search(command_line_args)) {
+            std::cout << "search() returned False.\n"; //Q
             return -1;
         }
     } else if (CommandLineArguments::Command::ExtractIr == command) {
