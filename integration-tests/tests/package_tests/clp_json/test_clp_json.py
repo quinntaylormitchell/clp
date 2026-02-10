@@ -1,7 +1,5 @@
 """Tests for the clp-json package."""
 
-import logging
-
 import pytest
 from clp_py_utils.clp_config import (
     ClpConfig,
@@ -17,9 +15,6 @@ from tests.utils.asserting_utils import (
 from tests.utils.clp_mode_utils import CLP_API_SERVER_COMPONENT, CLP_BASE_COMPONENTS
 from tests.utils.config import PackageCompressionJob, PackageInstance, PackageModeConfig
 from tests.utils.package_utils import run_package_compression_script
-
-logger = logging.getLogger(__name__)
-
 
 # Mode description for this module.
 CLP_JSON_MODE = PackageModeConfig(
@@ -38,25 +33,26 @@ CLP_JSON_MODE = PackageModeConfig(
 pytestmark = [
     pytest.mark.package,
     pytest.mark.clp_json,
-    pytest.mark.parametrize("fixt_package_test_config", [CLP_JSON_MODE], indirect=True),
+    pytest.mark.parametrize(
+        "fixt_package_test_config", [CLP_JSON_MODE], indirect=True, ids=[CLP_JSON_MODE.mode_name]
+    ),
 ]
 
 
 @pytest.mark.startup
 def test_clp_json_startup(fixt_package_instance: PackageInstance) -> None:
     """
-    Validate that the `clp-json` package starts up successfully.
+    Validates that the `clp-json` package starts up successfully.
 
     :param fixt_package_instance:
     """
     validate_package_instance(fixt_package_instance)
 
-    log_msg = "test_clp_json_startup was successful."
-    logger.info(log_msg)
-
 
 @pytest.mark.compression
-def test_clp_json_compression_json_multifile(fixt_package_instance: PackageInstance) -> None:
+def test_clp_json_compression_json_multifile(
+    request: pytest.FixtureRequest, fixt_package_instance: PackageInstance
+) -> None:
     """
     Validate that the `clp-json` package successfully compresses the `json-multifile` dataset.
 
@@ -71,6 +67,7 @@ def test_clp_json_compression_json_multifile(fixt_package_instance: PackageInsta
 
     # Compress a dataset.
     compression_job = PackageCompressionJob(
+        sample_dataset_name="json-multifile",
         path_to_original_dataset=(
             package_path_config.clp_json_test_data_path / "json-multifile" / "logs"
         ),
@@ -82,13 +79,10 @@ def test_clp_json_compression_json_multifile(fixt_package_instance: PackageInsta
         ],
         positional_args=None,
     )
-    run_package_compression_script(compression_job, package_test_config)
+    run_package_compression_script(request, compression_job, package_test_config)
 
     # Check the correctness of compression.
-    verify_package_compression(compression_job.path_to_original_dataset, package_test_config)
-
-    log_msg = "test_clp_json_compression_json_multifile was successful."
-    logger.info(log_msg)
+    verify_package_compression(request, compression_job, package_test_config)
 
     # Clear archives.
     package_path_config.clear_package_archives()
@@ -97,21 +91,14 @@ def test_clp_json_compression_json_multifile(fixt_package_instance: PackageInsta
 @pytest.mark.search
 def test_clp_json_search(fixt_package_instance: PackageInstance) -> None:
     """
-    Validate that the `clp-json` package successfully searches some dataset.
+    Validates that the `clp-json` package successfully searches some dataset.
 
     :param fixt_package_instance:
     """
     validate_package_instance(fixt_package_instance)
 
-    # TODO: compress a dataset
-
-    # TODO: check the correctness of the compression
+    # TODO: compress some dataset and check the correctness of compression.
 
     # TODO: search through that dataset and check the correctness of the search results.
 
     assert True
-
-    log_msg = "test_clp_json_search was successful."
-    logger.info(log_msg)
-
-    # TODO: clean up clp-package/var/data, clp-package/var/log, and clp-package/var/tmp

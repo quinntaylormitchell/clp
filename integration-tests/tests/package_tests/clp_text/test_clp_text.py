@@ -1,7 +1,5 @@
 """Tests for the clp-text package."""
 
-import logging
-
 import pytest
 from clp_py_utils.clp_config import (
     ClpConfig,
@@ -17,9 +15,6 @@ from tests.utils.asserting_utils import (
 from tests.utils.clp_mode_utils import CLP_BASE_COMPONENTS
 from tests.utils.config import PackageCompressionJob, PackageInstance, PackageModeConfig
 from tests.utils.package_utils import run_package_compression_script
-
-logger = logging.getLogger(__name__)
-
 
 # Mode description for this module.
 CLP_TEXT_MODE = PackageModeConfig(
@@ -40,21 +35,26 @@ CLP_TEXT_MODE = PackageModeConfig(
 pytestmark = [
     pytest.mark.package,
     pytest.mark.clp_text,
-    pytest.mark.parametrize("fixt_package_test_config", [CLP_TEXT_MODE], indirect=True),
+    pytest.mark.parametrize(
+        "fixt_package_test_config", [CLP_TEXT_MODE], indirect=True, ids=[CLP_TEXT_MODE.mode_name]
+    ),
 ]
 
 
 @pytest.mark.startup
 def test_clp_text_startup(fixt_package_instance: PackageInstance) -> None:
-    """Tests package startup."""
-    validate_package_instance(fixt_package_instance)
+    """
+    Validates that the `clp-text` package starts up successfully.
 
-    log_msg = "test_clp_text_startup was successful."
-    logger.info(log_msg)
+    :param fixt_package_instance:
+    """
+    validate_package_instance(fixt_package_instance)
 
 
 @pytest.mark.compression
-def test_clp_text_compression_text_multifile(fixt_package_instance: PackageInstance) -> None:
+def test_clp_text_compression_text_multifile(
+    request: pytest.FixtureRequest, fixt_package_instance: PackageInstance
+) -> None:
     """
     Validate that the `clp-text` package successfully compresses the `text-multifile` dataset.
 
@@ -69,19 +69,17 @@ def test_clp_text_compression_text_multifile(fixt_package_instance: PackageInsta
 
     # Compress a dataset.
     compression_job = PackageCompressionJob(
+        sample_dataset_name="text-multifile",
         path_to_original_dataset=(
             package_path_config.clp_text_test_data_path / "text-multifile" / "logs"
         ),
         options=None,
         positional_args=None,
     )
-    run_package_compression_script(compression_job, package_test_config)
+    run_package_compression_script(request, compression_job, package_test_config)
 
     # Check the correctness of compression.
-    verify_package_compression(compression_job.path_to_original_dataset, package_test_config)
-
-    log_msg = "test_clp_text_compression_text_multifile was successful."
-    logger.info(log_msg)
+    verify_package_compression(request, compression_job, package_test_config)
 
     # Clear archives.
     package_path_config.clear_package_archives()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field, InitVar
 from pathlib import Path
@@ -19,6 +20,8 @@ from tests.utils.utils import (
     validate_dir_exists,
     validate_file_exists,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -154,6 +157,7 @@ class PackagePathConfig:
 
     def clear_package_archives(self) -> None:
         """Removes the contents of `clp-package/var/data/archives`."""
+        logger.debug("Clearing archives directory in the package...")
         archives_dir = self.clp_package_dir / "var" / "data" / "archives"
         clear_directory(archives_dir)
 
@@ -161,6 +165,9 @@ class PackagePathConfig:
 @dataclass(frozen=True)
 class PackageCompressionJob:
     """A compression job for a package test."""
+
+    #: The name of the dataset or set of logs that's being compressed (for logging purposes).
+    sample_dataset_name: str
 
     #: The absolute path to the dataset (either a file or directory).
     path_to_original_dataset: Path
@@ -209,7 +216,8 @@ class PackageTestConfig:
         return self.path_config.temp_config_dir / f"clp-config-{self.mode_config.mode_name}.yaml"
 
     def _write_temp_config_file(self) -> None:
-        """Writes the temporary config file for this package test."""
+        """Writes the temporary config file for this package."""
+        logger.debug("Writing the config file for the '%s' package...", self.mode_config.mode_name)
         temp_config_file_path = self.temp_config_file_path
 
         payload = self.mode_config.clp_config.dump_to_primitive_dict()  # type: ignore[no-untyped-call]
