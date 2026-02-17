@@ -146,6 +146,11 @@ class PackagePathConfig:
         return self.clp_package_dir / "sbin" / "decompress.sh"
 
     @property
+    def search_script_path(self) -> Path:
+        """:return: The absolute path to the package search script."""
+        return self.clp_package_dir / "sbin" / "search.sh"
+
+    @property
     def clp_json_test_data_path(self) -> Path:
         """:return: The absolute path to the data for clp-json tests."""
         return self.package_test_scripts_dir / "clp_json" / "data"
@@ -169,14 +174,34 @@ class PackageCompressionJob:
     #: The name of the dataset or set of logs that's being compressed (for logging purposes).
     sample_dataset_name: str
 
-    #: The absolute path to the dataset (either a file or directory).
-    path_to_original_dataset: Path
-
     #: Options to specify in the compression command.
     options: list[str] | None
 
-    #: Positional arguments to specify in the compression command (do not put paths to compress)
-    positional_args: list[str] | None
+    #: The absolute path to the dataset (either a file or directory).
+    path_to_original_dataset: Path
+
+    #: The earliest timestamp that appears in the dataset.
+    begin_ts_ms: int
+
+    #: The latest timestamp that appears in the dataset.
+    end_ts_ms: int
+
+
+@dataclass(frozen=True)
+class PackageSearchJob:
+    """A search job for a package test."""
+
+    #: Name of the search (for logging purposes).
+    search_name: str
+
+    #: The PackageCompressionJob object that this search depends on.
+    compression_job: PackageCompressionJob
+
+    #: Options to specify in the search command.
+    options: list[str] | None
+
+    #: Wildcard query to search.
+    query: str
 
 
 @dataclass(frozen=True)

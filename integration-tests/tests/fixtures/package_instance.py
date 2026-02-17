@@ -38,7 +38,9 @@ def fixt_package_instance(
         logger.info("Starting the '%s' package...", mode_name)
         start_clp_package(request, fixt_package_test_config)
         instance = PackageInstance(package_test_config=fixt_package_test_config)
+        instance.package_test_config.path_config.clear_package_archives()
         yield instance
     finally:
         logger.info("Stopping the '%s' package...", mode_name)
         stop_clp_package(request, fixt_package_test_config)
+        instance.package_test_config.path_config.clear_package_archives()

@@ -56,7 +56,7 @@ def test_clp_text_compression_text_multifile(
     request: pytest.FixtureRequest, fixt_package_instance: PackageInstance
 ) -> None:
     """
-    Validate that the `clp-text` package successfully compresses the `text-multifile` dataset.
+    Validate that the `clp-text` package successfully compresses the `text_multifile` dataset.
 
     :param fixt_package_instance:
     """
@@ -69,12 +69,13 @@ def test_clp_text_compression_text_multifile(
 
     # Compress a dataset.
     compression_job = PackageCompressionJob(
-        sample_dataset_name="text-multifile",
-        path_to_original_dataset=(
-            package_path_config.clp_text_test_data_path / "text-multifile" / "logs"
-        ),
+        sample_dataset_name="text_multifile",
         options=None,
-        positional_args=None,
+        path_to_original_dataset=(
+            package_path_config.clp_text_test_data_path / "text_multifile" / "logs"
+        ),
+        begin_ts_ms=0,
+        end_ts_ms=0,
     )
     run_package_compression_script(request, compression_job, package_test_config)
 

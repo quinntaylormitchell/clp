@@ -1,6 +1,7 @@
 """Utilities that raise pytest assertions on failure."""
 
 import logging
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -11,15 +12,27 @@ from clp_py_utils.clp_config import ClpConfig
 from pydantic import ValidationError
 
 from tests.utils.clp_mode_utils import compare_mode_signatures
-from tests.utils.config import PackageCompressionJob, PackageInstance, PackageTestConfig
+from tests.utils.config import (
+    PackageCompressionJob,
+    PackageInstance,
+    PackageSearchJob,
+    PackageTestConfig,
+)
 from tests.utils.docker_utils import list_running_services_in_compose_project
 from tests.utils.logging_utils import construct_log_err_msg
-from tests.utils.utils import clear_directory, is_dir_tree_content_equal, load_yaml_to_dict
+from tests.utils.utils import (
+    clear_directory,
+    get_binary_path,
+    is_dir_tree_content_equal,
+    load_yaml_to_dict,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def run_and_log_to_file(request: pytest.FixtureRequest, cmd: list[str], **kwargs: Any) -> None:
+def run_and_log_to_file(
+    request: pytest.FixtureRequest, cmd: list[str], **kwargs: Any
+) -> subprocess.CompletedProcess[bytes]:
     """
     Runs a command with subprocess.
 
@@ -27,12 +40,18 @@ def run_and_log_to_file(request: pytest.FixtureRequest, cmd: list[str], **kwargs
     :param cmd: Command and arguments to execute.
     :param kwargs: Additional keyword arguments passed through to the subprocess.
     :raise: Propagates `subprocess.run`'s errors.
+    :return: The completed process.
     """
     log_file_path = Path(request.config.getini("log_file_path"))
     with log_file_path.open("ab") as log_file:
         log_debug_msg = f"Now running command: {cmd}"
         logger.debug(log_debug_msg)
-        subprocess.run(cmd, stdout=log_file, stderr=log_file, check=True, **kwargs)
+        result = subprocess.run(cmd, capture_output=True, check=False, **kwargs)
+        log_file.write(result.stdout)
+        log_file.write(result.stderr)
+
+    result.check_returncode()
+    return result
 
 
 def validate_package_instance(package_instance: PackageInstance) -> None:
@@ -176,6 +195,43 @@ def verify_package_compression(
                     f"Mismatch between clp input {path_to_original_dataset} and output"
                     f" {output_path}."
                 )
+                logger.error(construct_log_err_msg(err_msg))
                 pytest.fail(err_msg)
         finally:
             clear_directory(decompression_dir)
+
+
+def verify_package_search(
+    request: pytest.FixtureRequest,
+    search_job: PackageSearchJob,
+    search_result: str,
+    grep_cmd_options: list[str],
+    grep_cmd_pipe: str | None,
+) -> None:
+    """Docstring for verify_package_search"""
+    logger.info(
+        "Verifying that the '%s' search was performed correctly on the '%s' sample dataset...",
+        search_job.search_name,
+        search_job.compression_job.sample_dataset_name,
+    )
+
+    # Construct and run grep command.
+    grep_cmd = [
+        get_binary_path("grep"),
+        *grep_cmd_options,
+        search_job.query,
+        str(search_job.compression_job.path_to_original_dataset),
+    ]
+    result = run_and_log_to_file(request, grep_cmd)
+
+    if grep_cmd_pipe is not None:
+        result = run_and_log_to_file(request, shlex.split(grep_cmd_pipe), input=result.stdout)
+
+    # Compare grep result with search result.
+    grep_result_str = result.stdout.decode()
+    if grep_result_str != search_result:
+        err_msg = (
+            f"Mismatch between search result '{search_result}' and grep result '{grep_result_str}'"
+        )
+        logger.error(construct_log_err_msg(err_msg))
+        pytest.fail(err_msg)

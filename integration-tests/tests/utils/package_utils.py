@@ -8,6 +8,7 @@ import pytest
 from tests.utils.asserting_utils import run_and_log_to_file
 from tests.utils.config import (
     PackageCompressionJob,
+    PackageSearchJob,
     PackageTestConfig,
 )
 from tests.utils.logging_utils import construct_log_err_msg
@@ -85,6 +86,7 @@ def run_package_compression_script(
     """
     Constructs and runs a compression command on the CLP package.
 
+    :param request:
     :param compression_job:
     :param package_test_config:
     """
@@ -101,11 +103,45 @@ def run_package_compression_script(
     if compression_job.options is not None:
         compress_cmd.extend(compression_job.options)
 
-    if compression_job.positional_args is not None:
-        compress_cmd.extend(compression_job.positional_args)
-
     compress_cmd.append(str(compression_job.path_to_original_dataset))
 
     # Run compression command for this job and assert that it succeeds.
     logger.info("Compressing the '%s' sample dataset...", compression_job.sample_dataset_name)
     run_and_log_to_file(request, compress_cmd, timeout=DEFAULT_CMD_TIMEOUT_SECONDS)
+
+
+def run_package_search_script(
+    request: pytest.FixtureRequest,
+    compression_job: PackageCompressionJob,
+    search_job: PackageSearchJob,
+    package_test_config: PackageTestConfig,
+) -> str:
+    """
+    Constructs and runs a search command on the CLP package.
+
+    :param request:
+    :param compression_job:
+    :param search_job:
+    :param package_test_config:
+    :return: The result of the search command.
+    """
+    path_config = package_test_config.path_config
+    search_script_path = path_config.search_script_path
+    temp_config_file_path = package_test_config.temp_config_file_path
+
+    search_cmd = [str(search_script_path), "--config", str(temp_config_file_path)]
+
+    if search_job.options is not None:
+        search_cmd.extend(search_job.options)
+
+    search_cmd.append(search_job.query)
+
+    # Run search command for this job and assert that it succeeds.
+    logger.info(
+        "Performing '%s' search on the '%s' sample dataset...",
+        search_job.search_name,
+        compression_job.sample_dataset_name,
+    )
+    result = run_and_log_to_file(request, search_cmd, timeout=DEFAULT_CMD_TIMEOUT_SECONDS)
+
+    return result.stdout.decode()

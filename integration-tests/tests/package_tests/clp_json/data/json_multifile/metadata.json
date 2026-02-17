@@ -1,0 +1,10 @@
+{
+    "dataset_name": "json_multifile",
+    "data_type": "json",
+    "timestamp_key": "timestamp",
+    "begin_ts_ms": 1310138944000,
+    "end_ts_ms": 1311208074120,
+    "number_of_log_files": 5,
+    "number_of_events_per_log_file": 8,
+    "subdirectory_containing_log_files": "logs"
+}
