@@ -220,8 +220,14 @@ def verify_package_search(
         get_binary_path("grep"),
         *grep_cmd_options,
         search_job.query,
-        str(search_job.compression_job.path_to_original_dataset),
     ]
+    if search_job.subpath_to_search is not None:
+        path_for_grep = (
+            search_job.compression_job.path_to_original_dataset / search_job.subpath_to_search
+        )
+    else:
+        path_for_grep = search_job.compression_job.path_to_original_dataset
+    grep_cmd.append(str(path_for_grep))
     result = run_and_log_to_file(request, grep_cmd)
 
     if grep_cmd_pipe is not None:

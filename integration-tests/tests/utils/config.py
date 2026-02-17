@@ -6,6 +6,7 @@ import logging
 import re
 from dataclasses import dataclass, field, InitVar
 from pathlib import Path
+from typing import Any
 
 import yaml
 from clp_py_utils.clp_config import (
@@ -171,6 +172,9 @@ class PackagePathConfig:
 class PackageCompressionJob:
     """A compression job for a package test."""
 
+    #: A dictionary of metadata for the dataset that's being compressed.
+    metadata_dict: dict[str, Any]
+
     #: The name of the dataset or set of logs that's being compressed (for logging purposes).
     sample_dataset_name: str
 
@@ -202,6 +206,9 @@ class PackageSearchJob:
 
     #: Wildcard query to search.
     query: str
+
+    #: Subpath to search.
+    subpath_to_search: Path | None
 
 
 @dataclass(frozen=True)

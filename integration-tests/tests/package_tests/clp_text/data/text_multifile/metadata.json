@@ -1,0 +1,10 @@
+{
+    "dataset_name": "text_multifile",
+    "data_type": "text",
+    "begin_ts_ms": 92554380000,
+    "end_ts_ms": 93596040000,
+    "number_of_log_files": 5,
+    "number_of_events_per_log_file": 10,
+    "subdirectory_containing_log_files": "logs",
+    "subfile_for_file_path_search": "apollo-17_day01.txt"
+}

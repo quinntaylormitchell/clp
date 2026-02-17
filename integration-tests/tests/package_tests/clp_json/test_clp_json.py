@@ -80,7 +80,7 @@ def test_clp_json_compression_json_multifile(
 ) -> None:
     """
     Validate that the `clp-json` package successfully compresses the `json_multifile` sample
-    dataset. Package archives are cleared before and after testing.
+    dataset.
 
     :param request:
     :param fixt_package_instance:
@@ -96,7 +96,6 @@ def test_clp_json_search_json_multifile(
 ) -> None:
     """
     Validates that the `clp-json` package successfully searches the `json_multifile` sample dataset.
-    Package archives are cleared before and after testing.
 
     :param request:
     :param fixt_package_instance:
@@ -145,6 +144,7 @@ def _compress_and_verify_clp_json(
 
     # Set up compression job.
     compression_job = PackageCompressionJob(
+        metadata_dict=metadata_dict,
         sample_dataset_name=sample_dataset_name,
         options=[
             "--timestamp-key",
@@ -186,6 +186,7 @@ def _search_and_verify_clp_json(
         compression_job=compression_job,
         options=options,
         query=query,
+        subpath_to_search=None,
     )
 
     # Run search job.
