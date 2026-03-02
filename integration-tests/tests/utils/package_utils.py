@@ -1,15 +1,20 @@
 """Provides utility functions related to the CLP package used across `integration-tests`."""
 
+# TODO: rename this file "sbin_utils.py" or something like that
+
+from typing import Any
 import logging
+import subprocess
 from subprocess import SubprocessError
 
 import pytest
 
-from tests.utils.asserting_utils import run_and_log_to_file
+from tests.utils.asserting_utils import run_and_capture, run_and_log_to_file
 from tests.utils.config import (
     PackageCompressionJob,
     PackageSearchJob,
     PackageTestConfig,
+    NewPackageJob,
 )
 from tests.utils.logging_utils import construct_log_err_msg
 
@@ -142,6 +147,165 @@ def run_package_search_script(
         search_job.search_name,
         compression_job.sample_dataset_name,
     )
-    result = run_and_log_to_file(request, search_cmd, timeout=DEFAULT_CMD_TIMEOUT_SECONDS)
+    result = run_and_capture(search_cmd, timeout=DEFAULT_CMD_TIMEOUT_SECONDS)
 
     return result.stdout.decode()
+
+
+def run_package_job(job: NewPackageJob) -> None:
+    """
+    Constructs and runs the command described by `job`. Stores the completed process in
+    `job.completed_proc`.
+    """
+    job_cmd = [
+        job.cmd_name,
+        "--config",
+        job.config_path_str,
+    ]
+
+    if job.cmd_options is not None:
+        options_list = _dict_to_list_dfs(job.cmd_options)
+        job_cmd.extend(options_list)
+
+    if job.cmd_args is not None:
+        job_cmd.extend(job.cmd_args)
+
+    job.completed_proc = subprocess.run(job_cmd, capture_output=True, text=True,)
+
+
+def _dict_to_list_dfs(data: dict[str, Any]) -> list[str]:
+    """Writes a depth-first list of the keys and values in a dictionary."""
+    result = []
+    for key, value in data.items():
+        result.append(str(key))
+
+        if isinstance(value, dict):
+            result.extend(_dict_to_list_dfs(value))
+        else:
+            result.append(str(value))
+
+    return result
+
+
+def NEW_run_package_archive_manager_script(job: NewPackageJob) -> subprocess.CompletedProcess[str]:
+    archive_manager_cmd = [
+        job.cmd_name,
+        "--config",
+        job.config_path_str,
+    ]
+
+    # [--dataset DATASET]
+    # {find,del} ...
+        # {find}
+            # [--begin-ts BEGIN_TS]
+            # [--end-ts END_TS]
+        # {del}
+            # [--dry-run]
+            # {by-ids,by-filter} ...
+                # {by-ids}
+                    # ids
+                # {by-filter}
+                    # [--begin-ts BEGIN_TS]
+                    # --end-ts END_TS
+
+    job.completed_proc = subprocess.run(archive_manager_cmd, text=True)
+
+
+def NEW_run_package_dataset_manager_script() -> subprocess.CompletedProcess[str]:
+    dataset_manager_cmd = [
+        "/home/quinnmitchell/clp/build/clp-package/sbin/admin-tools/dataset-manager.sh",
+        "--config",
+        "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
+    ]
+
+    # {list,del} ...
+        # {list}
+        # {del}
+            # [-a]
+            # [datasets ...]
+
+    return subprocess.run(dataset_manager_cmd, text=True)
+
+
+def NEW_run_package_compress_from_s3_script() -> subprocess.CompletedProcess[str]:
+    compress_from_s3_cmd = [
+        "/home/quinnmitchell/clp/build/clp-package/sbin/compress_from_s3.sh",
+        "--config",
+        "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
+    ]
+
+    # [--dataset DATASET]
+    # [--timestamp-key TIMESTAMP_KEY]
+    # [--unstructured]
+    # [--no-progress-reporting]
+    # {s3-object,s3-key-prefix}
+
+    return subprocess.run(compress_from_s3_cmd, text=True)
+
+
+def NEW_run_package_compress_script() -> subprocess.CompletedProcess[str]:
+    compress_cmd = [
+        "/home/quinnmitchell/clp/build/clp-package/sbin/compress.sh",
+        "--config",
+        "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
+    ]
+
+    # [--dataset DATASET]
+    # [--timestamp-key TIMESTAMP_KEY]
+    # [--unstructured]
+    # [--no-progress-reporting]
+    # [-f PATH_LIST]
+    # [PATH ...]
+
+    return subprocess.run(compress_cmd, text=True)
+
+
+def NEW_run_package_decompress_script() -> subprocess.CompletedProcess[str]:
+    decompress_cmd = [
+        "/home/quinnmitchell/clp/build/clp-package/sbin/decompress.sh",
+        "--config",
+        "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
+    ]
+
+    # {x,i,j}
+
+    return subprocess.run(decompress_cmd, text=True)
+
+
+def NEW_run_package_search_script() -> subprocess.CompletedProcess[str]:
+    search_cmd = [
+        "/home/quinnmitchell/clp/build/clp-package/sbin/search.sh",
+        "--config",
+        "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
+    ]
+
+    # [--dataset DATASET]
+    # [--begin-time BEGIN_TIME]
+    # [--end-time END_TIME]
+    # [--ignore-case]
+    # [--file-path FILE_PATH]
+    # [--count]
+    # [--count-by-time COUNT_BY_TIME]
+    # [--raw]
+
+    return subprocess.run(search_cmd, text=True)
+
+
+def NEW_run_package_start_script() -> subprocess.CompletedProcess[str]:
+    start_cmd = [
+        "/home/quinnmitchell/clp/build/clp-package/sbin/start-clp.sh",
+        "--config",
+        "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
+    ]
+    
+    return subprocess.run(start_cmd, text=True)
+
+
+def NEW_run_package_stop_script() -> subprocess.CompletedProcess[str]:
+    start_cmd = [
+        "/home/quinnmitchell/clp/build/clp-package/sbin/stop-clp.sh",
+        "--config",
+        "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
+    ]
+    
+    return subprocess.run(start_cmd, text=True)

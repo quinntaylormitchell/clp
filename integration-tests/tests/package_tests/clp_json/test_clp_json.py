@@ -19,6 +19,7 @@ from tests.utils.asserting_utils import (
 )
 from tests.utils.clp_mode_utils import CLP_API_SERVER_COMPONENT, CLP_BASE_COMPONENTS
 from tests.utils.config import (
+    PackageAdminToolsJob,
     PackageCompressionJob,
     PackageInstance,
     PackageModeConfig,
@@ -87,7 +88,11 @@ def test_clp_json_compression_json_multifile(
     """
     validate_package_instance(fixt_package_instance)
 
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
+
     _compress_and_verify_clp_json(request, fixt_package_instance, "json_multifile")
+
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
 
 
 @pytest.mark.search
@@ -102,6 +107,8 @@ def test_clp_json_search_json_multifile(
     """
     validate_package_instance(fixt_package_instance)
 
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
+
     compression_job = _compress_and_verify_clp_json(
         request, fixt_package_instance, "json_multifile"
     )
@@ -114,6 +121,36 @@ def test_clp_json_search_json_multifile(
             search_type,
             '"detail":"Roll program complete, heads down attitude achieved for ascent"',
         )
+
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
+
+
+@pytest.mark.admin_tools
+def test_clp_json_admin_tools_json_multifile(
+    request: pytest.FixtureRequest, fixt_package_instance: PackageInstance
+) -> None:
+    """
+    Validates that the `clp-json` package successfully uses admin tools on the `json_multifile`
+    sample dataset.
+
+    :param request:
+    :param fixt_package_instance:
+    """
+    validate_package_instance(fixt_package_instance)
+
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
+
+    compression_job = _compress_and_verify_clp_json(
+        request, fixt_package_instance, "json_multifile"
+    )
+
+    _admin_tools_and_verify_clp_json(
+        request,
+        fixt_package_instance,
+        compression_job,
+    )
+
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
 
 
 def _compress_and_verify_clp_json(
@@ -199,7 +236,42 @@ def _search_and_verify_clp_json(
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
     grep_cmd_pipe = _get_grep_pipe_from_search_type(search_type)
     verify_package_search(
-        request, search_job, prepared_search_result, grep_cmd_options, grep_cmd_pipe
+        search_job, prepared_search_result, grep_cmd_options, grep_cmd_pipe
+    )
+
+
+def _admin_tools_and_verify_clp_json(
+    request: pytest.FixtureRequest,
+    package_instance: PackageInstance,
+    compression_job: PackageCompressionJob,
+) -> None:
+    # Set up search job.
+    package_test_config = package_instance.package_test_config
+    options = [
+        "--dataset",
+        compression_job.sample_dataset_name,
+        *_get_options_from_search_type(search_type, compression_job),
+    ]
+    search_name = _search_type_to_search_name(search_type)
+    search_job = PackageAdminToolsJob(
+        search_name=search_name,
+        compression_job=compression_job,
+        options=options,
+        query=query,
+        subpath_to_search=None,
+    )
+
+    # Run search job.
+    search_result = run_package_search_script(
+        request, compression_job, search_job, package_test_config
+    )
+
+    # Check the correctness of search.
+    prepared_search_result = _modify_search_result_for_search_type(search_type, search_result)
+    grep_cmd_options = _get_grep_options_from_search_type(search_type)
+    grep_cmd_pipe = _get_grep_pipe_from_search_type(search_type)
+    verify_package_search(
+        search_job, prepared_search_result, grep_cmd_options, grep_cmd_pipe
     )
 
 

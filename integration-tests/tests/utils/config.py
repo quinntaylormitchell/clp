@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import logging
 import re
 from dataclasses import dataclass, field, InitVar
@@ -209,6 +210,49 @@ class PackageSearchJob:
 
     #: Subpath to search.
     subpath_to_search: Path | None
+
+
+@dataclass(frozen=True)
+class PackageAdminToolsJob:
+    """An admin-tools job for a package test."""
+
+    #: Name of the  (for logging purposes).
+    search_name: str
+
+    #: The PackageCompressionJob object that this search depends on.
+    compression_job: PackageCompressionJob
+
+    #: Options to specify in the search command.
+    options: list[str] | None
+
+    #: Wildcard query to search.
+    query: str
+
+    #: Subpath to search.
+    subpath_to_search: Path | None
+
+
+@dataclass
+class NewPackageJob:
+    """A job for a package test."""
+
+    #: Name of the job (for logging purposes).
+    name: str
+
+    #: Command name is the first term in the command.
+    cmd_name: str
+
+    #: The path to the temporary config file for this package test.
+    config_path_str: str
+
+    #: Command options are listed in depth-first order after the command name.
+    cmd_options: dict[str, Any] | None
+
+    #: Command arguments are listed after the command options.
+    cmd_args: list[str] | None
+
+    #: The CompletedProcess object from the command.
+    completed_proc: subprocess.CompletedProcess[str] = field(init=False)
 
 
 @dataclass(frozen=True)

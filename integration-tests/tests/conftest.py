@@ -28,7 +28,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--base-port",
         action="store",
-        default="55000",
+        default="56000",
         help="Base port for CLP package integration tests.",
     )
 

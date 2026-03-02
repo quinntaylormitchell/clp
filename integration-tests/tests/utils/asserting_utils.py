@@ -30,28 +30,43 @@ from tests.utils.utils import (
 logger = logging.getLogger(__name__)
 
 
-def run_and_log_to_file(
-    request: pytest.FixtureRequest, cmd: list[str], **kwargs: Any
-) -> subprocess.CompletedProcess[bytes]:
+def run_and_capture(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
     """
-    Runs a command with subprocess.
+    Runs a command and captures its stdout and stderr.
 
     :param request: Pytest fixture request.
     :param cmd: Command and arguments to execute.
     :param kwargs: Additional keyword arguments passed through to the subprocess.
     :raise: Propagates `subprocess.run`'s errors.
-    :return: The completed process.
+    :return: A CompletedProcess instance.
     """
+    log_debug_msg = f"Running command (capturing output): {cmd}"
+    logger.debug(log_debug_msg)
+
+    return subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=True,
+        **kwargs,
+    )
+
+
+def run_and_log_to_file(request: pytest.FixtureRequest, cmd: list[str], **kwargs: Any) -> None:
+    """
+    Runs a command and logs its stdout and stderr to the unique log file for this test run.
+
+    :param request: Pytest fixture request.
+    :param cmd: Command and arguments to execute.
+    :param kwargs: Additional keyword arguments passed through to the subprocess.
+    :raise: Propagates `subprocess.run`'s errors.
+    """
+    log_debug_msg = f"Running command (logging output): {cmd}"
+    logger.debug(log_debug_msg)
+
     log_file_path = Path(request.config.getini("log_file_path"))
     with log_file_path.open("ab") as log_file:
-        log_debug_msg = f"Now running command: {cmd}"
-        logger.debug(log_debug_msg)
-        result = subprocess.run(cmd, capture_output=True, check=False, **kwargs)
-        log_file.write(result.stdout)
-        log_file.write(result.stderr)
-
-    result.check_returncode()
-    return result
+        subprocess.run(cmd, stdout=log_file, stderr=log_file, text=True, check=True, **kwargs)
 
 
 def validate_package_instance(package_instance: PackageInstance) -> None:
@@ -202,7 +217,6 @@ def verify_package_compression(
 
 
 def verify_package_search(
-    request: pytest.FixtureRequest,
     search_job: PackageSearchJob,
     search_result: str,
     grep_cmd_options: list[str],
@@ -228,10 +242,10 @@ def verify_package_search(
     else:
         path_for_grep = search_job.compression_job.path_to_original_dataset
     grep_cmd.append(str(path_for_grep))
-    result = run_and_log_to_file(request, grep_cmd)
+    result = run_and_capture(grep_cmd)
 
     if grep_cmd_pipe is not None:
-        result = run_and_log_to_file(request, shlex.split(grep_cmd_pipe), input=result.stdout)
+        result = run_and_capture(shlex.split(grep_cmd_pipe), input=result.stdout)
 
     # Compare grep result with search result.
     grep_result_str = result.stdout.decode()

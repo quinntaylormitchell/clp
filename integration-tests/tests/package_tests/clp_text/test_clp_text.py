@@ -90,7 +90,11 @@ def test_clp_text_compression_text_multifile(
     """
     validate_package_instance(fixt_package_instance)
 
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
+
     _compress_and_verify_clp_text(request, fixt_package_instance, "text_multifile")
+
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
 
 
 @pytest.mark.search
@@ -105,6 +109,8 @@ def test_clp_text_search_text_multifile(
     """
     validate_package_instance(fixt_package_instance)
 
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
+
     compression_job = _compress_and_verify_clp_text(
         request, fixt_package_instance, "text_multifile"
     )
@@ -117,6 +123,8 @@ def test_clp_text_search_text_multifile(
             search_type,
             "Saturn",
         )
+
+    fixt_package_instance.package_test_config.path_config.clear_package_archives()
 
 
 def _compress_and_verify_clp_text(
@@ -201,7 +209,7 @@ def _search_and_verify_clp_text(
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
     grep_cmd_pipe = _get_grep_pipe_from_search_type(search_type)
     verify_package_search(
-        request, search_job, prepared_search_result, grep_cmd_options, grep_cmd_pipe
+        search_job, prepared_search_result, grep_cmd_options, grep_cmd_pipe
     )
 
 
