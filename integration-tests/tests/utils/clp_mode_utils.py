@@ -32,7 +32,7 @@ def _to_docker_compose_service_name(name: str) -> str:
 
 
 # Names of components that may comprise a given package mode. Test modules use these lists to
-# assemble mode-specific component lists (see tests/package_tests/*/test_*.py).
+# assemble mode-specific component lists (see tests/clp_package_tests/*/test_*.py).
 # TODO: Modify these component lists when the Presto Docker Compose project is integrated with the
 # CLP Docker compose project.
 CLP_BASE_COMPONENTS: tuple[str, ...] = (

@@ -2,19 +2,19 @@
 
 # TODO: rename this file "sbin_utils.py" or something like that
 
-from typing import Any
 import logging
 import subprocess
 from subprocess import SubprocessError
+from typing import Any
 
 import pytest
 
 from tests.utils.asserting_utils import run_and_capture, run_and_log_to_file
 from tests.utils.config import (
+    NewPackageJob,
     PackageCompressionJob,
     PackageSearchJob,
     PackageTestConfig,
-    NewPackageJob,
 )
 from tests.utils.logging_utils import construct_log_err_msg
 
@@ -170,7 +170,7 @@ def run_package_job(job: NewPackageJob) -> None:
     if job.cmd_args is not None:
         job_cmd.extend(job.cmd_args)
 
-    job.completed_proc = subprocess.run(job_cmd, capture_output=True, text=True,)
+    job.completed_proc = subprocess.run(job_cmd, capture_output=True, text=True)
 
 
 def _dict_to_list_dfs(data: dict[str, Any]) -> list[str]:
@@ -297,7 +297,7 @@ def NEW_run_package_start_script() -> subprocess.CompletedProcess[str]:
         "--config",
         "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
     ]
-    
+
     return subprocess.run(start_cmd, text=True)
 
 
@@ -307,5 +307,5 @@ def NEW_run_package_stop_script() -> subprocess.CompletedProcess[str]:
         "--config",
         "/home/quinnmitchell/clp/build/integration-tests/temp_config_files",
     ]
-    
+
     return subprocess.run(start_cmd, text=True)

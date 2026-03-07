@@ -140,7 +140,7 @@ def _compress_and_verify_clp_text(
     # Ensure that a sample dataset called `sample_dataset_name` exists.
     package_test_config = package_instance.package_test_config
     path_to_dataset_dir = (
-        package_test_config.path_config.clp_text_test_data_path / sample_dataset_name
+        package_test_config.path_config.test_data_path / sample_dataset_name
     )
     validate_dir_exists(path_to_dataset_dir)
 

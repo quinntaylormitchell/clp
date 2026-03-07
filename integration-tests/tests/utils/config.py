@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import subprocess
 import logging
 import re
+import subprocess
 from dataclasses import dataclass, field, InitVar
 from pathlib import Path
 from typing import Any
@@ -153,14 +153,14 @@ class PackagePathConfig:
         return self.clp_package_dir / "sbin" / "search.sh"
 
     @property
-    def clp_json_test_data_path(self) -> Path:
+    def test_data_path(self) -> Path:
         """:return: The absolute path to the data for clp-json tests."""
-        return self.package_test_scripts_dir / "clp_json" / "data"
+        return self.package_test_scripts_dir.parent / "data"
 
-    @property
-    def clp_text_test_data_path(self) -> Path:
-        """:return: The absolute path to the data for clp-text tests."""
-        return self.package_test_scripts_dir / "clp_text" / "data"
+    # @property
+    # def test_data_path(self) -> Path:
+    #     """:return: The absolute path to the data for clp-text tests."""
+    #     return self.package_test_scripts_dir / "clp_text" / "data"
 
     def clear_package_archives(self) -> None:
         """Removes the contents of `clp-package/var/data/archives`."""
