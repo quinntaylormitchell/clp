@@ -154,7 +154,7 @@ class PackagePathConfig:
 
     @property
     def test_data_path(self) -> Path:
-        """:return: The absolute path to the data for clp-json tests."""
+        """:return: The absolute path to the data for tests."""
         return self.package_test_scripts_dir.parent / "data"
 
     # @property
