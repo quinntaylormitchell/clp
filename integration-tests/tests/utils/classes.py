@@ -11,7 +11,7 @@ from tests.utils.utils import (
 
 
 @dataclass
-class NEWIntegrationTestPathConfig:
+class IntegrationTestPathConfig:
     """Path configuration for CLP integration tests."""
 
     #: Default CLP build directory.
@@ -23,7 +23,7 @@ class NEWIntegrationTestPathConfig:
     #: The cache directory for integration tests.
     test_cache_dir: Path = field(init=False)
 
-    #: The log directory for integration tests.
+    #: The test log directory for integration tests.
     test_log_dir: Path = field(init=False)
 
     def __post_init__(self) -> None:
@@ -53,18 +53,16 @@ class IntegrationTestDataset:
     #: The name of the dataset (for logging purposes).
     dataset_name: str
 
+    #: Path to the dataset logs.
+    path_to_dataset_logs: Path
+
     #: A dictionary of metadata describing the dataset.
     metadata_dict: dict[str, Any]
-
-    def __post_init__(self) -> None:
-        # TODO: load in the metadata dictionary
-        # Should each dataset have a fixture maybe?
-        pass
 
 
 @dataclass
 class IntegrationTestExternalAction:
-    """Metadata for an external action executed with `subprocess.run()` during an integration test."""
+    """Metadata for an external action executed during an integration test."""
 
     #: Command to pass to `subprocess.run()`.
     cmd: list[str]

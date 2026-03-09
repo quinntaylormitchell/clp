@@ -5,12 +5,12 @@ compression and decompression.
 
 import pytest
 
-from tests.utils.asserting_utils import run_and_log_to_file
-from tests.utils.config import (
+from tests.clp_binary_tests.asserting_utils import run_and_log_to_file
+from tests.clp_binary_tests.config import (
     ClpCorePathConfig,
     CompressionTestPathConfig,
     IntegrationTestLogs,
-    IntegrationTestPathConfig,
+    OLDIntegrationTestPathConfig,
 )
 from tests.utils.utils import (
     is_dir_tree_content_equal,
@@ -39,7 +39,7 @@ json_datasets = pytest.mark.parametrize(
 def test_clp_identity_transform(
     request: pytest.FixtureRequest,
     clp_core_path_config: ClpCorePathConfig,
-    integration_test_path_config: IntegrationTestPathConfig,
+    old_integration_test_path_config: OLDIntegrationTestPathConfig,
     test_logs_fixture: str,
 ) -> None:
     """
@@ -48,14 +48,14 @@ def test_clp_identity_transform(
 
     :param request:
     :param clp_core_path_config:
-    :param integration_test_path_config:
+    :param old_integration_test_path_config:
     :param test_logs_fixture:
     """
     integration_test_logs: IntegrationTestLogs = request.getfixturevalue(test_logs_fixture)
     test_paths = CompressionTestPathConfig(
         test_name=f"clp-{integration_test_logs.name}",
         logs_source_dir=integration_test_logs.extraction_dir,
-        integration_test_path_config=integration_test_path_config,
+        old_integration_test_path_config=old_integration_test_path_config,
     )
     test_paths.clear_test_outputs()
 
@@ -93,7 +93,7 @@ def test_clp_identity_transform(
 def test_clp_s_identity_transform(
     request: pytest.FixtureRequest,
     clp_core_path_config: ClpCorePathConfig,
-    integration_test_path_config: IntegrationTestPathConfig,
+    old_integration_test_path_config: OLDIntegrationTestPathConfig,
     test_logs_fixture: str,
 ) -> None:
     """
@@ -102,7 +102,7 @@ def test_clp_s_identity_transform(
 
     :param request:
     :param clp_core_path_config:
-    :param integration_test_path_config:
+    :param old_integration_test_path_config:
     :param test_logs_fixture:
     """
     integration_test_logs: IntegrationTestLogs = request.getfixturevalue(test_logs_fixture)
@@ -111,7 +111,7 @@ def test_clp_s_identity_transform(
     test_paths = CompressionTestPathConfig(
         test_name=f"clp-s-{test_logs_name}",
         logs_source_dir=integration_test_logs.extraction_dir,
-        integration_test_path_config=integration_test_path_config,
+        old_integration_test_path_config=old_integration_test_path_config,
     )
     _clp_s_compress_and_decompress(request, clp_core_path_config, test_paths)
 
@@ -124,7 +124,7 @@ def test_clp_s_identity_transform(
     consolidated_json_test_paths = CompressionTestPathConfig(
         test_name=f"clp-s-{test_logs_name}-consolidated-json",
         logs_source_dir=test_paths.decompression_dir,
-        integration_test_path_config=integration_test_path_config,
+        old_integration_test_path_config=old_integration_test_path_config,
     )
     _clp_s_compress_and_decompress(request, clp_core_path_config, consolidated_json_test_paths)
 

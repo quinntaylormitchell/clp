@@ -1,58 +1,28 @@
 """Tests for the clp-json package."""
 
 import logging
-import re
-from enum import auto, Enum
 
 import pytest
-from clp_py_utils.clp_config import (
-    ClpConfig,
-    Package,
-    QueryEngine,
-    StorageEngine,
-)
 
-from tests.utils.asserting_utils import (
-    validate_package_instance,
-    verify_package_compression,
-    verify_package_search,
+from tests.clp_package_tests.clp_json.clp_json_utils import (
+    CLP_JSON_MODE,
+    verify_compress_action_clp_json,
+    verify_search_action_clp_json,
 )
-from tests.utils.clp_mode_utils import CLP_API_SERVER_COMPONENT, CLP_BASE_COMPONENTS
-from tests.utils.config import (
-    PackageAdminToolsJob,
-    PackageCompressionJob,
-    PackageInstance,
-    PackageModeConfig,
-    PackageSearchJob,
+from tests.clp_package_tests.clp_package_utils.actions import (
+    run_compress_cmd,
+    run_search_cmd,
 )
-from tests.utils.package_utils import run_package_compression_script, run_package_search_script
-from tests.utils.utils import load_json_to_dict, validate_dir_exists
+from tests.clp_package_tests.clp_package_utils.classes import (
+    ClpPackage,
+    ClpPackageExternalAction,
+    ClpPackageTestPathConfig,
+)
+from tests.utils.classes import (
+    IntegrationTestDataset,
+)
 
 logger = logging.getLogger(__name__)
-
-
-# Mode description for this module.
-CLP_JSON_MODE = PackageModeConfig(
-    mode_name="clp-json",
-    clp_config=ClpConfig(
-        package=Package(
-            storage_engine=StorageEngine.CLP_S,
-            query_engine=QueryEngine.CLP_S,
-        ),
-    ),
-    component_list=(*CLP_BASE_COMPONENTS, CLP_API_SERVER_COMPONENT),
-)
-
-
-# Search types for this mode.
-class ClpJsonSearchType(Enum):
-    """An enumeration of the types of search we can perform in `clp-json`."""
-
-    BASIC = auto()
-    IGNORE_CASE = auto()
-    COUNT_RESULTS = auto()
-    COUNT_BY_TIME = auto()
-    TIME_RANGE = auto()
 
 
 # Pytest markers for this module.
@@ -60,332 +30,88 @@ pytestmark = [
     pytest.mark.package,
     pytest.mark.clp_json,
     pytest.mark.parametrize(
-        "fixt_package_test_config", [CLP_JSON_MODE], indirect=True, ids=[CLP_JSON_MODE.mode_name]
+        "clp_package", [CLP_JSON_MODE], indirect=True, ids=[CLP_JSON_MODE.mode_name]
     ),
 ]
 
 
 @pytest.mark.startup
-def test_clp_json_startup(fixt_package_instance: PackageInstance) -> None:
-    """
-    Validates that the `clp-json` package starts up successfully.
-
-    :param fixt_package_instance:
-    """
-    validate_package_instance(fixt_package_instance)
+def test_clp_json_startup(clp_package: ClpPackage) -> None:
+    """Docstring."""
+    # Do nothing; CLP package startup is verified before the fixture is given to this test.
+    assert clp_package
 
 
 @pytest.mark.compression
 def test_clp_json_compression_json_multifile(
-    request: pytest.FixtureRequest, fixt_package_instance: PackageInstance
+    clp_package_test_path_config: ClpPackageTestPathConfig,
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
 ) -> None:
-    """
-    Validate that the `clp-json` package successfully compresses the `json_multifile` sample
-    dataset.
+    """Docstring."""
+    clp_package.clear_archives()
 
-    :param request:
-    :param fixt_package_instance:
-    """
-    validate_package_instance(fixt_package_instance)
+    compress_cmd = [
+        str(clp_package_test_path_config.compress_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
+        "--dataset",
+        json_multifile.metadata_dict["dataset_name"],
+        "--timestamp-key",
+        json_multifile.metadata_dict["timestamp_key"],
+        json_multifile.path_to_dataset_logs,
+    ]
+    compress_action: ClpPackageExternalAction = run_compress_cmd(compress_cmd)
+    compress_action_verified, failure_message = verify_compress_action_clp_json(
+        compress_action, clp_package
+    )
+    assert compress_action_verified, failure_message
 
-    fixt_package_instance.package_test_config.path_config.clear_package_archives()
-
-    _compress_and_verify_clp_json(request, fixt_package_instance, "json_multifile")
-
-    fixt_package_instance.package_test_config.path_config.clear_package_archives()
+    clp_package.clear_archives()
 
 
 @pytest.mark.search
-def test_clp_json_search_json_multifile(
-    request: pytest.FixtureRequest, fixt_package_instance: PackageInstance
+def test_clp_json_search_json_multifile_basic(
+    clp_package_test_path_config: ClpPackageTestPathConfig,
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
 ) -> None:
-    """
-    Validates that the `clp-json` package successfully searches the `json_multifile` sample dataset.
+    """Docstring."""
+    # Initial cleanup.
+    clp_package.clear_archives()
 
-    :param request:
-    :param fixt_package_instance:
-    """
-    validate_package_instance(fixt_package_instance)
-
-    fixt_package_instance.package_test_config.path_config.clear_package_archives()
-
-    compression_job = _compress_and_verify_clp_json(
-        request, fixt_package_instance, "json_multifile"
-    )
-
-    for search_type in ClpJsonSearchType:
-        _search_and_verify_clp_json(
-            request,
-            fixt_package_instance,
-            compression_job,
-            search_type,
-            '"detail":"Roll program complete, heads down attitude achieved for ascent"',
-        )
-
-    fixt_package_instance.package_test_config.path_config.clear_package_archives()
-
-
-@pytest.mark.admin_tools
-def test_clp_json_admin_tools_json_multifile(
-    request: pytest.FixtureRequest, fixt_package_instance: PackageInstance
-) -> None:
-    """
-    Validates that the `clp-json` package successfully uses admin tools on the `json_multifile`
-    sample dataset.
-
-    :param request:
-    :param fixt_package_instance:
-    """
-    validate_package_instance(fixt_package_instance)
-
-    fixt_package_instance.package_test_config.path_config.clear_package_archives()
-
-    compression_job = _compress_and_verify_clp_json(
-        request, fixt_package_instance, "json_multifile"
-    )
-
-    _admin_tools_and_verify_clp_json(
-        request,
-        fixt_package_instance,
-        compression_job,
-    )
-
-    fixt_package_instance.package_test_config.path_config.clear_package_archives()
-
-
-def _compress_and_verify_clp_json(
-    request: pytest.FixtureRequest, package_instance: PackageInstance, sample_dataset_name: str
-) -> PackageCompressionJob:
-    """
-    Compress the dataset called `sample_dataset_name` and verify that it was compressed correctly.
-
-    :param request:
-    :param package_instance:
-    :param sample_dataset_name:
-    """
-    # Ensure that a sample dataset called `sample_dataset_name` exists.
-    package_test_config = package_instance.package_test_config
-    path_to_dataset_dir = (
-        package_test_config.path_config.test_data_path / sample_dataset_name
-    )
-    validate_dir_exists(path_to_dataset_dir)
-
-    # Retrieve sample dataset metadata and parse.
-    metadata_dict = load_json_to_dict(path_to_dataset_dir / "metadata.json")
-    path_to_original_dataset = (
-        path_to_dataset_dir / metadata_dict["subdirectory_containing_log_files"]
-    )
-    timestamp_key = metadata_dict["timestamp_key"]
-    begin_ts_ms = metadata_dict["begin_ts_ms"]
-    end_ts_ms = metadata_dict["end_ts_ms"]
-
-    # Set up compression job.
-    compression_job = PackageCompressionJob(
-        metadata_dict=metadata_dict,
-        sample_dataset_name=sample_dataset_name,
-        options=[
-            "--timestamp-key",
-            timestamp_key,
-            "--dataset",
-            sample_dataset_name,
-        ],
-        path_to_original_dataset=path_to_original_dataset,
-        begin_ts_ms=begin_ts_ms,
-        end_ts_ms=end_ts_ms,
-    )
-
-    # Run compression job.
-    run_package_compression_script(request, compression_job, package_test_config)
-
-    # Check the correctness of compression.
-    verify_package_compression(request, compression_job, package_test_config)
-
-    return compression_job
-
-
-def _search_and_verify_clp_json(
-    request: pytest.FixtureRequest,
-    package_instance: PackageInstance,
-    compression_job: PackageCompressionJob,
-    search_type: ClpJsonSearchType,
-    query: str,
-) -> None:
-    # Set up search job.
-    package_test_config = package_instance.package_test_config
-    options = [
+    # Compress.
+    compress_cmd = [
+        str(clp_package_test_path_config.compress_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
         "--dataset",
-        compression_job.sample_dataset_name,
-        *_get_options_from_search_type(search_type, compression_job),
+        json_multifile.metadata_dict["dataset_name"],
+        "--timestamp-key",
+        json_multifile.metadata_dict["timestamp_key"],
+        json_multifile.path_to_dataset_logs,
     ]
-    search_name = _search_type_to_search_name(search_type)
-    search_job = PackageSearchJob(
-        search_name=search_name,
-        compression_job=compression_job,
-        options=options,
-        query=query,
-        subpath_to_search=None,
+    compress_action: ClpPackageExternalAction = run_compress_cmd(compress_cmd)
+    compress_action_verified, failure_message = verify_compress_action_clp_json(
+        compress_action, clp_package
     )
+    assert compress_action_verified, failure_message
 
-    # Run search job.
-    search_result = run_package_search_script(
-        request, compression_job, search_job, package_test_config
-    )
-
-    # Check the correctness of search.
-    prepared_search_result = _modify_search_result_for_search_type(search_type, search_result)
-    grep_cmd_options = _get_grep_options_from_search_type(search_type)
-    grep_cmd_pipe = _get_grep_pipe_from_search_type(search_type)
-    verify_package_search(
-        search_job, prepared_search_result, grep_cmd_options, grep_cmd_pipe
-    )
-
-
-def _admin_tools_and_verify_clp_json(
-    request: pytest.FixtureRequest,
-    package_instance: PackageInstance,
-    compression_job: PackageCompressionJob,
-) -> None:
-    # Set up search job.
-    package_test_config = package_instance.package_test_config
-    options = [
+    # Search.
+    search_cmd = [
+        str(clp_package_test_path_config.search_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
         "--dataset",
-        compression_job.sample_dataset_name,
-        *_get_options_from_search_type(search_type, compression_job),
+        json_multifile.metadata_dict["dataset_name"],
+        "--raw",
+        '"detail":"Roll program complete, heads down attitude achieved for ascent"',
     ]
-    search_name = _search_type_to_search_name(search_type)
-    search_job = PackageAdminToolsJob(
-        search_name=search_name,
-        compression_job=compression_job,
-        options=options,
-        query=query,
-        subpath_to_search=None,
+    search_action: ClpPackageExternalAction = run_search_cmd(search_cmd)
+    search_action_verified, failure_message = verify_search_action_clp_json(
+        search_action, json_multifile
     )
+    assert search_action_verified, failure_message
 
-    # Run search job.
-    search_result = run_package_search_script(
-        request, compression_job, search_job, package_test_config
-    )
-
-    # Check the correctness of search.
-    prepared_search_result = _modify_search_result_for_search_type(search_type, search_result)
-    grep_cmd_options = _get_grep_options_from_search_type(search_type)
-    grep_cmd_pipe = _get_grep_pipe_from_search_type(search_type)
-    verify_package_search(
-        search_job, prepared_search_result, grep_cmd_options, grep_cmd_pipe
-    )
-
-
-def _get_options_from_search_type(
-    search_type: ClpJsonSearchType, compression_job: PackageCompressionJob
-) -> list[str]:
-    match search_type:
-        case ClpJsonSearchType.BASIC:
-            return [
-                "--raw",
-            ]
-        case ClpJsonSearchType.IGNORE_CASE:
-            return [
-                "--ignore-case",
-                "--raw",
-            ]
-        case ClpJsonSearchType.COUNT_RESULTS:
-            return [
-                "--count",
-                "--raw",
-            ]
-        case ClpJsonSearchType.COUNT_BY_TIME:
-            return [
-                "--count-by-time",
-                "10",
-                "--raw",
-            ]
-        case ClpJsonSearchType.TIME_RANGE:
-            return [
-                "--begin-time",
-                str(compression_job.begin_ts_ms),
-                "--end-time",
-                str(compression_job.end_ts_ms),
-                "--raw",
-            ]
-        case _:
-            err_msg = (
-                f"Search type {search_type} has not been configured for options list construction."
-            )
-            raise ValueError(err_msg)
-
-
-def _search_type_to_search_name(search_type: ClpJsonSearchType) -> str:
-    match search_type:
-        case ClpJsonSearchType.BASIC:
-            return "basic"
-        case ClpJsonSearchType.IGNORE_CASE:
-            return "ignore case"
-        case ClpJsonSearchType.COUNT_RESULTS:
-            return "count results"
-        case ClpJsonSearchType.COUNT_BY_TIME:
-            return "count by time"
-        case ClpJsonSearchType.TIME_RANGE:
-            return "time range"
-        case _:
-            err_msg = (
-                f"Search type {search_type} has not been configured for search name construction."
-            )
-            raise ValueError(err_msg)
-
-
-def _modify_search_result_for_search_type(
-    search_type: ClpJsonSearchType, search_result: str
-) -> str:
-    match search_type:
-        case ClpJsonSearchType.BASIC | ClpJsonSearchType.IGNORE_CASE | ClpJsonSearchType.TIME_RANGE:
-            return search_result
-        case ClpJsonSearchType.COUNT_RESULTS | ClpJsonSearchType.COUNT_BY_TIME:
-            match = re.search(r"count: (\d+)", search_result)
-            if match:
-                return match.group(1) + "\n"
-            err_msg = f"The search result {search_result} wasn't in the correct format."
-            raise ValueError(err_msg)
-        case _:
-            err_msg = f"Search type {search_type} has not been configured for modification."
-            raise ValueError(err_msg)
-
-
-def _get_grep_options_from_search_type(search_type: ClpJsonSearchType) -> list[str]:
-    grep_cmd_options: list[str] = [
-        "--recursive",
-        "--no-filename",
-        "--color=never",
-    ]
-
-    match search_type:
-        case ClpJsonSearchType.BASIC:
-            return grep_cmd_options
-        case ClpJsonSearchType.IGNORE_CASE:
-            grep_cmd_options.append("--ignore-case")
-            return grep_cmd_options
-        case ClpJsonSearchType.COUNT_RESULTS:
-            grep_cmd_options.append("--count")
-            return grep_cmd_options
-        case ClpJsonSearchType.COUNT_BY_TIME:
-            grep_cmd_options.append("--count")
-            return grep_cmd_options
-        case ClpJsonSearchType.TIME_RANGE:
-            return grep_cmd_options
-        case _:
-            err_msg = (
-                f"Search type {search_type} has not been configured for grep command construction."
-            )
-            raise ValueError(err_msg)
-
-
-def _get_grep_pipe_from_search_type(search_type: ClpJsonSearchType) -> str | None:
-    match search_type:
-        case ClpJsonSearchType.BASIC | ClpJsonSearchType.IGNORE_CASE | ClpJsonSearchType.TIME_RANGE:
-            return None
-        case ClpJsonSearchType.COUNT_RESULTS | ClpJsonSearchType.COUNT_BY_TIME:
-            return "awk '{s+=$1} END {print s}'"
-        case _:
-            err_msg = (
-                f"Search type {search_type} has not been configured for grep pipe construction."
-            )
-            raise ValueError(err_msg)
+    # Cleanup.
+    clp_package.clear_archives()
