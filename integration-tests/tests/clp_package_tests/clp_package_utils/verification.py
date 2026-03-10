@@ -2,19 +2,12 @@
 
 import logging
 
-import pytest
-from clp_py_utils.clp_config import ClpConfig
-from pydantic import ValidationError
-
 from tests.clp_package_tests.clp_package_utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
 from tests.clp_package_tests.clp_package_utils.modes import compare_mode_signatures
 from tests.utils.docker_utils import list_running_services_in_compose_project
-from tests.utils.utils import (
-    load_yaml_to_dict,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +47,7 @@ def verify_stop_clp_action(
 def _validate_clp_package_running(clp_package: ClpPackage) -> tuple[bool, str]:
     """Docstring."""
     # Get list of services currently running in the Compose project.
-    instance_id = clp_package.clp_instance_id
+    instance_id = clp_package.get_clp_instance_id()
     project_name = f"clp-package-{instance_id}"
     running_services = set(list_running_services_in_compose_project(project_name))
 
@@ -80,13 +73,7 @@ def _validate_clp_package_running(clp_package: ClpPackage) -> tuple[bool, str]:
 
 def _validate_running_mode_correct(clp_package: ClpPackage) -> tuple[bool, str]:
     """Docstring."""
-    shared_config_dict = load_yaml_to_dict(clp_package.shared_config_file_path)
-    try:
-        running_config = ClpConfig.model_validate(shared_config_dict)
-    except ValidationError as err:
-        fail_msg = f"The shared config file could not be validated: {err}"
-        pytest.fail(fail_msg)
-
+    running_config = clp_package.get_running_config_from_shared_config_file()
     intended_config = clp_package.clp_config
 
     if compare_mode_signatures(intended_config, running_config):
@@ -101,7 +88,7 @@ def _validate_running_mode_correct(clp_package: ClpPackage) -> tuple[bool, str]:
 
 def _validate_clp_package_not_running(clp_package: ClpPackage) -> tuple[bool, str]:
     # Get list of services currently running in the Compose project.
-    instance_id = clp_package.clp_instance_id
+    instance_id = clp_package.get_clp_instance_id()
     project_name = f"clp-package-{instance_id}"
     running_services = set(list_running_services_in_compose_project(project_name))
 

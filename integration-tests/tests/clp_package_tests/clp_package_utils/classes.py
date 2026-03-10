@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from tests.utils.classes import IntegrationTestExternalAction, IntegrationTestPathConfig
 from tests.utils.utils import (
+    load_yaml_to_dict,
     validate_dir_exists,
 )
 
@@ -98,6 +99,11 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
         """:return: The absolute path to the package stop-clp script."""
         return self.clp_package_dir / "sbin" / "stop-clp.sh"
 
+    @property
+    def package_logs_path(self) -> Path:
+        """:return: The absolute path to the package archive-manager script."""
+        return self.clp_package_dir / "var" / "log"
+
 
 @dataclass
 class ClpPackageModeConfig:
@@ -129,12 +135,6 @@ class ClpPackage:
     #: The list of CLP components that this CLP package needs.
     component_list: tuple[str, ...]
 
-    #: The instance ID of the running package.
-    clp_instance_id: str = field(init=False, repr=True)
-
-    #: The path to the .clp-config.yaml file constructed by the package during spin up.
-    shared_config_file_path: Path = field(init=False, repr=True)
-
     def __post_init__(self) -> None:
         """Docstring."""
         # Validate clp_config.
@@ -144,24 +144,30 @@ class ClpPackage:
             fail_msg = f"The `ClpConfig` pydantic object could not be validated: {err}"
             pytest.fail(fail_msg)
 
-        # TODO: Set clp_instance_id from instance-id file.
-
-        # TODO: Set shared_config_file_path and validate it exists.
-
     @property
     def temp_config_file_path(self) -> Path:
         """:return: The absolute path to the temporary configuration file for the package."""
         return self.path_config.temp_config_dir / f"clp-config-{self.mode_name}.yaml"
 
-    @staticmethod
-    def _get_clp_instance_id(clp_instance_id_file_path: Path) -> str:
+    @property
+    def clp_instance_id_file_path(self) -> Path:
+        """:return: The absolute path to the temporary configuration file for the package."""
+        return self.path_config.package_logs_path / ".clp-config.yaml"
+
+    @property
+    def shared_config_file_path(self) -> Path:
+        """:return: The absolute path to the temporary configuration file for the package."""
+        return self.path_config.package_logs_path / "instance-id"
+
+    def get_clp_instance_id(self) -> str:
         """
-        Reads the CLP instance ID from the given file and validates its format.
+        Reads the CLP instance ID for the package and validates its format.
 
         :param clp_instance_id_file_path:
         :return: The 4-character hexadecimal instance ID.
         :raise ValueError: If the file cannot be read or contents are not a 4-character hex string.
         """
+        clp_instance_id_file_path = self.clp_instance_id_file_path
         try:
             contents = clp_instance_id_file_path.read_text(encoding="utf-8").strip()
         except OSError as err:
@@ -176,6 +182,17 @@ class ClpPackage:
             raise ValueError(err_msg)
 
         return contents
+
+    def get_running_config_from_shared_config_file(self) -> ClpConfig:
+        """Docstring."""
+        shared_config_dict = load_yaml_to_dict(self.shared_config_file_path)
+        try:
+            running_config = ClpConfig.model_validate(shared_config_dict)
+        except ValidationError as err:
+            fail_msg = f"The shared config file could not be validated: {err}"
+            pytest.fail(fail_msg)
+
+        return running_config
 
     @staticmethod
     def clear_archives() -> None:

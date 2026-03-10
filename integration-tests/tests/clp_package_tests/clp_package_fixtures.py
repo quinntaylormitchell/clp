@@ -73,7 +73,7 @@ def clp_package(
         ]
         start_clp_action: ClpPackageExternalAction = run_start_clp_cmd(start_clp_cmd)
 
-        # Verify.
+        # Verify start.
         start_clp_action_verified, failure_message = verify_start_clp_action(
             start_clp_action, clp_package
         )
@@ -89,7 +89,7 @@ def clp_package(
         ]
         stop_clp_action: ClpPackageExternalAction = run_stop_clp_cmd(stop_clp_cmd)
 
-        # Verify.
+        # Verify stop.
         stop_clp_action_verified, failure_message = verify_stop_clp_action(
             stop_clp_action, clp_package
         )
