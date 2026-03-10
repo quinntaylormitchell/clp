@@ -11,13 +11,15 @@ from clp_py_utils.clp_config import (
 )
 from pydantic import ValidationError
 
+from tests.clp_package_tests.clp_json.clp_json_utils import (
+    verify_dataset_manager_action_clp_json,
+)
+from tests.clp_package_tests.clp_package_utils.actions import run_dataset_manager_cmd
 from tests.utils.classes import IntegrationTestExternalAction, IntegrationTestPathConfig
 from tests.utils.utils import (
     load_yaml_to_dict,
     validate_dir_exists,
 )
-from tests.clp_package_tests.clp_package_utils.actions import run_dataset_manager_cmd
-from tests.clp_package_tests.clp_json.clp_json_utils import verify_dataset_manager_action_clp_json
 
 
 @dataclass
@@ -105,7 +107,7 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
     def package_logs_path(self) -> Path:
         """:return: The absolute path to the package logs."""
         return self.clp_package_dir / "var" / "log"
-    
+
     @property
     def package_archives_path(self) -> Path:
         """:return: The absolute path to the package archives."""
@@ -211,10 +213,14 @@ class ClpPackage:
                     "--config",
                     str(self.temp_config_file_path),
                     "del",
-                    "--all"
+                    "--all",
                 ]
-                dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(dataset_manager_cmd)
-                dataset_manager_action_verified, failure_message = verify_dataset_manager_action_clp_json(dataset_manager_action, self)
+                dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
+                    dataset_manager_cmd
+                )
+                dataset_manager_action_verified, failure_message = (
+                    verify_dataset_manager_action_clp_json(dataset_manager_action, self)
+                )
                 assert dataset_manager_action_verified, failure_message
                 return
             case "clp-text":

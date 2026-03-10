@@ -10,6 +10,7 @@ from clp_py_utils.clp_config import (
     StorageEngine,
 )
 
+from tests.clp_package_tests.clp_package_utils.actions import run_dataset_manager_cmd
 from tests.clp_package_tests.clp_package_utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
@@ -22,7 +23,6 @@ from tests.clp_package_tests.clp_package_utils.modes import (
 from tests.utils.actions import run_grep_cmd
 from tests.utils.classes import IntegrationTestDataset, IntegrationTestExternalAction
 from tests.utils.utils import get_binary_path
-
 
 # Mode description for clp-json.
 CLP_JSON_MODE = ClpPackageModeConfig(
@@ -177,7 +177,10 @@ def _format_search_result_for_search_type(
             raise ValueError(err_msg)
 
 
-def verify_dataset_manager_action_clp_json(dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage) -> tuple[bool, str]:
+def verify_dataset_manager_action_clp_json(
+    dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
+) -> tuple[bool, str]:
+    """Docstring."""
     if dataset_manager_action.completed_proc.returncode != 0:
         return False, "The dataset-manager.sh subprocess returned a non-zero exit code."
 
@@ -194,15 +197,40 @@ def verify_dataset_manager_action_clp_json(dataset_manager_action: ClpPackageExt
             )
             return False, fail_msg
     elif subcommand == "del":
-        pass
+        deleted_datasets_list = _extract_dataset_names_from_output(dataset_manager_action)
+
+        check_dataset_manager_cmd = [
+            str(clp_package.path_config.compress_path),
+            "--config",
+            str(clp_package.temp_config_file_path),
+            "list",
+        ]
+        check_dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
+            check_dataset_manager_cmd
+        )
+        check_dataset_manager_action_verified, failure_message = (
+            verify_dataset_manager_action_clp_json(check_dataset_manager_action, clp_package)
+        )
+        assert check_dataset_manager_action_verified, failure_message
+        current_datasets_list = _extract_dataset_names_from_output(check_dataset_manager_action)
+
+        for dataset in deleted_datasets_list:
+            if dataset in current_datasets_list:
+                fail_msg = (
+                    f"dataset-manager del failed: {dataset} is still present in the metadata"
+                    f" database."
+                )
+                return False, fail_msg
     else:
-        False, "The dataset-manager.sh command had an unrecognized positional argument."
+        return False, "The dataset-manager.sh command carried an unrecognized positional argument."
 
     return True, ""
 
 
-def _extract_dataset_names_from_output(dataset_manager_action: ClpPackageExternalAction) -> list[str]:
-    dataset_list = []
+def _extract_dataset_names_from_output(
+    dataset_manager_action: ClpPackageExternalAction,
+) -> list[str]:
+    dataset_list: list[str] = []
     output = dataset_manager_action.completed_proc.stdout
     output_lines = output.splitlines()
     match = re.search(r"Found (\d+) datasets", output_lines[0])
@@ -211,10 +239,10 @@ def _extract_dataset_names_from_output(dataset_manager_action: ClpPackageExterna
     else:
         # TODO: output was in the wrong format!
         return dataset_list
-    
+
     if num_datasets == 0:
         return dataset_list
-    
+
     for i in range(1, num_datasets + 1):
         match = re.search(r"INFO \[dataset_manager\] (.+)", output_lines[i])
         if match:
