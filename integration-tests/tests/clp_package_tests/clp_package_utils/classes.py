@@ -16,6 +16,8 @@ from tests.utils.utils import (
     load_yaml_to_dict,
     validate_dir_exists,
 )
+from tests.clp_package_tests.clp_package_utils.actions import run_dataset_manager_cmd
+from tests.clp_package_tests.clp_json.clp_json_utils import verify_dataset_manager_action_clp_json
 
 
 @dataclass
@@ -101,8 +103,13 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
 
     @property
     def package_logs_path(self) -> Path:
-        """:return: The absolute path to the package archive-manager script."""
+        """:return: The absolute path to the package logs."""
         return self.clp_package_dir / "var" / "log"
+    
+    @property
+    def package_archives_path(self) -> Path:
+        """:return: The absolute path to the package archives."""
+        return self.clp_package_dir / "var" / "data" / "archives"
 
 
 @dataclass
@@ -137,7 +144,7 @@ class ClpPackage:
 
     def __post_init__(self) -> None:
         """Docstring."""
-        # Validate clp_config.
+        # Validate clp_config pydantic object.
         try:
             ClpConfig.model_validate(self.clp_config)
         except ValidationError as err:
@@ -194,10 +201,27 @@ class ClpPackage:
 
         return running_config
 
-    @staticmethod
-    def clear_archives() -> None:
+    def clear_archives(self) -> None:
         """Docstring."""
-        # Use dataset-manager or archive-manager as appropriate.
+        path_config = self.path_config
+        match self.mode_name:
+            case "clp-json":
+                dataset_manager_cmd = [
+                    str(path_config.compress_path),
+                    "--config",
+                    str(self.temp_config_file_path),
+                    "del",
+                    "--all"
+                ]
+                dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(dataset_manager_cmd)
+                dataset_manager_action_verified, failure_message = verify_dataset_manager_action_clp_json(dataset_manager_action, self)
+                assert dataset_manager_action_verified, failure_message
+                return
+            case "clp-text":
+                return
+            case _:
+                # TODO: log that clearing archives is not currently supported for any other mode.
+                return
 
 
 @dataclass

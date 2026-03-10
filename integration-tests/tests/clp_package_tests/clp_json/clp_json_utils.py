@@ -23,6 +23,7 @@ from tests.utils.actions import run_grep_cmd
 from tests.utils.classes import IntegrationTestDataset, IntegrationTestExternalAction
 from tests.utils.utils import get_binary_path
 
+
 # Mode description for clp-json.
 CLP_JSON_MODE = ClpPackageModeConfig(
     mode_name="clp-json",
@@ -174,3 +175,58 @@ def _format_search_result_for_search_type(
         case _:
             err_msg = f"Search type {search_type} has not been configured for modification."
             raise ValueError(err_msg)
+
+
+def verify_dataset_manager_action_clp_json(dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage) -> tuple[bool, str]:
+    if dataset_manager_action.completed_proc.returncode != 0:
+        return False, "The dataset-manager.sh subprocess returned a non-zero exit code."
+
+    parsed_args = dataset_manager_action.parsed_args
+    subcommand = parsed_args.subcommand
+    if subcommand == "list":
+        dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
+        directories_in_archive = _get_names_of_archive_directories(clp_package)
+
+        if dataset_list != directories_in_archive:
+            fail_msg = (
+                f"Mismatch between dataset list '{dataset_list}' and directories in archive"
+                f" '{directories_in_archive}'"
+            )
+            return False, fail_msg
+    elif subcommand == "del":
+        pass
+    else:
+        False, "The dataset-manager.sh command had an unrecognized positional argument."
+
+    return True, ""
+
+
+def _extract_dataset_names_from_output(dataset_manager_action: ClpPackageExternalAction) -> list[str]:
+    dataset_list = []
+    output = dataset_manager_action.completed_proc.stdout
+    output_lines = output.splitlines()
+    match = re.search(r"Found (\d+) datasets", output_lines[0])
+    if match:
+        num_datasets = int(match.group(1))
+    else:
+        # TODO: output was in the wrong format!
+        return dataset_list
+    
+    if num_datasets == 0:
+        return dataset_list
+    
+    for i in range(1, num_datasets + 1):
+        match = re.search(r"INFO \[dataset_manager\] (.+)", output_lines[i])
+        if match:
+            dataset_list.append(match.group(1))
+
+    return sorted(dataset_list)
+
+
+def _get_names_of_archive_directories(clp_package: ClpPackage) -> list[str]:
+    directories_in_archive = []
+    archives_dir = clp_package.path_config.package_archives_path
+    for item in archives_dir.iterdir():
+        if item.is_dir():
+            directories_in_archive.append(item.name)
+    return sorted(directories_in_archive)
