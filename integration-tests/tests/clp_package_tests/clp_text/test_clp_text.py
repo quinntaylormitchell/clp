@@ -1,7 +1,5 @@
 """Tests for the clp-text package."""
 
-import logging
-
 import pytest
 
 from tests.clp_package_tests.clp_package_utils.actions import (
@@ -21,9 +19,6 @@ from tests.clp_package_tests.clp_text.clp_text_utils import (
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
-
-logger = logging.getLogger(__name__)
-
 
 # Pytest markers for this module.
 pytestmark = [
@@ -49,8 +44,7 @@ def test_clp_text_compression_text_multifile(
     text_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    # Initial cleanup.
-    clp_package.clear_archives()
+    # TODO: Initial cleanup.
 
     # Compress.
     compress_cmd: list[str] = [
@@ -66,7 +60,6 @@ def test_clp_text_compression_text_multifile(
     assert compress_action_verified, failure_message
 
     # Cleanup.
-    clp_package.clear_archives()
 
 
 @pytest.mark.search
@@ -76,8 +69,7 @@ def test_clp_text_search_text_multifile_basic(
     text_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    # Initial cleanup.
-    clp_package.clear_archives()
+    # TODO: Initial cleanup.
 
     # Compress.
     compress_cmd: list[str] = [
@@ -106,5 +98,4 @@ def test_clp_text_search_text_multifile_basic(
     )
     assert search_action_verified, failure_message
 
-    # Cleanup.
-    clp_package.clear_archives()
+    # TODO: Cleanup.

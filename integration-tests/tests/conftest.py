@@ -6,14 +6,58 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils.logging_utils import BLUE, BOLD, RESET
 from tests.utils.utils import resolve_path_env_var
 
 # Make the fixtures defined in `tests/fixtures/` globally available without imports.
 pytest_plugins = [
     "tests.fixtures.datasets",
     "tests.fixtures.path_configs",
+    "tests.clp_binary_tests.integration_test_logs",
+    "tests.clp_binary_tests.clp_binary_path_configs",
+    "tests.clp_package_tests.clp_package_fixtures",
 ]
+
+
+BLUE = "\033[34m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
+
+unique_testlog_dir: Path | None = None
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
+    """Docstring."""
+    global unique_testlog_dir  # noqa: PLW0603
+
+    now = datetime.datetime.now()  # noqa: DTZ005
+    test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
+
+    unique_testlog_dir = (
+        resolve_path_env_var("CLP_BUILD_DIR")
+        / "integration_tests"
+        / "test_logs"
+        / f"testrun_{test_run_id}"
+    )
+
+    unique_testlog_dir.mkdir(parents=True, exist_ok=True)
+
+
+def get_test_log_dir() -> Path:
+    """Docstring."""
+    if unique_testlog_dir is None:
+        err_msg = "test log directory has not been initialized"
+        raise RuntimeError(err_msg)
+
+    return unique_testlog_dir
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_report_header(config: pytest.Config) -> str:  # noqa: ARG001
+    """Docstring."""
+    log_dir = get_test_log_dir()
+    return f"Log directory for this test run: '{log_dir}'"
 
 
 @pytest.hookimpl()
@@ -30,22 +74,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Base port for CLP package integration tests.",
     )
 
-    # Sets up a unique log file for this test run, and stores the path to the file.
-    now = datetime.datetime.now()  # noqa: DTZ005
-    test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
-    log_file_path = (
-        resolve_path_env_var("CLP_BUILD_DIR")
-        / "integration-tests"
-        / "test_logs"
-        / f"testrun_{test_run_id}.log"
-    )
-    parser.addini(
-        "log_file_path",
-        help="Path to the log file for this test.",
-        type="string",
-        default=str(log_file_path),
-    )
-
 
 def pytest_itemcollected(item: pytest.Item) -> None:
     """
@@ -56,22 +84,10 @@ def pytest_itemcollected(item: pytest.Item) -> None:
     item._nodeid = f"{BOLD}{BLUE}{item.nodeid}{RESET}"  # noqa: SLF001
 
 
-@pytest.hookimpl(tryfirst=True)
-def pytest_report_header(config: pytest.Config) -> str:
-    """
-    Adds a field to the header at the start of the test run that reports the path to the log file
-    for this test run.
-
-    :param config:
-    """
-    log_file_path = Path(config.getini("log_file_path")).expanduser().resolve()
-    return f"Log file path for this test run: {log_file_path}"
-
-
 @pytest.hookimpl(wrapper=True)
 def pytest_runtest_setup(item: pytest.Item) -> Iterator[None]:
     """
-    Sets `log_file_path` as the output file for the logger.
+    Sets and stores the test_output log file.
 
     :param item:
     """
@@ -81,6 +97,6 @@ def pytest_runtest_setup(item: pytest.Item) -> Iterator[None]:
         err_msg = "Expected pytest plugin 'logging-plugin' to be registered."
         raise RuntimeError(err_msg)
 
-    log_file_path = Path(config.getini("log_file_path"))
-    logging_plugin.set_log_path(str(log_file_path))
+    test_output_log_file = get_test_log_dir() / "test_output.log"
+    logging_plugin.set_log_path(str(test_output_log_file))
     yield

@@ -5,6 +5,7 @@ import logging
 import pytest
 
 from tests.clp_package_tests.clp_json.clp_json_utils import (
+    clear_archives_clp_json,
     CLP_JSON_MODE,
     verify_compress_action_clp_json,
     verify_search_action_clp_json,
@@ -23,7 +24,6 @@ from tests.utils.classes import (
 )
 
 logger = logging.getLogger(__name__)
-
 
 # Pytest markers for this module.
 pytestmark = [
@@ -49,8 +49,9 @@ def test_clp_json_compression_json_multifile(
     json_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    clp_package.clear_archives()
+    clear_archives_clp_json(clp_package)
 
+    logger.info("Compressing the `json_multifile` dataset.")
     compress_cmd = [
         str(clp_package_test_path_config.compress_path),
         "--config",
@@ -59,7 +60,7 @@ def test_clp_json_compression_json_multifile(
         json_multifile.metadata_dict["dataset_name"],
         "--timestamp-key",
         json_multifile.metadata_dict["timestamp_key"],
-        json_multifile.path_to_dataset_logs,
+        str(json_multifile.path_to_dataset_logs),
     ]
     compress_action: ClpPackageExternalAction = run_compress_cmd(compress_cmd)
     compress_action_verified, failure_message = verify_compress_action_clp_json(
@@ -67,7 +68,7 @@ def test_clp_json_compression_json_multifile(
     )
     assert compress_action_verified, failure_message
 
-    clp_package.clear_archives()
+    clear_archives_clp_json(clp_package)
 
 
 @pytest.mark.search
@@ -78,7 +79,7 @@ def test_clp_json_search_json_multifile_basic(
 ) -> None:
     """Docstring."""
     # Initial cleanup.
-    clp_package.clear_archives()
+    clear_archives_clp_json(clp_package)
 
     # Compress.
     compress_cmd = [
@@ -89,7 +90,7 @@ def test_clp_json_search_json_multifile_basic(
         json_multifile.metadata_dict["dataset_name"],
         "--timestamp-key",
         json_multifile.metadata_dict["timestamp_key"],
-        json_multifile.path_to_dataset_logs,
+        str(json_multifile.path_to_dataset_logs),
     ]
     compress_action: ClpPackageExternalAction = run_compress_cmd(compress_cmd)
     compress_action_verified, failure_message = verify_compress_action_clp_json(
@@ -114,4 +115,4 @@ def test_clp_json_search_json_multifile_basic(
     assert search_action_verified, failure_message
 
     # Cleanup.
-    clp_package.clear_archives()
+    clear_archives_clp_json(clp_package)

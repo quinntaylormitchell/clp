@@ -16,6 +16,7 @@ def verify_start_clp_action(
     start_clp_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
+    logger.info(f"Verifying the startup of the '{clp_package.mode_name}' package.")
     if start_clp_action.completed_proc.returncode != 0:
         return False, "The start-clp.sh subprocess returned a non-zero exit code."
 
@@ -34,6 +35,7 @@ def verify_stop_clp_action(
     stop_clp_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
+    logger.info(f"Verifying the spindown of the '{clp_package.mode_name}' package.")
     if stop_clp_action.completed_proc.returncode != 0:
         return False, "The stop-clp.sh subprocess returned a non-zero exit code."
 

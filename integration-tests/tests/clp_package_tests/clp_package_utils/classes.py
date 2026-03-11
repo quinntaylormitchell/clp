@@ -1,6 +1,7 @@
 """Classes used in CLP package integration tests."""
 
 import argparse
+import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,15 +12,13 @@ from clp_py_utils.clp_config import (
 )
 from pydantic import ValidationError
 
-from tests.clp_package_tests.clp_json.clp_json_utils import (
-    verify_dataset_manager_action_clp_json,
-)
-from tests.clp_package_tests.clp_package_utils.actions import run_dataset_manager_cmd
 from tests.utils.classes import IntegrationTestExternalAction, IntegrationTestPathConfig
 from tests.utils.utils import (
     load_yaml_to_dict,
     validate_dir_exists,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -37,6 +36,8 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
 
     def __post_init__(self) -> None:
         """Validate directories."""
+        super().__post_init__()
+
         # Ensure that the CLP package directory exists and that it is structured correctly.
         clp_package_dir = self.clp_package_dir
         validate_dir_exists(clp_package_dir)
@@ -147,6 +148,7 @@ class ClpPackage:
     def __post_init__(self) -> None:
         """Docstring."""
         # Validate clp_config pydantic object.
+        logger.info(f"Validating the ClpConfig pydantic object for the '{self.mode_name}' package.")
         try:
             ClpConfig.model_validate(self.clp_config)
         except ValidationError as err:
@@ -161,12 +163,12 @@ class ClpPackage:
     @property
     def clp_instance_id_file_path(self) -> Path:
         """:return: The absolute path to the temporary configuration file for the package."""
-        return self.path_config.package_logs_path / ".clp-config.yaml"
+        return self.path_config.package_logs_path / "instance-id"
 
     @property
     def shared_config_file_path(self) -> Path:
         """:return: The absolute path to the temporary configuration file for the package."""
-        return self.path_config.package_logs_path / "instance-id"
+        return self.path_config.package_logs_path / ".clp-config.yaml"
 
     def get_clp_instance_id(self) -> str:
         """
@@ -202,32 +204,6 @@ class ClpPackage:
             pytest.fail(fail_msg)
 
         return running_config
-
-    def clear_archives(self) -> None:
-        """Docstring."""
-        path_config = self.path_config
-        match self.mode_name:
-            case "clp-json":
-                dataset_manager_cmd = [
-                    str(path_config.compress_path),
-                    "--config",
-                    str(self.temp_config_file_path),
-                    "del",
-                    "--all",
-                ]
-                dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
-                    dataset_manager_cmd
-                )
-                dataset_manager_action_verified, failure_message = (
-                    verify_dataset_manager_action_clp_json(dataset_manager_action, self)
-                )
-                assert dataset_manager_action_verified, failure_message
-                return
-            case "clp-text":
-                return
-            case _:
-                # TODO: log that clearing archives is not currently supported for any other mode.
-                return
 
 
 @dataclass

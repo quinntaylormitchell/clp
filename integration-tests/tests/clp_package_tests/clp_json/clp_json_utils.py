@@ -1,5 +1,6 @@
 """Docstring."""
 
+import logging
 import re
 from enum import auto, Enum
 
@@ -23,6 +24,8 @@ from tests.clp_package_tests.clp_package_utils.modes import (
 from tests.utils.actions import run_grep_cmd
 from tests.utils.classes import IntegrationTestDataset, IntegrationTestExternalAction
 from tests.utils.utils import get_binary_path
+
+logger = logging.getLogger(__name__)
 
 # Mode description for clp-json.
 CLP_JSON_MODE = ClpPackageModeConfig(
@@ -52,6 +55,7 @@ def verify_compress_action_clp_json(
     compress_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
+    logger.info(f"Verifying {clp_package.mode_name} package compression.")
     if compress_action.completed_proc.returncode != 0:
         return False, "The compress.sh subprocess returned a non-zero exit code."
 
@@ -65,6 +69,7 @@ def verify_search_action_clp_json(
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """Docstring."""
+    logger.info(f"Verifying search on the '{original_dataset.dataset_name}' dataset.")
     if search_action.completed_proc.returncode != 0:
         return False, "The search.sh subprocess returned a non-zero exit code."
 
@@ -181,48 +186,84 @@ def verify_dataset_manager_action_clp_json(
     dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
+    logger.info("Verifying dataset-manager action.")
     if dataset_manager_action.completed_proc.returncode != 0:
         return False, "The dataset-manager.sh subprocess returned a non-zero exit code."
 
     parsed_args = dataset_manager_action.parsed_args
     subcommand = parsed_args.subcommand
-    if subcommand == "list":
-        dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
-        directories_in_archive = _get_names_of_archive_directories(clp_package)
+    match subcommand:
+        case "list":
+            _verify_dataset_manager_list_action_clp_json(dataset_manager_action, clp_package)
+        case "del":
+            _verify_dataset_manager_del_action_clp_json(dataset_manager_action, clp_package)
+        case _:
+            return (
+                False,
+                "The dataset-manager.sh command carried an unrecognized positional argument.",
+            )
 
-        if dataset_list != directories_in_archive:
+    return True, ""
+
+
+def _verify_dataset_manager_list_action_clp_json(
+    dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
+) -> tuple[bool, str]:
+    dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
+    directories_in_archive = _get_names_of_archive_directories(clp_package)
+
+    if dataset_list != directories_in_archive:
+        fail_msg = (
+            f"Mismatch between dataset list '{dataset_list}' and directories in archive"
+            f" '{directories_in_archive}'"
+        )
+        return False, fail_msg
+
+    return True, ""
+
+
+def _verify_dataset_manager_del_action_clp_json(
+    dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
+) -> tuple[bool, str]:
+    check_dataset_manager_cmd = [
+        str(clp_package.path_config.dataset_manager_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
+        "list",
+    ]
+    check_dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
+        check_dataset_manager_cmd
+    )
+    check_dataset_manager_action_verified, failure_message = verify_dataset_manager_action_clp_json(
+        check_dataset_manager_action, clp_package
+    )
+    assert check_dataset_manager_action_verified, failure_message
+
+    current_datasets = _extract_dataset_names_from_output(check_dataset_manager_action)
+
+    parsed_args = dataset_manager_action.parsed_args
+    datasets_specified_for_deletion = parsed_args.datasets
+    del_all_flag = parsed_args.del_all
+    if del_all_flag:
+        # Verify that there are no datasets left.
+        if len(current_datasets) > 0:
             fail_msg = (
-                f"Mismatch between dataset list '{dataset_list}' and directories in archive"
-                f" '{directories_in_archive}'"
+                f"dataset-manager del --all failed: There are datasets still present in the"
+                f" metadata database: {current_datasets}"
             )
             return False, fail_msg
-    elif subcommand == "del":
-        deleted_datasets_list = _extract_dataset_names_from_output(dataset_manager_action)
-
-        check_dataset_manager_cmd = [
-            str(clp_package.path_config.compress_path),
-            "--config",
-            str(clp_package.temp_config_file_path),
-            "list",
-        ]
-        check_dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
-            check_dataset_manager_cmd
-        )
-        check_dataset_manager_action_verified, failure_message = (
-            verify_dataset_manager_action_clp_json(check_dataset_manager_action, clp_package)
-        )
-        assert check_dataset_manager_action_verified, failure_message
-        current_datasets_list = _extract_dataset_names_from_output(check_dataset_manager_action)
-
-        for dataset in deleted_datasets_list:
-            if dataset in current_datasets_list:
-                fail_msg = (
-                    f"dataset-manager del failed: {dataset} is still present in the metadata"
-                    f" database."
-                )
-                return False, fail_msg
     else:
-        return False, "The dataset-manager.sh command carried an unrecognized positional argument."
+        if len(datasets_specified_for_deletion) == 0:
+            # No datasets were specified for deletion.
+            return True, ""
+
+        # Verify that the datasets specified for deletion are not present.
+        if any(item in current_datasets for item in datasets_specified_for_deletion):
+            fail_msg = (
+                "dataset-manager del failed: Some datasets that were specified for deletion"
+                " are still present in the metadata database."
+            )
+            return False, fail_msg
 
     return True, ""
 
@@ -231,20 +272,23 @@ def _extract_dataset_names_from_output(
     dataset_manager_action: ClpPackageExternalAction,
 ) -> list[str]:
     dataset_list: list[str] = []
-    output = dataset_manager_action.completed_proc.stdout
+    output = (
+        dataset_manager_action.completed_proc.stdout + dataset_manager_action.completed_proc.stderr
+    )
     output_lines = output.splitlines()
-    match = re.search(r"Found (\d+) datasets", output_lines[0])
-    if match:
-        num_datasets = int(match.group(1))
-    else:
-        # TODO: output was in the wrong format!
-        return dataset_list
+    num_datasets = 0
+    for line in output_lines:
+        match = re.search(r"Found (\d+) datasets", line)
+        if match:
+            num_datasets = int(match.group(1))
+            output_lines.remove(line)
+            break
 
     if num_datasets == 0:
         return dataset_list
 
-    for i in range(1, num_datasets + 1):
-        match = re.search(r"INFO \[dataset_manager\] (.+)", output_lines[i])
+    for line in output_lines:
+        match = re.search(r"INFO \[dataset_manager\] (.+)", line)
         if match:
             dataset_list.append(match.group(1))
 
@@ -258,3 +302,31 @@ def _get_names_of_archive_directories(clp_package: ClpPackage) -> list[str]:
         if item.is_dir():
             directories_in_archive.append(item.name)
     return sorted(directories_in_archive)
+
+
+def clear_archives_clp_json(clp_package: ClpPackage) -> None:
+    """Docstring."""
+    logger.info(f"Clearing the {clp_package.mode_name} archives.")
+    path_config = clp_package.path_config
+    match clp_package.mode_name:
+        case "clp-json":
+            dataset_manager_cmd = [
+                str(path_config.dataset_manager_path),
+                "--config",
+                str(clp_package.temp_config_file_path),
+                "del",
+                "--all",
+            ]
+            dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
+                dataset_manager_cmd
+            )
+            dataset_manager_action_verified, failure_message = (
+                verify_dataset_manager_action_clp_json(dataset_manager_action, clp_package)
+            )
+            assert dataset_manager_action_verified, failure_message
+            return
+        case "clp-text":
+            return
+        case _:
+            # TODO: log that clearing archives is not currently supported for any other mode.
+            return

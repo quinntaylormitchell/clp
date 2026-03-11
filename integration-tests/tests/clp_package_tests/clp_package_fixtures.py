@@ -1,5 +1,6 @@
 """Session-scoped path configuration fixtures shared across package integration tests."""
 
+import logging
 from collections.abc import Iterator
 
 import pytest
@@ -19,6 +20,8 @@ from tests.clp_package_tests.clp_package_utils.verification import (
 )
 from tests.utils.port_utils import assign_ports_from_base
 from tests.utils.utils import resolve_path_env_var, write_dict_to_yaml
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
@@ -44,6 +47,7 @@ def clp_package(
     component_list = mode_config.component_list
 
     # Assign ports to the `ClpConfig` pydantic object.
+    logger.info(f"Assigning ports to the '{mode_name}' package.")
     base_port_string = request.config.getoption("--base-port")
     try:
         base_port = int(base_port_string)
@@ -53,6 +57,7 @@ def clp_package(
     assign_ports_from_base(base_port, clp_config)
 
     # Write the temporary config file.
+    logger.info(f"Writing the temporary config file for the '{mode_name}' package.")
     temp_config_file_path = path_config.temp_config_dir / f"clp-config-{mode_name}.yaml"
     write_dict_to_yaml(clp_config.dump_to_primitive_dict(), temp_config_file_path)
 
@@ -89,7 +94,7 @@ def clp_package(
         ]
         stop_clp_action: ClpPackageExternalAction = run_stop_clp_cmd(stop_clp_cmd)
 
-        # Verify stop.
+        # Verify stop.s
         stop_clp_action_verified, failure_message = verify_stop_clp_action(
             stop_clp_action, clp_package
         )
