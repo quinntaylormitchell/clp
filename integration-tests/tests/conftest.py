@@ -1,7 +1,7 @@
 """Global pytest setup."""
 
 import datetime
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
@@ -26,6 +26,15 @@ RESET = "\033[0m"
 unique_testlog_dir: Path | None = None
 
 
+def get_test_log_dir() -> Path:
+    """Docstring."""
+    if unique_testlog_dir is None:
+        err_msg = "test log directory has not been initialized"
+        raise RuntimeError(err_msg)
+
+    return unique_testlog_dir
+
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
     """Docstring."""
@@ -44,22 +53,6 @@ def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
     unique_testlog_dir.mkdir(parents=True, exist_ok=True)
 
 
-def get_test_log_dir() -> Path:
-    """Docstring."""
-    if unique_testlog_dir is None:
-        err_msg = "test log directory has not been initialized"
-        raise RuntimeError(err_msg)
-
-    return unique_testlog_dir
-
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_report_header(config: pytest.Config) -> str:  # noqa: ARG001
-    """Docstring."""
-    log_dir = get_test_log_dir()
-    return f"Log directory for this test run: '{log_dir}'"
-
-
 @pytest.hookimpl()
 def pytest_addoption(parser: pytest.Parser) -> None:
     """
@@ -75,13 +68,28 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-def pytest_itemcollected(item: pytest.Item) -> None:
-    """
-    Prettifies the name of the test for output purposes.
+@pytest.hookimpl(tryfirst=True)
+def pytest_report_header(config: pytest.Config) -> str:  # noqa: ARG001
+    """Docstring."""
+    log_dir = get_test_log_dir()
+    return f"Log directory for this test run: {log_dir}"
 
-    :param item:
-    """
-    item._nodeid = f"{BOLD}{BLUE}{item.nodeid}{RESET}"  # noqa: SLF001
+
+def pytest_report_collectionfinish(
+    config: pytest.Config,  # noqa: ARG001
+    start_path: Path,  # noqa: ARG001
+    items: Sequence[pytest.Item],
+) -> str | list[str]:
+    """Docstring."""
+    report: str = ""
+    if len(items) == 0:
+        report = f"{BOLD}No tests match the specified parameters.{RESET}\n"
+    else:
+        report = f"{BOLD}The following tests will run:{RESET}\n"
+        for item in items:
+            report += f"\t{BOLD}{BLUE}{item.name}{RESET}\n"
+        report += f"\n{BOLD}Running tests now...{RESET}"
+    return report
 
 
 @pytest.hookimpl(wrapper=True)
@@ -100,3 +108,12 @@ def pytest_runtest_setup(item: pytest.Item) -> Iterator[None]:
     test_output_log_file = get_test_log_dir() / "test_output.log"
     logging_plugin.set_log_path(str(test_output_log_file))
     yield
+
+
+def pytest_itemcollected(item: pytest.Item) -> None:
+    """
+    Prettifies the name of the test for output purposes.
+
+    :param item:
+    """
+    item._nodeid = f"{BOLD}{BLUE}{item.name}{RESET}"  # noqa: SLF001

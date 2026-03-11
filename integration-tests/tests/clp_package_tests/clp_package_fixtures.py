@@ -34,7 +34,7 @@ def clp_package_test_path_config() -> ClpPackageTestPathConfig:
     )
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="module")
 def clp_package(
     request: pytest.FixtureRequest,
     clp_package_test_path_config: ClpPackageTestPathConfig,
