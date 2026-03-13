@@ -11,7 +11,10 @@ from clp_py_utils.clp_config import (
     StorageEngine,
 )
 
-from tests.clp_package_tests.clp_package_utils.actions import run_dataset_manager_cmd
+from tests.clp_package_tests.clp_package_utils.actions import (
+    run_archive_manager_cmd,
+    run_dataset_manager_cmd,
+)
 from tests.clp_package_tests.clp_package_utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
@@ -210,12 +213,12 @@ def _verify_dataset_manager_list_action_clp_json(
     dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
-    directories_in_archive = _get_names_of_archive_directories(clp_package)
+    directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
-    if dataset_list != directories_in_archive:
+    if dataset_list != directories_in_package_archives:
         fail_msg = (
-            f"Mismatch between dataset list '{dataset_list}' and directories in archive"
-            f" '{directories_in_archive}'"
+            f"Mismatch between dataset list '{dataset_list}' and directories in var/archives"
+            f" '{directories_in_package_archives}'"
         )
         return False, fail_msg
 
@@ -225,21 +228,21 @@ def _verify_dataset_manager_list_action_clp_json(
 def _verify_dataset_manager_del_action_clp_json(
     dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
-    check_dataset_manager_cmd = [
+    verify_dataset_manager_cmd = [
         str(clp_package.path_config.dataset_manager_path),
         "--config",
         str(clp_package.temp_config_file_path),
         "list",
     ]
-    check_dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
-        check_dataset_manager_cmd
+    verify_dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
+        verify_dataset_manager_cmd
     )
-    check_dataset_manager_action_verified, failure_message = verify_dataset_manager_action_clp_json(
-        check_dataset_manager_action, clp_package
+    verify_dataset_manager_action_verified, failure_message = (
+        verify_dataset_manager_action_clp_json(verify_dataset_manager_action, clp_package)
     )
-    assert check_dataset_manager_action_verified, failure_message
+    assert verify_dataset_manager_action_verified, failure_message
 
-    current_datasets = _extract_dataset_names_from_output(check_dataset_manager_action)
+    current_datasets = _extract_dataset_names_from_output(verify_dataset_manager_action)
 
     parsed_args = dataset_manager_action.parsed_args
     datasets_specified_for_deletion = parsed_args.datasets
@@ -295,16 +298,16 @@ def _extract_dataset_names_from_output(
     return sorted(dataset_list)
 
 
-def _get_names_of_archive_directories(clp_package: ClpPackage) -> list[str]:
-    directories_in_archive = []
+def _get_names_of_directories_in_package_archives(clp_package: ClpPackage) -> list[str]:
+    directories_in_package_archives = []
     archives_dir = clp_package.path_config.package_archives_path
     for item in archives_dir.iterdir():
         if item.is_dir():
-            directories_in_archive.append(item.name)
-    return sorted(directories_in_archive)
+            directories_in_package_archives.append(item.name)
+    return sorted(directories_in_package_archives)
 
 
-def clear_archives_clp_json(clp_package: ClpPackage) -> None:
+def clear_package_archives_clp_json(clp_package: ClpPackage) -> None:
     """Docstring."""
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
     path_config = clp_package.path_config
@@ -330,3 +333,206 @@ def clear_archives_clp_json(clp_package: ClpPackage) -> None:
         case _:
             # TODO: log that clearing archives is not currently supported for any other mode.
             return
+
+
+def verify_archive_manager_action_clp_json(
+    archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
+) -> tuple[bool, str]:
+    """Docstring."""
+    logger.info("Verifying archive-manager action.")
+    if archive_manager_action.completed_proc.returncode != 0:
+        return False, "The archive-manager.sh subprocess returned a non-zero exit code."
+
+    parsed_args = archive_manager_action.parsed_args
+    subcommand = parsed_args.subcommand
+    match subcommand:
+        case "find":
+            _verify_archive_manager_find_action_clp_json(archive_manager_action, clp_package)
+        case "del":
+            _verify_archive_manager_del_action_clp_json(archive_manager_action, clp_package)
+        case _:
+            return (
+                False,
+                "The archive-manager.sh command carried an unrecognized positional argument.",
+            )
+
+    return True, ""
+
+
+def _verify_archive_manager_find_action_clp_json(
+    archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
+) -> tuple[bool, str]:
+    parsed_args = archive_manager_action.parsed_args
+    begin_ts: int = parsed_args.begin_ts
+    end_ts: int | None = parsed_args.end_ts
+    path_config = clp_package.path_config
+
+    current_archive_id_list: list[str] = []
+    # Chunk 1.
+    if begin_ts > 0:
+        verify_archive_manager_cmd = [
+            str(path_config.archive_manager_path),
+            "--config",
+            str(clp_package.temp_config_file_path),
+            "--dataset",
+            parsed_args.dataset,
+            "find",
+            "--begin-ts",
+            "0",
+            "--end-ts",
+            str(begin_ts),
+        ]
+        verify_archive_manager_action = run_archive_manager_cmd(verify_archive_manager_cmd)
+        assert verify_archive_manager_action.completed_proc.returncode == 0
+        current_archive_id_list.extend(
+            _extract_archive_ids_from_find_output(verify_archive_manager_action)
+        )
+
+    # Chunk 2.
+    # We already have the info from this from the original command output.
+    current_archive_id_list.extend(_extract_archive_ids_from_find_output(archive_manager_action))
+
+    # Chunk 3.
+    if end_ts is not None:
+        verify_archive_manager_cmd = [
+            str(path_config.archive_manager_path),
+            "--config",
+            str(clp_package.temp_config_file_path),
+            "--dataset",
+            parsed_args.dataset,
+            "find",
+            "--begin-ts",
+            str(end_ts),
+        ]
+        verify_archive_manager_action = run_archive_manager_cmd(verify_archive_manager_cmd)
+        assert verify_archive_manager_action.completed_proc.returncode == 0
+        current_archive_id_list.extend(
+            _extract_archive_ids_from_find_output(verify_archive_manager_action)
+        )
+
+    directories_in_package_archives = _get_names_of_directories_in_dataset_archive_dir(
+        clp_package, parsed_args.dataset
+    )
+    if current_archive_id_list != directories_in_package_archives:
+        fail_msg = (
+            f"Mismatch between output archive ID list '{current_archive_id_list}' and directories"
+            f" in var/archives '{directories_in_package_archives}'"
+        )
+        return False, fail_msg
+
+    return True, ""
+
+
+def _verify_archive_manager_del_action_clp_json(
+    archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
+) -> tuple[bool, str]:
+    parsed_args = archive_manager_action.parsed_args
+    del_subcommand = parsed_args.del_subcommand
+    match del_subcommand:
+        case "by-ids":
+            # Run a "find all" command.
+            verify_archive_manager_cmd = [
+                str(clp_package.path_config.archive_manager_path),
+                "--config",
+                str(clp_package.temp_config_file_path),
+                "--dataset",
+                parsed_args.dataset,
+                "find",
+            ]
+            verify_archive_manager_action = run_archive_manager_cmd(verify_archive_manager_cmd)
+            verify_archive_manager_action_verified, failure_message = (
+                verify_archive_manager_action_clp_json(verify_archive_manager_action, clp_package)
+            )
+            assert verify_archive_manager_action_verified, failure_message
+
+            # Get ids from "find all" and compare.
+            current_archive_ids_list = _extract_archive_ids_from_find_output(
+                verify_archive_manager_action
+            )
+            if any(item in current_archive_ids_list for item in parsed_args.ids):
+                fail_msg = (
+                    "archive-manager del by-ids failed: Some archives that were specified for"
+                    " deletion are still present in the metadata database."
+                )
+                return False, fail_msg
+        case "by-filter":
+            # Run a "find" command with begin_ts and end_ts.
+            verify_archive_manager_cmd = [
+                str(clp_package.path_config.archive_manager_path),
+                "--config",
+                str(clp_package.temp_config_file_path),
+                "--dataset",
+                parsed_args.dataset,
+                "find",
+                "--begin-ts",
+                str(parsed_args.begin_ts),
+            ]
+            if parsed_args.end_ts is not None:
+                verify_archive_manager_cmd.append("--end-ts")
+                verify_archive_manager_cmd.append(str(parsed_args.end_ts))
+
+            verify_archive_manager_action = run_archive_manager_cmd(verify_archive_manager_cmd)
+            verify_archive_manager_action_verified, failure_message = (
+                verify_archive_manager_action_clp_json(verify_archive_manager_action, clp_package)
+            )
+            assert verify_archive_manager_action_verified, failure_message
+
+            # Get ids from "find" command with begin_ts and end_ts and compare
+            current_archive_ids_list = _extract_archive_ids_from_find_output(
+                verify_archive_manager_action
+            )
+            if len(current_archive_ids_list) > 0:
+                fail_msg = (
+                    "archive-manager del by-filter failed: Some archives that should have been"
+                    " deleted were not deleted."
+                )
+                return False, fail_msg
+
+        case _:
+            fail_msg = (
+                "archive-manager del failed: del needs a subcommand ('by-ids' or 'by-filter')"
+            )
+            return False, fail_msg
+
+    return True, ""
+
+
+def _extract_archive_ids_from_find_output(
+    archive_manager_action: ClpPackageExternalAction,
+) -> list[str]:
+    output_archive_id_list: list[str] = []
+    output = (
+        archive_manager_action.completed_proc.stdout + archive_manager_action.completed_proc.stderr
+    )
+    output_lines = output.splitlines()
+    num_archive_ids = 0
+    for line in output_lines:
+        match = re.search(r"Found (\d+) archives within the specified time range", line)
+        if match:
+            num_archive_ids = int(match.group(1))
+            output_lines.remove(line)
+            break
+
+    if num_archive_ids == 0:
+        return output_archive_id_list
+
+    for line in output_lines:
+        match = re.search(
+            r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            line,
+        )
+        if match:
+            output_archive_id_list.append(match.group(0))
+
+    return sorted(output_archive_id_list)
+
+
+def _get_names_of_directories_in_dataset_archive_dir(
+    clp_package: ClpPackage, dataset_name: str
+) -> list[str]:
+    directories_in_dataset_archive_dir = []
+    dataset_archive_dir = clp_package.path_config.package_archives_path / dataset_name
+    for item in dataset_archive_dir.iterdir():
+        if item.is_dir():
+            directories_in_dataset_archive_dir.append(item.name)
+    return sorted(directories_in_dataset_archive_dir)
