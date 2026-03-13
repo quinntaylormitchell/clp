@@ -311,28 +311,18 @@ def clear_package_archives_clp_json(clp_package: ClpPackage) -> None:
     """Docstring."""
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
     path_config = clp_package.path_config
-    match clp_package.mode_name:
-        case "clp-json":
-            dataset_manager_cmd = [
-                str(path_config.dataset_manager_path),
-                "--config",
-                str(clp_package.temp_config_file_path),
-                "del",
-                "--all",
-            ]
-            dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(
-                dataset_manager_cmd
-            )
-            dataset_manager_action_verified, failure_message = (
-                verify_dataset_manager_action_clp_json(dataset_manager_action, clp_package)
-            )
-            assert dataset_manager_action_verified, failure_message
-            return
-        case "clp-text":
-            return
-        case _:
-            # TODO: log that clearing archives is not currently supported for any other mode.
-            return
+    dataset_manager_cmd = [
+        str(path_config.dataset_manager_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
+        "del",
+        "--all",
+    ]
+    dataset_manager_action: ClpPackageExternalAction = run_dataset_manager_cmd(dataset_manager_cmd)
+    dataset_manager_action_verified, failure_message = verify_dataset_manager_action_clp_json(
+        dataset_manager_action, clp_package
+    )
+    assert dataset_manager_action_verified, failure_message
 
 
 def verify_archive_manager_action_clp_json(
@@ -410,13 +400,13 @@ def _verify_archive_manager_find_action_clp_json(
             _extract_archive_ids_from_find_output(verify_archive_manager_action)
         )
 
-    directories_in_package_archives = _get_names_of_directories_in_dataset_archive_dir(
+    directories_in_dataset_archive_dir = _get_names_of_directories_in_dataset_archive_dir(
         clp_package, parsed_args.dataset
     )
-    if current_archive_id_list != directories_in_package_archives:
+    if current_archive_id_list != directories_in_dataset_archive_dir:
         fail_msg = (
             f"Mismatch between output archive ID list '{current_archive_id_list}' and directories"
-            f" in var/archives '{directories_in_package_archives}'"
+            f" in var/archives dataset directory '{directories_in_dataset_archive_dir}'"
         )
         return False, fail_msg
 
@@ -518,7 +508,7 @@ def _extract_archive_ids_from_find_output(
 
     for line in output_lines:
         match = re.search(
-            r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
             line,
         )
         if match:
