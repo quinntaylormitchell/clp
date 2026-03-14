@@ -12,16 +12,16 @@ from clp_py_utils.clp_config import (
     StorageEngine,
 )
 
-from tests.clp_package_tests.clp_package_utils.actions import (
+from tests.clp_package_tests.utils.actions import (
     run_archive_manager_cmd,
     run_decompress_cmd,
 )
-from tests.clp_package_tests.clp_package_utils.classes import (
+from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
     ClpPackageModeConfig,
 )
-from tests.clp_package_tests.clp_package_utils.modes import (
+from tests.clp_package_tests.utils.modes import (
     CLP_BASE_COMPONENTS,
 )
 from tests.utils.actions import run_grep_cmd

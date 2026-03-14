@@ -4,22 +4,22 @@ from pathlib import Path
 
 import pytest
 
-from tests.clp_package_tests.clp_package_utils.actions import (
-    run_archive_manager_cmd,
-    run_compress_cmd,
-    run_search_cmd,
-)
-from tests.clp_package_tests.clp_package_utils.classes import (
-    ClpPackage,
-    ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
-)
 from tests.clp_package_tests.clp_text.clp_text_utils import (
     clear_package_archives_clp_text,
     CLP_TEXT_MODE,
     verify_archive_manager_action_clp_text,
     verify_compress_action_clp_text,
     verify_search_action_clp_text,
+)
+from tests.clp_package_tests.utils.actions import (
+    run_archive_manager_cmd,
+    run_compress_cmd,
+    run_search_cmd,
+)
+from tests.clp_package_tests.utils.classes import (
+    ClpPackage,
+    ClpPackageExternalAction,
+    ClpPackageTestPathConfig,
 )
 from tests.utils.classes import (
     IntegrationTestDataset,

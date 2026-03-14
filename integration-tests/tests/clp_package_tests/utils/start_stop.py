@@ -1,15 +1,54 @@
-"""Utilities that raise pytest assertions on failure."""
+"""Utilities that start/stop the CLP package."""
 
 import logging
 
-from tests.clp_package_tests.clp_package_utils.classes import (
+from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
-from tests.clp_package_tests.clp_package_utils.modes import compare_mode_signatures
+from tests.clp_package_tests.utils.modes import compare_mode_signatures
+from tests.clp_package_tests.utils.parsers import (
+    get_start_clp_parser,
+    get_stop_clp_parser,
+)
 from tests.utils.docker_utils import list_running_services_in_compose_project
+from tests.utils.subprocess_utils import execute_external_action
 
 logger = logging.getLogger(__name__)
+
+
+def start_clp_package(clp_package: ClpPackage) -> tuple[bool, str]:
+    """Docstring."""
+    path_config = clp_package.path_config
+    start_clp_cmd: list[str] = [
+        str(path_config.start_clp_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
+    ]
+    start_clp_action = ClpPackageExternalAction(
+        cmd=start_clp_cmd,
+        args_parser=get_start_clp_parser(),
+    )
+    execute_external_action(start_clp_action)
+
+    return verify_start_clp_action(start_clp_action, clp_package)
+
+
+def stop_clp_package(clp_package: ClpPackage) -> tuple[bool, str]:
+    """Docstring."""
+    path_config = clp_package.path_config
+    stop_clp_cmd: list[str] = [
+        str(path_config.stop_clp_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
+    ]
+    stop_clp_action = ClpPackageExternalAction(
+        cmd=stop_clp_cmd,
+        args_parser=get_stop_clp_parser(),
+    )
+    execute_external_action(stop_clp_action)
+
+    return verify_stop_clp_action(stop_clp_action, clp_package)
 
 
 def verify_start_clp_action(

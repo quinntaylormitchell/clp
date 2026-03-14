@@ -1,7 +1,6 @@
 """Module docstring."""
 
 import argparse
-from pathlib import Path
 
 from clp_package_utils.cli_utils import RESTART_POLICY
 from clp_package_utils.general import (
@@ -24,9 +23,6 @@ from clp_package_utils.scripts.dataset_manager import (
     LIST_COMMAND,
 )
 
-# TODO: find out how you're going to determine this dynamically per test run.
-DEFAULT_CONFIG_FILE_PATH = Path("/to/be/determined")
-
 
 def get_archive_manager_parser() -> argparse.ArgumentParser:
     """Docstring."""
@@ -35,7 +31,6 @@ def get_archive_manager_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP package configuration file.",
     )
     args_parser.add_argument(
@@ -137,7 +132,6 @@ def get_compress_from_s3_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP package configuration file.",
     )
     args_parser.add_argument(
@@ -162,19 +156,24 @@ def get_compress_from_s3_parser() -> argparse.ArgumentParser:
         help="Treat all inputs as unstructured text logs.",
     )
     args_parser.add_argument(
-        "--no-progress-reporting", action="store_true", help="Disables progress reporting."
+        "--no-progress-reporting",
+        action="store_true",
+        help="Disables progress reporting.",
     )
 
     subparsers = args_parser.add_subparsers(dest="subcommand", required=True)
 
     object_compression_option_parser = subparsers.add_parser(
-        S3_OBJECT_COMPRESSION, help="Compress specific S3 objects identified by their full URLs."
+        S3_OBJECT_COMPRESSION,
+        help="Compress specific S3 objects identified by their full URLs.",
     )
     object_compression_option_parser.add_argument(
         "inputs", metavar="URL", nargs="*", help="S3 object URLs."
     )
     object_compression_option_parser.add_argument(
-        "--inputs-from", type=str, help="A file containing all S3 object URLs to compress."
+        "--inputs-from",
+        type=str,
+        help="A file containing all S3 object URLs to compress.",
     )
 
     prefix_compression_option_parser = subparsers.add_parser(
@@ -197,7 +196,6 @@ def get_compress_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP package configuration file.",
     )
     args_parser.add_argument(
@@ -222,11 +220,16 @@ def get_compress_parser() -> argparse.ArgumentParser:
         help="Treat all inputs as unstructured text logs.",
     )
     args_parser.add_argument(
-        "--no-progress-reporting", action="store_true", help="Disables progress reporting."
+        "--no-progress-reporting",
+        action="store_true",
+        help="Disables progress reporting.",
     )
     args_parser.add_argument("paths", metavar="PATH", nargs="*", help="Paths to compress.")
     args_parser.add_argument(
-        "-f", "--path-list", dest="path_list", help="A file listing all paths to compress."
+        "-f",
+        "--path-list",
+        dest="path_list",
+        help="A file listing all paths to compress.",
     )
 
     return args_parser
@@ -239,7 +242,6 @@ def get_dataset_manager_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP package configuration file.",
     )
     args_parser.add_argument(
@@ -287,7 +289,6 @@ def get_decompress_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP configuration file.",
     )
     args_parser.add_argument(
@@ -350,7 +351,6 @@ def get_search_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP package configuration file.",
     )
     args_parser.add_argument(
@@ -402,7 +402,6 @@ def get_start_clp_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP package configuration file.",
     )
     args_parser.add_argument(
@@ -433,7 +432,6 @@ def get_stop_clp_parser() -> argparse.ArgumentParser:
     args_parser.add_argument(
         "--config",
         "-c",
-        default=str(DEFAULT_CONFIG_FILE_PATH),
         help="CLP package configuration file.",
     )
 
