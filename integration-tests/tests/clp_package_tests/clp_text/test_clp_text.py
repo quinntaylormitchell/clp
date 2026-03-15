@@ -1,24 +1,21 @@
 """Tests for the clp-text package."""
 
-from pathlib import Path
-
 import pytest
 
-from tests.clp_package_tests.clp_text.clp_text_utils import (
+from tests.clp_package_tests.clp_text.utils.archive_manager import (
+    archive_manager_del_by_filter_clp_text,
+    archive_manager_del_by_ids_clp_text,
+    archive_manager_find_clp_text,
     clear_package_archives_clp_text,
-    CLP_TEXT_MODE,
-    verify_archive_manager_action_clp_text,
-    verify_compress_action_clp_text,
-    verify_search_action_clp_text,
 )
-from tests.clp_package_tests.utils.actions import (
-    run_archive_manager_cmd,
-    run_compress_cmd,
-    run_search_cmd,
+from tests.clp_package_tests.clp_text.utils.compress import compress_clp_text
+from tests.clp_package_tests.clp_text.utils.mode import CLP_TEXT_MODE
+from tests.clp_package_tests.clp_text.utils.search import (
+    ClpTextSearchType,
+    search_clp_text,
 )
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
-    ClpPackageExternalAction,
     ClpPackageTestPathConfig,
 )
 from tests.utils.classes import (
@@ -49,23 +46,15 @@ def test_clp_text_compression_text_multifile(
     text_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    # Initial cleanup.
     clear_package_archives_clp_text(clp_package)
 
-    # Compress.
-    compress_cmd: list[str] = [
-        str(clp_package_test_path_config.compress_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        str(text_multifile.path_to_dataset_logs),
-    ]
-    compress_action: ClpPackageExternalAction = run_compress_cmd(compress_cmd)
-    compress_action_verified, failure_message = verify_compress_action_clp_text(
-        compress_action, clp_package, text_multifile
+    compress_action_verified, failure_message = compress_clp_text(
+        clp_package_test_path_config=clp_package_test_path_config,
+        clp_package=clp_package,
+        dataset=text_multifile,
     )
     assert compress_action_verified, failure_message
 
-    # Cleanup.
     clear_package_archives_clp_text(clp_package)
 
 
@@ -76,37 +65,24 @@ def test_clp_text_search_text_multifile_basic(
     text_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    # Initial cleanup.
     clear_package_archives_clp_text(clp_package)
 
-    # Compress.
-    compress_cmd: list[str] = [
-        str(clp_package_test_path_config.compress_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        str(text_multifile.path_to_dataset_logs),
-    ]
-    compress_action: ClpPackageExternalAction = run_compress_cmd(compress_cmd)
-    compress_action_verified, failure_message = verify_compress_action_clp_text(
-        compress_action, clp_package, text_multifile
+    compress_action_verified, failure_message = compress_clp_text(
+        clp_package_test_path_config=clp_package_test_path_config,
+        clp_package=clp_package,
+        dataset=text_multifile,
     )
     assert compress_action_verified, failure_message
 
-    # Search.
-    search_cmd = [
-        str(clp_package_test_path_config.search_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "--raw",
-        "Saturn",
-    ]
-    search_action: ClpPackageExternalAction = run_search_cmd(search_cmd)
-    search_action_verified, failure_message = verify_search_action_clp_text(
-        search_action, text_multifile
+    search_action_verified, failure_message = search_clp_text(
+        clp_package_test_path_config=clp_package_test_path_config,
+        clp_package=clp_package,
+        dataset=text_multifile,
+        search_type=ClpTextSearchType.BASIC,
+        wildcard_query="Saturn",
     )
     assert search_action_verified, failure_message
 
-    # Cleanup.
     clear_package_archives_clp_text(clp_package)
 
 
@@ -117,90 +93,43 @@ def test_clp_text_archive_manager_text_multifile(
     text_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    # Initial cleanup.
     clear_package_archives_clp_text(clp_package)
 
-    # Compress.
-    compress_cmd: list[str] = [
-        str(clp_package_test_path_config.compress_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        str(text_multifile.path_to_dataset_logs),
-    ]
-    compress_action: ClpPackageExternalAction = run_compress_cmd(compress_cmd)
-    compress_action_verified, failure_message = verify_compress_action_clp_text(
-        compress_action, clp_package, text_multifile
+    compress_action_verified, failure_message = compress_clp_text(
+        clp_package_test_path_config=clp_package_test_path_config,
+        clp_package=clp_package,
+        dataset=text_multifile,
     )
     assert compress_action_verified, failure_message
 
-    # Archive-manager tests.
-    archive_manager_cmd = [
-        str(clp_package_test_path_config.archive_manager_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "find",
-    ]
-    archive_manager_action = run_archive_manager_cmd(archive_manager_cmd)
-    archive_manager_action_verified, failure_message = verify_archive_manager_action_clp_text(
-        archive_manager_action, clp_package
+    archive_manager_find_all_verified, failure_message = archive_manager_find_clp_text(
+        clp_package_test_path_config=clp_package_test_path_config,
+        clp_package=clp_package,
     )
-    assert archive_manager_action_verified, failure_message
+    assert archive_manager_find_all_verified, failure_message
 
-    archive_manager_cmd = [
-        str(clp_package_test_path_config.archive_manager_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "find",
-        "--begin-ts",
-        str(text_multifile.metadata_dict["begin_ts_ms"]),
-        "--end-ts",
-        str(text_multifile.metadata_dict["end_ts_ms"]),
-    ]
-    archive_manager_action = run_archive_manager_cmd(archive_manager_cmd)
-    archive_manager_action_verified, failure_message = verify_archive_manager_action_clp_text(
-        archive_manager_action, clp_package
+    archive_manager_find_range_verified, failure_message = archive_manager_find_clp_text(
+        clp_package_test_path_config=clp_package_test_path_config,
+        clp_package=clp_package,
+        begin_ts=text_multifile.metadata_dict["begin_ts_ms"],
+        end_ts=text_multifile.metadata_dict["end_ts_ms"],
     )
-    assert archive_manager_action_verified, failure_message
+    assert archive_manager_find_range_verified, failure_message
 
-    sample_id = _get_rand_subdirectory_name(clp_package_test_path_config.package_archives_path)
-    archive_manager_cmd = [
-        str(clp_package_test_path_config.archive_manager_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "del",
-        "by-ids",
-        sample_id,
-    ]
-    archive_manager_action = run_archive_manager_cmd(archive_manager_cmd)
-    archive_manager_action_verified, failure_message = verify_archive_manager_action_clp_text(
-        archive_manager_action, clp_package
+    archive_manager_del_by_ids_verified, failure_message = archive_manager_del_by_ids_clp_text(
+        clp_package_test_path_config=clp_package_test_path_config,
+        clp_package=clp_package,
     )
-    assert archive_manager_action_verified, failure_message
+    assert archive_manager_del_by_ids_verified, failure_message
 
-    archive_manager_cmd = [
-        str(clp_package_test_path_config.archive_manager_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "del",
-        "by-filter",
-        "--begin-ts",
-        str(text_multifile.metadata_dict["begin_ts_ms"]),
-        "--end-ts",
-        str(text_multifile.metadata_dict["end_ts_ms"]),
-    ]
-    archive_manager_action = run_archive_manager_cmd(archive_manager_cmd)
-    archive_manager_action_verified, failure_message = verify_archive_manager_action_clp_text(
-        archive_manager_action, clp_package
+    archive_manager_del_by_filter_verified, failure_message = (
+        archive_manager_del_by_filter_clp_text(
+            clp_package_test_path_config=clp_package_test_path_config,
+            clp_package=clp_package,
+            begin_ts=text_multifile.metadata_dict["begin_ts_ms"],
+            end_ts=text_multifile.metadata_dict["end_ts_ms"],
+        )
     )
-    assert archive_manager_action_verified, failure_message
+    assert archive_manager_del_by_filter_verified, failure_message
 
-    # Cleanup.
     clear_package_archives_clp_text(clp_package)
-
-
-def _get_rand_subdirectory_name(path_to_parent: Path) -> str:
-    for item in path_to_parent.iterdir():
-        if item.is_dir():
-            return item.name
-
-    return ""
