@@ -74,14 +74,15 @@ def test_clp_text_search_text_multifile_basic(
     )
     assert compress_action_verified, failure_message
 
-    search_action_verified, failure_message = search_clp_text(
-        clp_package_test_path_config=clp_package_test_path_config,
-        clp_package=clp_package,
-        dataset=text_multifile,
-        search_type=ClpTextSearchType.BASIC,
-        wildcard_query="Saturn",
-    )
-    assert search_action_verified, failure_message
+    for search_type in ClpTextSearchType:
+        search_action_verified, failure_message = search_clp_text(
+            clp_package_test_path_config=clp_package_test_path_config,
+            clp_package=clp_package,
+            dataset=text_multifile,
+            search_type=search_type,
+            wildcard_query="Saturn",
+        )
+        assert search_action_verified, failure_message
 
     clear_package_archives_clp_text(clp_package)
 

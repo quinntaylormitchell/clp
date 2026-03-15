@@ -4,6 +4,8 @@ import logging
 import re
 from enum import auto, Enum
 
+import pytest
+
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
@@ -46,24 +48,66 @@ def search_clp_text(
     log_msg = f"Searching the '{clp_package.mode_name}' package."
     logger.info(log_msg)
 
-    search_cmd: list[str] = [
-        str(clp_package_test_path_config.search_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "--raw",
+    search_cmd: list[str] = _build_search_cmd_for_search_type_clp_text(
+        clp_package_test_path_config,
+        clp_package,
+        dataset,
+        search_type,
         wildcard_query,
-    ]
-
+    )
     search_action = ClpPackageExternalAction(
         cmd=search_cmd,
         args_parser=get_search_parser(),
     )
     execute_external_action(search_action)
 
-    # TODO: remove
-    assert search_type
-
     return verify_search_action_clp_text(search_action, dataset)
+
+
+def _build_search_cmd_for_search_type_clp_text(
+    clp_package_test_path_config: ClpPackageTestPathConfig,
+    clp_package: ClpPackage,
+    dataset: IntegrationTestDataset,
+    search_type: ClpTextSearchType,
+    wildcard_query: str,
+) -> list[str]:
+    """Docstring."""
+    search_cmd: list[str] = [
+        str(clp_package_test_path_config.search_path),
+        "--config",
+        str(clp_package.temp_config_file_path),
+    ]
+
+    match search_type:
+        case ClpTextSearchType.BASIC:
+            pass
+        case ClpTextSearchType.FILE_PATH:
+            search_cmd.append("--file-path")
+            search_cmd.append(
+                str(
+                    dataset.path_to_dataset_logs
+                    / dataset.metadata_dict["subfile_for_file_path_search"]
+                )
+            )
+        case ClpTextSearchType.IGNORE_CASE:
+            search_cmd.append("--ignore-case")
+        case ClpTextSearchType.COUNT_RESULTS:
+            search_cmd.append("--count")
+        case ClpTextSearchType.COUNT_BY_TIME:
+            search_cmd.append("--count-by-time")
+            search_cmd.append(str(10))
+        case ClpTextSearchType.TIME_RANGE:
+            search_cmd.append("--begin-time")
+            search_cmd.append(str(dataset.metadata_dict["begin_ts_ms"]))
+            search_cmd.append("--end-time")
+            search_cmd.append(str(dataset.metadata_dict["end_ts_ms"]))
+        case _:
+            pytest.fail(f"Unsupported search type for clp-text: '{search_type}'")
+
+    search_cmd.append("--raw")
+    search_cmd.append(wildcard_query)
+
+    return search_cmd
 
 
 def verify_search_action_clp_text(

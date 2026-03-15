@@ -82,14 +82,17 @@ def test_clp_json_search_json_multifile_basic(
     )
     assert compress_action_verified, failure_message
 
-    search_action_verified, failure_message = search_clp_json(
-        clp_package_test_path_config=clp_package_test_path_config,
-        clp_package=clp_package,
-        dataset=json_multifile,
-        search_type=ClpJsonSearchType.BASIC,
-        wildcard_query='"detail":"Roll program complete, heads down attitude achieved for ascent"',
-    )
-    assert search_action_verified, failure_message
+    for search_type in ClpJsonSearchType:
+        search_action_verified, failure_message = search_clp_json(
+            clp_package_test_path_config=clp_package_test_path_config,
+            clp_package=clp_package,
+            dataset=json_multifile,
+            search_type=search_type,
+            wildcard_query=(
+                '"detail":"Roll program complete, heads down attitude achieved for ascent"'
+            ),
+        )
+        assert search_action_verified, failure_message
 
     clear_package_archives_clp_json(clp_package)
 
