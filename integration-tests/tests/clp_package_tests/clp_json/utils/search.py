@@ -40,7 +40,7 @@ def search_clp_json(
     dataset: IntegrationTestDataset,
     search_type: ClpJsonSearchType,
     wildcard_query: str,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = f"Searching the '{dataset.dataset_name}' dataset."  # TODO: "Performing <SEARCH_TYPE>"
     logger.info(log_msg)
@@ -57,8 +57,7 @@ def search_clp_json(
         args_parser=get_search_parser(),
     )
     execute_external_action(search_action)
-
-    return verify_search_action_clp_json(search_action, dataset)
+    return search_action
 
 
 def _build_search_cmd_for_search_type_clp_json(

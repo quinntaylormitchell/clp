@@ -28,7 +28,7 @@ def archive_manager_find_clp_json(
     dataset: IntegrationTestDataset,
     begin_ts: int | None = None,
     end_ts: int | None = None,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'find' operation with archive manager."
     logger.info(log_msg)
@@ -53,8 +53,7 @@ def archive_manager_find_clp_json(
         args_parser=get_archive_manager_parser(),
     )
     execute_external_action(archive_manager_action)
-
-    return verify_archive_manager_action_clp_json(archive_manager_action, clp_package)
+    return archive_manager_action
 
 
 def archive_manager_del_by_ids_clp_json(
@@ -62,7 +61,7 @@ def archive_manager_del_by_ids_clp_json(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     ids_to_del: list[str] | None = None,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'del by-ids' operation with archive manager."
     logger.info(log_msg)
@@ -88,8 +87,7 @@ def archive_manager_del_by_ids_clp_json(
         args_parser=get_archive_manager_parser(),
     )
     execute_external_action(archive_manager_action)
-
-    return verify_archive_manager_action_clp_json(archive_manager_action, clp_package)
+    return archive_manager_action
 
 
 def archive_manager_del_by_filter_clp_json(
@@ -98,7 +96,7 @@ def archive_manager_del_by_filter_clp_json(
     dataset: IntegrationTestDataset,
     begin_ts: int | None,
     end_ts: int,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'del by-filter' operation with archive manager."
     logger.info(log_msg)
@@ -130,8 +128,7 @@ def archive_manager_del_by_filter_clp_json(
         args_parser=get_archive_manager_parser(),
     )
     execute_external_action(archive_manager_action)
-
-    return verify_archive_manager_action_clp_json(archive_manager_action, clp_package)
+    return archive_manager_action
 
 
 def _get_rand_subdirectory_name(path_to_parent: Path) -> str:
@@ -143,33 +140,14 @@ def _get_rand_subdirectory_name(path_to_parent: Path) -> str:
     return ""
 
 
-def verify_archive_manager_action_clp_json(
+def verify_archive_manager_find_action_clp_json(
     archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
-    logger.info("Verifying archive-manager action.")
+    logger.info("Verifying archive-manager find action.")
     if archive_manager_action.completed_proc.returncode != 0:
-        return False, "The archive-manager.sh subprocess returned a non-zero exit code."
+        return False, "The archive-manager.sh find subprocess returned a non-zero exit code."
 
-    parsed_args = archive_manager_action.parsed_args
-    subcommand = parsed_args.subcommand
-    match subcommand:
-        case "find":
-            _verify_archive_manager_find_action_clp_json(archive_manager_action, clp_package)
-        case "del":
-            _verify_archive_manager_del_action_clp_json(archive_manager_action, clp_package)
-        case _:
-            return (
-                False,
-                "The archive-manager.sh command carried an unrecognized positional argument.",
-            )
-
-    return True, ""
-
-
-def _verify_archive_manager_find_action_clp_json(
-    archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
-) -> tuple[bool, str]:
     parsed_args = archive_manager_action.parsed_args
     begin_ts: int = parsed_args.begin_ts
     end_ts: int | None = parsed_args.end_ts
@@ -243,9 +221,14 @@ def _verify_archive_manager_find_action_clp_json(
     return True, ""
 
 
-def _verify_archive_manager_del_action_clp_json(
+def verify_archive_manager_del_action_clp_json(
     archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
+    """Docstring."""
+    logger.info("Verifying archive-manager del action.")
+    if archive_manager_action.completed_proc.returncode != 0:
+        return False, "The archive-manager.sh del subprocess returned a non-zero exit code."
+
     parsed_args = archive_manager_action.parsed_args
     del_subcommand = parsed_args.del_subcommand
     match del_subcommand:
@@ -267,7 +250,9 @@ def _verify_archive_manager_del_action_clp_json(
             execute_external_action(verify_archive_manager_action)
 
             verify_archive_manager_action_verified, failure_message = (
-                verify_archive_manager_action_clp_json(verify_archive_manager_action, clp_package)
+                verify_archive_manager_find_action_clp_json(
+                    verify_archive_manager_action, clp_package
+                )
             )
             assert verify_archive_manager_action_verified, failure_message
 
@@ -304,7 +289,9 @@ def _verify_archive_manager_del_action_clp_json(
             execute_external_action(verify_archive_manager_action)
 
             verify_archive_manager_action_verified, failure_message = (
-                verify_archive_manager_action_clp_json(verify_archive_manager_action, clp_package)
+                verify_archive_manager_find_action_clp_json(
+                    verify_archive_manager_action, clp_package
+                )
             )
             assert verify_archive_manager_action_verified, failure_message
 

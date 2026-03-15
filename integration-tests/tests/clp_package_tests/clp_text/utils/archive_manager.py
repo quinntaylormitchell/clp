@@ -25,30 +25,25 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     path_config = clp_package.path_config
 
     # Find all.
-    find_archive_manager_cmd = [
-        str(path_config.archive_manager_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "find",
-    ]
-    find_archive_manager_action = ClpPackageExternalAction(
-        cmd=find_archive_manager_cmd,
-        args_parser=get_archive_manager_parser(),
+    find_archive_manager_action = archive_manager_find_clp_text(
+        clp_package_test_path_config=path_config,
+        clp_package=clp_package,
     )
-    execute_external_action(find_archive_manager_action)
-
-    find_archive_manager_action_verified, failure_message = verify_archive_manager_action_clp_text(
-        find_archive_manager_action, clp_package
+    find_archive_manager_action_verified, failure_message = (
+        _verify_archive_manager_find_action_clp_text(find_archive_manager_action, clp_package)
     )
     assert find_archive_manager_action_verified, failure_message
 
     # Delete.
     archive_ids_to_delete = _extract_archive_ids_from_find_output(find_archive_manager_action)
     if len(archive_ids_to_delete) > 0:
-        archive_manager_action_verified, failure_message = archive_manager_del_by_ids_clp_text(
+        del_by_ids_action = archive_manager_del_by_ids_clp_text(
             clp_package_test_path_config=clp_package.path_config,
             clp_package=clp_package,
             ids_to_del=archive_ids_to_delete,
+        )
+        archive_manager_action_verified, failure_message = (
+            _verify_archive_manager_del_action_clp_text(del_by_ids_action, clp_package)
         )
         assert archive_manager_action_verified, failure_message
 
@@ -58,7 +53,7 @@ def archive_manager_find_clp_text(
     clp_package: ClpPackage,
     begin_ts: int | None = None,
     end_ts: int | None = None,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'find' operation with archive manager."
     logger.info(log_msg)
@@ -82,14 +77,14 @@ def archive_manager_find_clp_text(
     )
     execute_external_action(archive_manager_action)
 
-    return verify_archive_manager_action_clp_text(archive_manager_action, clp_package)
+    return archive_manager_action
 
 
 def archive_manager_del_by_ids_clp_text(
     clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     ids_to_del: list[str] | None = None,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'del by-ids' operation with archive manager."
     logger.info(log_msg)
@@ -114,7 +109,7 @@ def archive_manager_del_by_ids_clp_text(
     )
     execute_external_action(archive_manager_action)
 
-    return verify_archive_manager_action_clp_text(archive_manager_action, clp_package)
+    return archive_manager_action
 
 
 def archive_manager_del_by_filter_clp_text(
@@ -122,7 +117,7 @@ def archive_manager_del_by_filter_clp_text(
     clp_package: ClpPackage,
     begin_ts: int | None,
     end_ts: int,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'del by-filter' operation with archive manager."
     logger.info(log_msg)
@@ -153,7 +148,7 @@ def archive_manager_del_by_filter_clp_text(
     )
     execute_external_action(archive_manager_action)
 
-    return verify_archive_manager_action_clp_text(archive_manager_action, clp_package)
+    return archive_manager_action
 
 
 def _get_rand_subdirectory_name(path_to_parent: Path) -> str:
@@ -164,33 +159,13 @@ def _get_rand_subdirectory_name(path_to_parent: Path) -> str:
     return ""
 
 
-def verify_archive_manager_action_clp_text(
-    archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
-) -> tuple[bool, str]:
-    """Docstring."""
-    logger.info("Verifying archive-manager action.")
-    if archive_manager_action.completed_proc.returncode != 0:
-        return False, "The archive-manager.sh subprocess returned a non-zero exit code."
-
-    parsed_args = archive_manager_action.parsed_args
-    subcommand = parsed_args.subcommand
-    match subcommand:
-        case "find":
-            _verify_archive_manager_find_action_clp_text(archive_manager_action, clp_package)
-        case "del":
-            _verify_archive_manager_del_action_clp_text(archive_manager_action, clp_package)
-        case _:
-            return (
-                False,
-                "The archive-manager.sh command carried an unrecognized positional argument.",
-            )
-
-    return True, ""
-
-
 def _verify_archive_manager_find_action_clp_text(
     archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
+    logger.info("Verifying archive-manager find action.")
+    if archive_manager_action.completed_proc.returncode != 0:
+        return False, "The archive-manager.sh subprocess returned a non-zero exit code."
+
     parsed_args = archive_manager_action.parsed_args
     begin_ts: int = parsed_args.begin_ts
     end_ts: int | None = parsed_args.end_ts
@@ -257,6 +232,10 @@ def _verify_archive_manager_find_action_clp_text(
 def _verify_archive_manager_del_action_clp_text(
     archive_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
+    logger.info("Verifying archive-manager del action.")
+    if archive_manager_action.completed_proc.returncode != 0:
+        return False, "The archive-manager.sh subprocess returned a non-zero exit code."
+
     parsed_args = archive_manager_action.parsed_args
     del_subcommand = parsed_args.del_subcommand
     match del_subcommand:
@@ -274,7 +253,9 @@ def _verify_archive_manager_del_action_clp_text(
             )
             execute_external_action(verify_archive_manager_action)
             verify_archive_manager_action_verified, failure_message = (
-                verify_archive_manager_action_clp_text(verify_archive_manager_action, clp_package)
+                _verify_archive_manager_find_action_clp_text(
+                    verify_archive_manager_action, clp_package
+                )
             )
             assert verify_archive_manager_action_verified, failure_message
 
@@ -308,7 +289,9 @@ def _verify_archive_manager_del_action_clp_text(
             )
             execute_external_action(verify_archive_manager_action)
             verify_archive_manager_action_verified, failure_message = (
-                verify_archive_manager_action_clp_text(verify_archive_manager_action, clp_package)
+                _verify_archive_manager_find_action_clp_text(
+                    verify_archive_manager_action, clp_package
+                )
             )
             assert verify_archive_manager_action_verified, failure_message
 

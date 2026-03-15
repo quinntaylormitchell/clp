@@ -20,7 +20,7 @@ def compress_clp_json(
     clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
@@ -37,8 +37,7 @@ def compress_clp_json(
     ]
     compress_action = ClpPackageExternalAction(cmd=compress_cmd, args_parser=get_compress_parser())
     execute_external_action(compress_action)
-
-    return verify_compress_action_clp_json(compress_action, clp_package)
+    return compress_action
 
 
 def verify_compress_action_clp_json(

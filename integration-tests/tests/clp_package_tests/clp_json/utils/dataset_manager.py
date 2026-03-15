@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def dataset_manager_list_clp_json(
     clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'list' operation with dataset manager."
     logger.info(log_msg)
@@ -41,8 +41,7 @@ def dataset_manager_list_clp_json(
         args_parser=get_dataset_manager_parser(),
     )
     execute_external_action(dataset_manager_action)
-
-    return verify_dataset_manager_action_clp_json(dataset_manager_action, clp_package)
+    return dataset_manager_action
 
 
 def dataset_manager_del_clp_json(
@@ -50,7 +49,7 @@ def dataset_manager_del_clp_json(
     clp_package: ClpPackage,
     datasets_to_del: list[IntegrationTestDataset] | None = None,
     del_all: bool = False,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'del' operation with dataset manager."
     logger.info(log_msg)
@@ -74,37 +73,17 @@ def dataset_manager_del_clp_json(
         args_parser=get_dataset_manager_parser(),
     )
     execute_external_action(dataset_manager_action)
+    return dataset_manager_action
 
-    return verify_dataset_manager_action_clp_json(dataset_manager_action, clp_package)
 
-
-def verify_dataset_manager_action_clp_json(
+def verify_dataset_manager_list_action_clp_json(
     dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
-    logger.info("Verifying dataset-manager action.")
+    logger.info("Verifying dataset-manager list action.")
     if dataset_manager_action.completed_proc.returncode != 0:
-        return False, "The dataset-manager.sh subprocess returned a non-zero exit code."
+        return False, "The dataset-manager.sh list subprocess returned a non-zero exit code."
 
-    parsed_args = dataset_manager_action.parsed_args
-    subcommand = parsed_args.subcommand
-    match subcommand:
-        case "list":
-            _verify_dataset_manager_list_action_clp_json(dataset_manager_action, clp_package)
-        case "del":
-            _verify_dataset_manager_del_action_clp_json(dataset_manager_action, clp_package)
-        case _:
-            return (
-                False,
-                "The dataset-manager.sh command carried an unrecognized positional argument.",
-            )
-
-    return True, ""
-
-
-def _verify_dataset_manager_list_action_clp_json(
-    dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
-) -> tuple[bool, str]:
     dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
@@ -118,9 +97,14 @@ def _verify_dataset_manager_list_action_clp_json(
     return True, ""
 
 
-def _verify_dataset_manager_del_action_clp_json(
+def verify_dataset_manager_del_action_clp_json(
     dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
+    """Docstring."""
+    logger.info("Verifying dataset-manager del action.")
+    if dataset_manager_action.completed_proc.returncode != 0:
+        return False, "The dataset-manager.sh del subprocess returned a non-zero exit code."
+
     verify_dataset_manager_cmd = [
         str(clp_package.path_config.dataset_manager_path),
         "--config",
@@ -135,7 +119,7 @@ def _verify_dataset_manager_del_action_clp_json(
     execute_external_action(verify_dataset_manager_action)
 
     verify_dataset_manager_action_verified, failure_message = (
-        verify_dataset_manager_action_clp_json(verify_dataset_manager_action, clp_package)
+        verify_dataset_manager_list_action_clp_json(verify_dataset_manager_action, clp_package)
     )
     assert verify_dataset_manager_action_verified, failure_message
 
@@ -222,7 +206,7 @@ def clear_package_archives_clp_json(clp_package: ClpPackage) -> None:
     )
     execute_external_action(dataset_manager_action)
 
-    dataset_manager_action_verified, failure_message = verify_dataset_manager_action_clp_json(
+    dataset_manager_action_verified, failure_message = verify_dataset_manager_del_action_clp_json(
         dataset_manager_action, clp_package
     )
     assert dataset_manager_action_verified, failure_message

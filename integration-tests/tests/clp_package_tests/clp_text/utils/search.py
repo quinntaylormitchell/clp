@@ -43,7 +43,7 @@ def search_clp_text(
     dataset: IntegrationTestDataset,
     search_type: ClpTextSearchType,
     wildcard_query: str,
-) -> tuple[bool, str]:
+) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = f"Searching the '{clp_package.mode_name}' package."
     logger.info(log_msg)
@@ -61,7 +61,7 @@ def search_clp_text(
     )
     execute_external_action(search_action)
 
-    return verify_search_action_clp_text(search_action, dataset)
+    return search_action
 
 
 def _build_search_cmd_for_search_type_clp_text(
