@@ -1,7 +1,9 @@
 """Provide utility functions related to the use of Docker during integration tests."""
 
-import subprocess
+import pytest
 
+from tests.utils.classes import IntegrationTestExternalAction
+from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import get_binary_path
 
 
@@ -23,11 +25,16 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
         "--format", "{{.Service}}",
     ]
     # fmt: on
+    compose_ps_action = IntegrationTestExternalAction(cmd=compose_ps_cmd)
+    execute_external_action(compose_ps_action)
 
-    compose_ps_proc = subprocess.run(compose_ps_cmd, stdout=subprocess.PIPE, text=True, check=True)
+    if compose_ps_action.completed_proc.returncode != 0:
+        pytest.fail("The docker compose subprocess returned a non-zero exit code.")
+
+    compose_ps_output = compose_ps_action.completed_proc.stdout
 
     service_names: list[str] = []
-    for line in (compose_ps_proc.stdout or "").splitlines():
+    for line in (compose_ps_output or "").splitlines():
         service_name_candidate = line.strip()
         if service_name_candidate:
             service_names.append(service_name_candidate)

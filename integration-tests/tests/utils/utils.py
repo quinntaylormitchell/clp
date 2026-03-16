@@ -10,6 +10,9 @@ from typing import Any, IO
 
 import yaml
 
+from tests.utils.classes import IntegrationTestExternalAction
+from tests.utils.subprocess_utils import execute_external_action
+
 
 def clear_directory(directory: Path) -> None:
     """
@@ -58,12 +61,14 @@ def is_dir_tree_content_equal(path1: Path, path2: Path) -> bool:
     :raise: RuntimeError if the diff command fails due to execution errors.
     """
     cmd = ["diff", "--brief", "--recursive", str(path1), str(path2)]
-    proc = subprocess.run(cmd, check=False, capture_output=True)
+    diff_action = IntegrationTestExternalAction(cmd=cmd)
+    execute_external_action(diff_action)
+    proc = diff_action.completed_proc
     if proc.returncode == 0:
         return True
     if proc.returncode == 1:
         return False
-    err_msg = f"Command failed {' '.join(cmd)}: {proc.stderr.decode()}"
+    err_msg = f"Command failed {' '.join(cmd)}: {proc.stderr}"
     raise RuntimeError(err_msg)
 
 
