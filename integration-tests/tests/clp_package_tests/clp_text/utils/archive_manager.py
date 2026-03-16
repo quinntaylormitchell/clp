@@ -10,7 +10,6 @@ from strenum import StrEnum
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
 )
 from tests.clp_package_tests.utils.parsers import (
     get_archive_manager_parser,
@@ -30,13 +29,9 @@ class DelSubcommand(StrEnum):
 def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     """Docstring."""
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
-    path_config = clp_package.path_config
 
     # Find all.
-    find_archive_manager_action = archive_manager_find_clp_text(
-        clp_package_test_path_config=path_config,
-        clp_package=clp_package,
-    )
+    find_archive_manager_action = archive_manager_find_clp_text(clp_package)
     find_archive_manager_action_verified, failure_message = (
         verify_archive_manager_find_action_clp_text(find_archive_manager_action, clp_package)
     )
@@ -45,11 +40,7 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     # Delete.
     archive_ids_to_delete = _extract_archive_ids_from_find_output(find_archive_manager_action)
     if len(archive_ids_to_delete) > 0:
-        del_by_ids_action = archive_manager_del_by_ids_clp_text(
-            clp_package_test_path_config=clp_package.path_config,
-            clp_package=clp_package,
-            ids_to_del=archive_ids_to_delete,
-        )
+        del_by_ids_action = archive_manager_del_by_ids_clp_text(clp_package, archive_ids_to_delete)
         archive_manager_action_verified, failure_message = (
             verify_archive_manager_del_action_clp_text(del_by_ids_action, clp_package)
         )
@@ -57,7 +48,6 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
 
 
 def archive_manager_find_clp_text(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     begin_ts: int | None = None,
     end_ts: int | None = None,
@@ -65,7 +55,7 @@ def archive_manager_find_clp_text(
     """Docstring."""
     logger.info("Performing 'find' operation with archive manager.")
 
-    cmd = _get_base_archive_manager_cmd(clp_package_test_path_config, clp_package)
+    cmd = _get_base_archive_manager_cmd(clp_package)
     cmd.append("find")
     if begin_ts is not None:
         cmd.append("--begin-ts")
@@ -78,28 +68,26 @@ def archive_manager_find_clp_text(
 
 
 def archive_manager_del_by_ids_clp_text(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     ids_to_del: list[str] | None = None,
 ) -> ClpPackageExternalAction:
     """Docstring."""
     logger.info("Performing 'del by-ids' operation with archive manager.")
 
-    cmd = _get_base_archive_manager_cmd(clp_package_test_path_config, clp_package)
+    cmd = _get_base_archive_manager_cmd(clp_package)
     cmd.append("del")
     cmd.append(DelSubcommand.BY_IDS)
 
     if ids_to_del is not None:
         cmd.extend(ids_to_del)
     else:
-        sample_id = _get_rand_subdirectory_name(clp_package_test_path_config.package_archives_path)
+        sample_id = _get_rand_subdirectory_name(clp_package.path_config.package_archives_path)
         cmd.append(sample_id)
 
     return _run_archive_manager_action(cmd)
 
 
 def archive_manager_del_by_filter_clp_text(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     begin_ts: int | None,
     end_ts: int,
@@ -112,7 +100,7 @@ def archive_manager_del_by_filter_clp_text(
             "You must use the '--end-ts' flag when performing 'del by-filter' with archive manager."
         )
 
-    cmd = _get_base_archive_manager_cmd(clp_package_test_path_config, clp_package)
+    cmd = _get_base_archive_manager_cmd(clp_package)
     cmd.append("del")
     cmd.append(DelSubcommand.BY_FILTER)
 
@@ -137,14 +125,12 @@ def verify_archive_manager_find_action_clp_text(
     parsed_args = archive_manager_action.parsed_args
     begin_ts: int = parsed_args.begin_ts
     end_ts: int | None = parsed_args.end_ts
-    path_config = clp_package.path_config
 
     current_archive_id_list: list[str] = []
 
     # Find archives before begin_ts.
     if begin_ts > 0:
         chunk1_action = archive_manager_find_clp_text(
-            clp_package_test_path_config=path_config,
             clp_package=clp_package,
             begin_ts=0,
             end_ts=begin_ts,
@@ -158,7 +144,6 @@ def verify_archive_manager_find_action_clp_text(
     # Find archives after end_ts.
     if end_ts is not None:
         chunk3_action = archive_manager_find_clp_text(
-            clp_package_test_path_config=path_config,
             clp_package=clp_package,
             begin_ts=end_ts,
         )
@@ -166,10 +151,7 @@ def verify_archive_manager_find_action_clp_text(
         current_archive_id_list.extend(_extract_archive_ids_from_find_output(chunk3_action))
 
     # Find all.
-    find_all_action = archive_manager_find_clp_text(
-        clp_package_test_path_config=path_config,
-        clp_package=clp_package,
-    )
+    find_all_action = archive_manager_find_clp_text(clp_package)
     assert find_all_action.completed_proc.returncode == 0
     directories_in_package_archives = _extract_archive_ids_from_find_output(find_all_action)
 
@@ -193,14 +175,10 @@ def verify_archive_manager_del_action_clp_text(
         return False, "The archive-manager.sh del subprocess returned a non-zero exit code."
 
     parsed_args = archive_manager_action.parsed_args
-    path_config = clp_package.path_config
     match parsed_args.del_subcommand:
         case DelSubcommand.BY_IDS:
             # Find all, and then confirm the deleted IDs are gone.
-            find_all_action = archive_manager_find_clp_text(
-                clp_package_test_path_config=path_config,
-                clp_package=clp_package,
-            )
+            find_all_action = archive_manager_find_clp_text(clp_package)
             verified, failure_message = verify_archive_manager_find_action_clp_text(
                 find_all_action, clp_package
             )
@@ -217,7 +195,6 @@ def verify_archive_manager_del_action_clp_text(
             begin_ts = parsed_args.begin_ts
             end_ts = parsed_args.end_ts
             find_action = archive_manager_find_clp_text(
-                clp_package_test_path_config=path_config,
                 clp_package=clp_package,
                 begin_ts=begin_ts,
                 end_ts=end_ts,
@@ -271,12 +248,11 @@ def _extract_archive_ids_from_find_output(
 
 
 def _get_base_archive_manager_cmd(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
 ) -> list[str]:
     """Build the common prefix shared by all archive-manager commands."""
     return [
-        str(clp_package_test_path_config.archive_manager_path),
+        str(clp_package.path_config.archive_manager_path),
         "--config",
         str(clp_package.temp_config_file_path),
     ]

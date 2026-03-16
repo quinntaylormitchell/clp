@@ -7,7 +7,6 @@ from clp_package_utils.general import EXTRACT_FILE_CMD
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
 )
 from tests.clp_package_tests.utils.parsers import get_compress_parser, get_decompress_parser
 from tests.utils.classes import (
@@ -23,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 def compress_clp_text(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
 ) -> ClpPackageExternalAction:
@@ -32,7 +30,7 @@ def compress_clp_text(
     logger.info(log_msg)
 
     compress_cmd: list[str] = [
-        str(clp_package_test_path_config.compress_path),
+        str(clp_package.path_config.compress_path),
         "--config",
         str(clp_package.temp_config_file_path),
         str(dataset.path_to_dataset_logs),

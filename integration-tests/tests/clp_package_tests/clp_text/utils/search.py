@@ -9,7 +9,6 @@ import pytest
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
 )
 from tests.clp_package_tests.utils.parsers import (
     get_search_parser,
@@ -38,7 +37,6 @@ class ClpTextSearchType(Enum):
 
 
 def search_clp_text(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     search_type: ClpTextSearchType,
@@ -49,7 +47,6 @@ def search_clp_text(
     logger.info(log_msg)
 
     search_cmd: list[str] = _build_search_cmd_for_search_type_clp_text(
-        clp_package_test_path_config,
         clp_package,
         dataset,
         search_type,
@@ -65,7 +62,6 @@ def search_clp_text(
 
 
 def _build_search_cmd_for_search_type_clp_text(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     search_type: ClpTextSearchType,
@@ -73,7 +69,7 @@ def _build_search_cmd_for_search_type_clp_text(
 ) -> list[str]:
     """Docstring."""
     search_cmd: list[str] = [
-        str(clp_package_test_path_config.search_path),
+        str(clp_package.path_config.search_path),
         "--config",
         str(clp_package.temp_config_file_path),
     ]

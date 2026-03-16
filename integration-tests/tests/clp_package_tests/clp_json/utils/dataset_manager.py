@@ -8,7 +8,6 @@ import pytest
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
 )
 from tests.clp_package_tests.utils.parsers import (
     get_dataset_manager_parser,
@@ -22,21 +21,19 @@ logger = logging.getLogger(__name__)
 
 
 def dataset_manager_list_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
 ) -> ClpPackageExternalAction:
     """Docstring."""
     log_msg = "Performing 'list' operation with dataset manager."
     logger.info(log_msg)
 
-    cmd = _get_base_dataset_manager_cmd(clp_package_test_path_config, clp_package)
+    cmd = _get_base_dataset_manager_cmd(clp_package)
     cmd.append("list")
 
     return _run_dataset_manager_action(cmd)
 
 
 def dataset_manager_del_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     datasets_to_del: list[IntegrationTestDataset] | None = None,
     del_all: bool = False,
@@ -45,7 +42,7 @@ def dataset_manager_del_clp_json(
     log_msg = "Performing 'del' operation with dataset manager."
     logger.info(log_msg)
 
-    cmd = _get_base_dataset_manager_cmd(clp_package_test_path_config, clp_package)
+    cmd = _get_base_dataset_manager_cmd(clp_package)
     cmd.append("del")
 
     if del_all:
@@ -65,7 +62,10 @@ def verify_dataset_manager_list_action_clp_json(
     """Docstring."""
     logger.info("Verifying dataset-manager list action.")
     if dataset_manager_action.completed_proc.returncode != 0:
-        return False, "The dataset-manager.sh list subprocess returned a non-zero exit code."
+        return (
+            False,
+            "The dataset-manager.sh list subprocess returned a non-zero exit code.",
+        )
 
     dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
@@ -86,14 +86,13 @@ def verify_dataset_manager_del_action_clp_json(
     """Docstring."""
     logger.info("Verifying dataset-manager del action.")
     if dataset_manager_action.completed_proc.returncode != 0:
-        return False, "The dataset-manager.sh del subprocess returned a non-zero exit code."
+        return (
+            False,
+            "The dataset-manager.sh del subprocess returned a non-zero exit code.",
+        )
 
     # Get list of all datasets currently in archives.
-    path_config = clp_package.path_config
-    list_action = dataset_manager_list_clp_json(
-        clp_package_test_path_config=path_config,
-        clp_package=clp_package,
-    )
+    list_action = dataset_manager_list_clp_json(clp_package)
     verified, failure_message = verify_dataset_manager_list_action_clp_json(
         list_action, clp_package
     )
@@ -157,9 +156,7 @@ def clear_package_archives_clp_json(
 ) -> None:
     """Docstring."""
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
-    path_config = clp_package.path_config
     del_action = dataset_manager_del_clp_json(
-        clp_package_test_path_config=path_config,
         clp_package=clp_package,
         del_all=True,
     )
@@ -168,12 +165,11 @@ def clear_package_archives_clp_json(
 
 
 def _get_base_dataset_manager_cmd(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
 ) -> list[str]:
     """Build the common prefix shared by all dataset-manager commands."""
     return [
-        str(clp_package_test_path_config.dataset_manager_path),
+        str(clp_package.path_config.dataset_manager_path),
         "--config",
         str(clp_package.temp_config_file_path),
     ]

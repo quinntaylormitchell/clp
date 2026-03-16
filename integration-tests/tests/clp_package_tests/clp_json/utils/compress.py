@@ -5,7 +5,6 @@ import logging
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
 )
 from tests.clp_package_tests.utils.parsers import get_compress_parser
 from tests.utils.classes import (
@@ -17,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 def compress_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
 ) -> ClpPackageExternalAction:
@@ -25,6 +23,7 @@ def compress_clp_json(
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
 
+    clp_package_test_path_config = clp_package.path_config
     compress_cmd: list[str] = [
         str(clp_package_test_path_config.compress_path),
         "--config",

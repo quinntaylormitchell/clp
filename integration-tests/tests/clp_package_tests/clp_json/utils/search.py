@@ -9,7 +9,6 @@ import pytest
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
 )
 from tests.clp_package_tests.utils.parsers import (
     get_search_parser,
@@ -35,7 +34,6 @@ class ClpJsonSearchType(Enum):
 
 
 def search_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     search_type: ClpJsonSearchType,
@@ -46,7 +44,6 @@ def search_clp_json(
     logger.info(log_msg)
 
     search_cmd: list[str] = _build_search_cmd_for_search_type_clp_json(
-        clp_package_test_path_config,
         clp_package,
         dataset,
         search_type,
@@ -61,13 +58,13 @@ def search_clp_json(
 
 
 def _build_search_cmd_for_search_type_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     search_type: ClpJsonSearchType,
     wildcard_query: str,
 ) -> list[str]:
     """Docstring."""
+    clp_package_test_path_config = clp_package.path_config
     search_cmd: list[str] = [
         str(clp_package_test_path_config.search_path),
         "--config",
@@ -198,7 +195,7 @@ def _format_grep_result_for_search_type(grep_result: str, search_type: ClpJsonSe
         case ClpJsonSearchType.COUNT_RESULTS | ClpJsonSearchType.COUNT_BY_TIME:
             return str(len(grep_result.splitlines())) + "\n"
         case _:
-            err_msg = f"Search type {search_type} has not been configured for modification."
+            err_msg = f"Search type '{search_type}' has not been configured for modification."
             raise ValueError(err_msg)
 
 
@@ -212,8 +209,8 @@ def _format_search_result_for_search_type(
             match = re.search(r"count: (\d+)", search_result)
             if match:
                 return match.group(1) + "\n"
-            err_msg = f"The search result {search_result} wasn't in the correct format."
+            err_msg = f"The search result '{search_result}' wasn't in the correct format."
             raise ValueError(err_msg)
         case _:
-            err_msg = f"Search type {search_type} has not been configured for modification."
+            err_msg = f"Search type '{search_type}' has not been configured for modification."
             raise ValueError(err_msg)

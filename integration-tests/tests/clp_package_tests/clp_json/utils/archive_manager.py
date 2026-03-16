@@ -10,7 +10,6 @@ from strenum import StrEnum
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
-    ClpPackageTestPathConfig,
 )
 from tests.clp_package_tests.utils.parsers import (
     get_archive_manager_parser,
@@ -31,7 +30,6 @@ class DelSubcommand(StrEnum):
 
 
 def archive_manager_find_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     begin_ts: int | None = None,
@@ -40,7 +38,7 @@ def archive_manager_find_clp_json(
     """Docstring."""
     logger.info("Performing 'find' operation with archive manager.")
 
-    cmd = _get_base_archive_manager_cmd(clp_package_test_path_config, clp_package, dataset)
+    cmd = _get_base_archive_manager_cmd(clp_package, dataset)
     cmd.append("find")
     if begin_ts is not None:
         cmd.append("--begin-ts")
@@ -53,7 +51,6 @@ def archive_manager_find_clp_json(
 
 
 def archive_manager_del_by_ids_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     ids_to_del: list[str] | None = None,
@@ -61,21 +58,20 @@ def archive_manager_del_by_ids_clp_json(
     """Docstring."""
     logger.info("Performing 'del by-ids' operation with archive manager.")
 
-    cmd = _get_base_archive_manager_cmd(clp_package_test_path_config, clp_package, dataset)
+    cmd = _get_base_archive_manager_cmd(clp_package, dataset)
     cmd.append("del")
     cmd.append(DelSubcommand.BY_IDS)
 
     if ids_to_del is not None:
         cmd.extend(ids_to_del)
     else:
-        sample_id = _get_rand_subdirectory_name(clp_package_test_path_config.package_archives_path)
+        sample_id = _get_rand_subdirectory_name(clp_package.path_config.package_archives_path)
         cmd.append(sample_id)
 
     return _run_archive_manager_action(cmd)
 
 
 def archive_manager_del_by_filter_clp_json(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     begin_ts: int | None,
@@ -89,7 +85,7 @@ def archive_manager_del_by_filter_clp_json(
             "You must use the '--end-ts' flag when performing 'del by-filter' with archive manager."
         )
 
-    cmd = _get_base_archive_manager_cmd(clp_package_test_path_config, clp_package, dataset)
+    cmd = _get_base_archive_manager_cmd(clp_package, dataset)
     cmd.append("del")
     cmd.append(DelSubcommand.BY_FILTER)
 
@@ -119,14 +115,12 @@ def verify_archive_manager_find_action_clp_json(
     parsed_args = archive_manager_action.parsed_args
     begin_ts: int = parsed_args.begin_ts
     end_ts: int | None = parsed_args.end_ts
-    path_config = clp_package.path_config
 
     current_archive_id_list: list[str] = []
 
     # Find archives before begin_ts.
     if begin_ts > 0:
         chunk1_action = archive_manager_find_clp_json(
-            clp_package_test_path_config=path_config,
             clp_package=clp_package,
             dataset=dataset,
             begin_ts=0,
@@ -141,7 +135,6 @@ def verify_archive_manager_find_action_clp_json(
     # Find archives after end_ts.
     if end_ts is not None:
         chunk3_action = archive_manager_find_clp_json(
-            clp_package_test_path_config=path_config,
             clp_package=clp_package,
             dataset=dataset,
             begin_ts=end_ts,
@@ -151,7 +144,6 @@ def verify_archive_manager_find_action_clp_json(
 
     # Find all.
     find_all_action = archive_manager_find_clp_json(
-        clp_package_test_path_config=path_config,
         clp_package=clp_package,
         dataset=dataset,
     )
@@ -183,12 +175,10 @@ def verify_archive_manager_del_action_clp_json(
         )
 
     parsed_args = archive_manager_action.parsed_args
-    path_config = clp_package.path_config
     match parsed_args.del_subcommand:
         case DelSubcommand.BY_IDS:
             # Find all, and then confirm the deleted IDs are gone.
             find_all_action = archive_manager_find_clp_json(
-                clp_package_test_path_config=path_config,
                 clp_package=clp_package,
                 dataset=dataset,
             )
@@ -208,7 +198,6 @@ def verify_archive_manager_del_action_clp_json(
             begin_ts = parsed_args.begin_ts
             end_ts = parsed_args.end_ts
             find_action = archive_manager_find_clp_json(
-                clp_package_test_path_config=path_config,
                 clp_package=clp_package,
                 dataset=dataset,
                 begin_ts=begin_ts,
@@ -263,13 +252,12 @@ def _extract_archive_ids_from_find_output(
 
 
 def _get_base_archive_manager_cmd(
-    clp_package_test_path_config: ClpPackageTestPathConfig,
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
 ) -> list[str]:
     """Build the common prefix shared by all archive-manager commands."""
     return [
-        str(clp_package_test_path_config.archive_manager_path),
+        str(clp_package.path_config.archive_manager_path),
         "--config",
         str(clp_package.temp_config_file_path),
         "--dataset",
