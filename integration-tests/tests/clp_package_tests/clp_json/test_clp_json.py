@@ -185,7 +185,9 @@ def test_clp_json_archive_manager_json_multifile(
         dataset=json_multifile,
     )
     archive_manager_find_all_verified, failure_message = (
-        verify_archive_manager_find_action_clp_json(archive_manager_find_all_action, clp_package)
+        verify_archive_manager_find_action_clp_json(
+            archive_manager_find_all_action, clp_package, json_multifile
+        )
     )
     assert archive_manager_find_all_verified, failure_message
 
@@ -197,7 +199,9 @@ def test_clp_json_archive_manager_json_multifile(
         end_ts=json_multifile.metadata_dict["end_ts_ms"],
     )
     archive_manager_find_range_verified, failure_message = (
-        verify_archive_manager_find_action_clp_json(archive_manager_find_range_action, clp_package)
+        verify_archive_manager_find_action_clp_json(
+            archive_manager_find_range_action, clp_package, json_multifile
+        )
     )
     assert archive_manager_find_range_verified, failure_message
 
@@ -207,7 +211,9 @@ def test_clp_json_archive_manager_json_multifile(
         dataset=json_multifile,
     )
     archive_manager_del_by_ids_verified, failure_message = (
-        verify_archive_manager_del_action_clp_json(archive_manager_del_by_ids_action, clp_package)
+        verify_archive_manager_del_action_clp_json(
+            archive_manager_del_by_ids_action, clp_package, json_multifile
+        )
     )
     assert archive_manager_del_by_ids_verified, failure_message
 
@@ -220,7 +226,7 @@ def test_clp_json_archive_manager_json_multifile(
     )
     archive_manager_del_by_filter_verified, failure_message = (
         verify_archive_manager_del_action_clp_json(
-            archive_manager_del_by_filter_action, clp_package
+            archive_manager_del_by_filter_action, clp_package, json_multifile
         )
     )
     assert archive_manager_del_by_filter_verified, failure_message
