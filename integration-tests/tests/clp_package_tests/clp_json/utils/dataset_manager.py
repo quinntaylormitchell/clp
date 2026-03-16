@@ -2,8 +2,17 @@
 
 import logging
 import re
+from contextlib import closing
 
 import pytest
+from clp_py_utils.clp_config import (
+    ClpConfig,
+)
+from clp_py_utils.clp_metadata_db_utils import (
+    get_datasets_table_name,
+)
+from clp_py_utils.sql_adapter import SqlAdapter
+from dotenv import load_dotenv
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
@@ -82,15 +91,18 @@ def verify_dataset_manager_list_action_clp_json(
     """Docstring."""
     logger.info("Verifying dataset-manager list action.")
     if dataset_manager_action.completed_proc.returncode != 0:
-        return False, "The dataset-manager.sh list subprocess returned a non-zero exit code."
+        return (
+            False,
+            "The dataset-manager.sh list subprocess returned a non-zero exit code.",
+        )
 
-    dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
-    directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
+    output_dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
+    current_datasets_in_db = _get_dataset_names(clp_package.clp_config)
 
-    if dataset_list != directories_in_package_archives:
+    if output_dataset_list != current_datasets_in_db:
         fail_msg = (
-            f"Mismatch between dataset list '{dataset_list}' and directories in var/archives"
-            f" '{directories_in_package_archives}'"
+            f"Mismatch between output dataset list '{output_dataset_list}' and list of datasets"
+            f" currently in the metadata database: '{current_datasets_in_db}'"
         )
         return False, fail_msg
 
@@ -103,46 +115,30 @@ def verify_dataset_manager_del_action_clp_json(
     """Docstring."""
     logger.info("Verifying dataset-manager del action.")
     if dataset_manager_action.completed_proc.returncode != 0:
-        return False, "The dataset-manager.sh del subprocess returned a non-zero exit code."
+        return (
+            False,
+            "The dataset-manager.sh del subprocess returned a non-zero exit code.",
+        )
 
-    verify_dataset_manager_cmd = [
-        str(clp_package.path_config.dataset_manager_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "list",
-    ]
-
-    verify_dataset_manager_action = ClpPackageExternalAction(
-        cmd=verify_dataset_manager_cmd,
-        args_parser=get_dataset_manager_parser(),
-    )
-    execute_external_action(verify_dataset_manager_action)
-
-    verify_dataset_manager_action_verified, failure_message = (
-        verify_dataset_manager_list_action_clp_json(verify_dataset_manager_action, clp_package)
-    )
-    assert verify_dataset_manager_action_verified, failure_message
-
-    current_datasets = _extract_dataset_names_from_output(verify_dataset_manager_action)
-
+    current_datasets_in_db = _get_dataset_names(clp_package.clp_config)
     parsed_args = dataset_manager_action.parsed_args
-    datasets_specified_for_deletion = parsed_args.datasets
     del_all_flag = parsed_args.del_all
     if del_all_flag:
         # Verify that there are no datasets left.
-        if len(current_datasets) > 0:
+        if len(current_datasets_in_db) > 0:
             fail_msg = (
                 f"dataset-manager del --all failed: There are datasets still present in the"
-                f" metadata database: {current_datasets}"
+                f" metadata database: {current_datasets_in_db}"
             )
             return False, fail_msg
     else:
+        datasets_specified_for_deletion = parsed_args.datasets
         if len(datasets_specified_for_deletion) == 0:
             # No datasets were specified for deletion.
             return True, ""
 
         # Verify that the datasets specified for deletion are not present.
-        if any(item in current_datasets for item in datasets_specified_for_deletion):
+        if any(item in current_datasets_in_db for item in datasets_specified_for_deletion):
             fail_msg = (
                 "dataset-manager del failed: Some datasets that were specified for deletion"
                 " are still present in the metadata database."
@@ -179,15 +175,6 @@ def _extract_dataset_names_from_output(
     return sorted(dataset_list)
 
 
-def _get_names_of_directories_in_package_archives(clp_package: ClpPackage) -> list[str]:
-    directories_in_package_archives = []
-    archives_dir = clp_package.path_config.package_archives_path
-    for item in archives_dir.iterdir():
-        if item.is_dir():
-            directories_in_package_archives.append(item.name)
-    return sorted(directories_in_package_archives)
-
-
 def clear_package_archives_clp_json(clp_package: ClpPackage) -> None:
     """Docstring."""
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
@@ -210,3 +197,24 @@ def clear_package_archives_clp_json(clp_package: ClpPackage) -> None:
         dataset_manager_action, clp_package
     )
     assert dataset_manager_action_verified, failure_message
+
+
+def _get_dataset_names(clp_config: ClpConfig) -> list[str]:
+    """
+    :param clp_config:
+    :return: A list of all datasets that currently exist in the metadata database.
+    """
+    load_dotenv(dotenv_path="/home/quinnmitchell/clp/build/clp-package/.env")
+    database = clp_config.database
+    database.load_credentials_from_env()
+
+    sql_adapter = SqlAdapter(database)
+    with (
+        closing(sql_adapter.create_connection(True)) as db_conn,
+        closing(db_conn.cursor(dictionary=True)) as db_cursor,
+    ):
+        clp_db_connection_params = database.get_clp_connection_params_and_type(True)
+        table_prefix = clp_db_connection_params["table_prefix"]
+        db_cursor.execute(f"SELECT name FROM `{get_datasets_table_name(table_prefix)}`")  # noqa: S608
+        rows = db_cursor.fetchall()
+        return [row["name"] for row in rows]  # type: ignore[call-overload, misc]
