@@ -2,7 +2,6 @@
 
 import logging
 import re
-from pathlib import Path
 
 import pytest
 from strenum import StrEnum
@@ -15,6 +14,7 @@ from tests.clp_package_tests.utils.parsers import (
     get_archive_manager_parser,
 )
 from tests.utils.subprocess_utils import execute_external_action
+from tests.utils.utils import get_rand_subdirectory_name
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ def archive_manager_del_by_ids_clp_text(
     if ids_to_del is not None:
         cmd.extend(ids_to_del)
     else:
-        sample_id = _get_rand_subdirectory_name(clp_package.path_config.package_archives_path)
+        sample_id = get_rand_subdirectory_name(clp_package.path_config.package_archives_path)
         cmd.append(sample_id)
 
     return _run_archive_manager_action(cmd)
@@ -271,11 +271,3 @@ def _run_archive_manager_action(cmd: list[str]) -> ClpPackageExternalAction:
 def _get_action_output(action: ClpPackageExternalAction) -> str:
     """Return the combined stdout + stderr from a completed action."""
     return action.completed_proc.stdout + action.completed_proc.stderr
-
-
-def _get_rand_subdirectory_name(path_to_parent: Path) -> str:
-    """Docstring."""
-    for item in path_to_parent.iterdir():
-        if item.is_dir():
-            return item.name
-    return ""

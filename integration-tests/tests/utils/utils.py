@@ -53,6 +53,14 @@ def get_env_var(var_name: str) -> str:
     return value
 
 
+def get_rand_subdirectory_name(parent: Path) -> str:
+    """Docstring."""
+    for item in parent.iterdir():
+        if item.is_dir():
+            return item.name
+    return ""
+
+
 def is_dir_tree_content_equal(path1: Path, path2: Path) -> bool:
     """
     :param path1:
