@@ -52,7 +52,6 @@ def test_clp_json_startup(clp_package: ClpPackage) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_startup'")
 
-    # Do nothing; CLP package startup is verified before the fixture is given to this test.
     assert clp_package
 
     logger.info("Test complete: 'test_clp_json_startup'")

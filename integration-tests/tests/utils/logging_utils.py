@@ -10,21 +10,6 @@ from tests.utils.classes import IntegrationTestExternalAction
 logger = logging.getLogger(__name__)
 
 
-# TODO: Remove this function and change all former call sites.
-def construct_log_err_msg(err_msg: str) -> str:
-    """
-    Append a signal that directs readers to the test output log file.
-
-    :param err_msg: The base error message onto which the signal will be appended.
-    :return: An error message that directs readers to look in the test output log file.
-
-    """
-    return (
-        err_msg
-        + " Check the full test output log for more information (see test header for file path)."
-    )
-
-
 def format_action_failure_msg(
     reason: str, *actions: IntegrationTestExternalAction
 ) -> tuple[bool, str]:
