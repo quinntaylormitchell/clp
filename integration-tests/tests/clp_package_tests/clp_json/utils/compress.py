@@ -10,6 +10,7 @@ from tests.clp_package_tests.utils.parsers import get_compress_parser
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
+from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.subprocess_utils import execute_external_action
 
 logger = logging.getLogger(__name__)
@@ -45,8 +46,10 @@ def verify_compress_action_clp_json(
     """Docstring."""
     logger.info(f"Verifying {clp_package.mode_name} package compression.")
     if compress_action.completed_proc.returncode != 0:
-        return False, "The compress.sh subprocess returned a non-zero exit code."
+        return format_action_failure_msg(
+            "The compress.sh subprocess returned a non-zero exit code.",
+            compress_action,
+        )
 
     # TODO: Waiting for PR 1299 (clp-json decompression) to be merged.
-    assert clp_package
     return True, ""

@@ -12,6 +12,8 @@ from tests.clp_package_tests.utils.classes import (
 from tests.clp_package_tests.utils.start_stop import (
     start_clp_package,
     stop_clp_package,
+    verify_start_clp_action,
+    verify_stop_clp_action,
 )
 from tests.utils.port_utils import assign_ports_from_base
 from tests.utils.utils import resolve_path_env_var, write_dict_to_yaml
@@ -65,11 +67,17 @@ def clp_package(
     )
 
     try:
-        start_clp_action_verified, failure_message = start_clp_package(clp_package)
+        start_clp_action = start_clp_package(clp_package)
+        start_clp_action_verified, failure_message = verify_start_clp_action(
+            start_clp_action, clp_package
+        )
         assert start_clp_action_verified, failure_message
         yield clp_package
     finally:
-        stop_clp_action_verified, failure_message = stop_clp_package(clp_package)
+        stop_clp_action = stop_clp_package(clp_package)
+        stop_clp_action_verified, failure_message = verify_stop_clp_action(
+            stop_clp_action, clp_package
+        )
         assert stop_clp_action_verified, failure_message
 
         clp_package.temp_config_file_path.unlink(missing_ok=True)

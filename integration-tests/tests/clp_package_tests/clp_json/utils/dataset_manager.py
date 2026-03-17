@@ -15,6 +15,7 @@ from tests.clp_package_tests.utils.parsers import (
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
+from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.subprocess_utils import execute_external_action
 
 logger = logging.getLogger(__name__)
@@ -24,8 +25,7 @@ def dataset_manager_list_clp_json(
     clp_package: ClpPackage,
 ) -> ClpPackageExternalAction:
     """Docstring."""
-    log_msg = "Performing 'list' operation with dataset manager."
-    logger.info(log_msg)
+    logger.info("Performing 'list' operation with dataset-manager.")
 
     cmd = _get_base_dataset_manager_cmd(clp_package)
     cmd.append("list")
@@ -39,8 +39,7 @@ def dataset_manager_del_clp_json(
     del_all: bool = False,
 ) -> ClpPackageExternalAction:
     """Docstring."""
-    log_msg = "Performing 'del' operation with dataset manager."
-    logger.info(log_msg)
+    logger.info("Performing 'del' operation with dataset-manager.")
 
     cmd = _get_base_dataset_manager_cmd(clp_package)
     cmd.append("del")
@@ -60,22 +59,23 @@ def verify_dataset_manager_list_action_clp_json(
     dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
-    logger.info("Verifying dataset-manager list action.")
+    logger.info("Verifying dataset-manager 'list'.")
     if dataset_manager_action.completed_proc.returncode != 0:
-        return (
-            False,
-            "The dataset-manager.sh list subprocess returned a non-zero exit code.",
+        return format_action_failure_msg(
+            "The 'dataset-manager.sh list' subprocess returned a non-zero exit code.",
+            dataset_manager_action,
         )
 
     dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
     if dataset_list != directories_in_package_archives:
-        fail_msg = (
-            f"Mismatch between dataset list '{dataset_list}' and directories in var/archives"
-            f" '{directories_in_package_archives}'"
+        return format_action_failure_msg(
+            "Dataset-manager 'list' verification failure: mismatch between output dataset list"
+            f" '{dataset_list}' and directories in var/archives"
+            f" '{directories_in_package_archives}'",
+            dataset_manager_action,
         )
-        return False, fail_msg
 
     return True, ""
 
@@ -84,11 +84,11 @@ def verify_dataset_manager_del_action_clp_json(
     dataset_manager_action: ClpPackageExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
-    logger.info("Verifying dataset-manager del action.")
+    logger.info("Verifying dataset-manager 'del'.")
     if dataset_manager_action.completed_proc.returncode != 0:
-        return (
-            False,
-            "The dataset-manager.sh del subprocess returned a non-zero exit code.",
+        return format_action_failure_msg(
+            "The 'dataset-manager.sh del' subprocess returned a non-zero exit code.",
+            dataset_manager_action,
         )
 
     # Get list of all datasets currently in archives.
@@ -96,32 +96,30 @@ def verify_dataset_manager_del_action_clp_json(
     verified, failure_message = verify_dataset_manager_list_action_clp_json(
         list_action, clp_package
     )
-    assert verified, failure_message
+    if not verified:
+        pytest.fail(
+            "During dataset-manager 'del' verification, supporting call to dataset-manager 'list'"
+            f" could not be verified: '{failure_message}' Subprocess log:"
+            f" '{list_action.log_file_path}'"
+        )
 
     current_datasets = _extract_dataset_names_from_output(list_action)
     parsed_args = dataset_manager_action.parsed_args
     datasets_specified_for_deletion = parsed_args.datasets
     del_all_flag = parsed_args.del_all
     if del_all_flag:
-        # Verify that there are no datasets left.
         if len(current_datasets) > 0:
-            fail_msg = (
-                f"dataset-manager del --all failed: There are datasets still present in the"
-                f" metadata database: {current_datasets}"
+            return format_action_failure_msg(
+                f"Dataset-manager 'del --all' verification failure: There are datasets still"
+                f" present in the database: '{current_datasets}'.",
+                dataset_manager_action,
             )
-            return False, fail_msg
-    else:
-        if len(datasets_specified_for_deletion) == 0:
-            # No datasets were specified for deletion.
-            return True, ""
-
-        # Verify that the datasets specified for deletion are not present.
-        if any(item in current_datasets for item in datasets_specified_for_deletion):
-            fail_msg = (
-                "dataset-manager del failed: Some datasets that were specified for deletion"
-                " are still present in the metadata database."
-            )
-            return False, fail_msg
+    elif any(item in current_datasets for item in datasets_specified_for_deletion):
+        return format_action_failure_msg(
+            "Dataset-manager 'del' verification failure: Some datasets that were specified for"
+            " deletion are still present in the database.",
+            dataset_manager_action,
+        )
 
     return True, ""
 
@@ -161,7 +159,11 @@ def clear_package_archives_clp_json(
         del_all=True,
     )
     verified, failure_message = verify_dataset_manager_del_action_clp_json(del_action, clp_package)
-    assert verified, failure_message
+    if not verified:
+        pytest.fail(
+            f"When clearing package archives, the call to dataset-manager 'del' could not be"
+            f" verified: '{failure_message}' Subprocess log: '{del_action.log_file_path}'"
+        )
 
 
 def _get_base_dataset_manager_cmd(

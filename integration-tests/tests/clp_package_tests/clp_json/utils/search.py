@@ -17,6 +17,7 @@ from tests.utils.classes import (
     IntegrationTestDataset,
     IntegrationTestExternalAction,
 )
+from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import get_binary_path
 
@@ -40,8 +41,7 @@ def search_clp_json(
     wildcard_query: str,
 ) -> ClpPackageExternalAction:
     """Docstring."""
-    log_msg = f"Searching the '{dataset.dataset_name}' dataset."  # TODO: "Performing <SEARCH_TYPE>"
-    logger.info(log_msg)
+    logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
 
     search_cmd: list[str] = _build_search_cmd_for_search_type_clp_json(
         clp_package,
@@ -102,16 +102,23 @@ def verify_search_action_clp_json(
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """Docstring."""
-    logger.info(f"Verifying search on the '{original_dataset.dataset_name}' dataset.")
+    logger.info("Verifying search.")
     if search_action.completed_proc.returncode != 0:
-        return False, "The search.sh subprocess returned a non-zero exit code."
+        return format_action_failure_msg(
+            "The 'search.sh' subprocess returned a non-zero exit code.", search_action
+        )
 
     # Construct and run grep command.
     search_type = _get_search_type_for_action(search_action)
     grep_cmd = _convert_search_action_to_grep_cmd(search_action, search_type, original_dataset)
     grep_action = IntegrationTestExternalAction(cmd=grep_cmd)
     execute_external_action(grep_action)
-    assert grep_action.completed_proc.returncode == 0, "grep command returned non-zero exit code."
+
+    if grep_action.completed_proc.returncode != 0:
+        pytest.fail(
+            "During search action verification, internal grep command returned a non-zero exit"
+            f" code. Subprocess log: {grep_action.log_file_path}"
+        )
 
     # Compare grep result with search result.
     formatted_grep_result = _format_grep_result_for_search_type(
@@ -121,11 +128,12 @@ def verify_search_action_clp_json(
         search_action.completed_proc.stdout, search_type
     )
     if formatted_grep_result != formatted_search_result:
-        fail_msg = (
-            f"Mismatch between search result '{formatted_search_result}' and grep result "
-            f"'{formatted_grep_result}'"
+        return format_action_failure_msg(
+            f"Search verification failure: mismatch between formatted search result"
+            f" '{formatted_search_result}' and formatted grep result '{formatted_grep_result}'.",
+            search_action,
+            grep_action,
         )
-        return False, fail_msg
 
     return True, ""
 
@@ -160,8 +168,6 @@ def _get_search_type_for_action(
         return ClpJsonSearchType.IGNORE_CASE
     return ClpJsonSearchType.BASIC
 
-    # TODO: what if the command has an invalid combination of arguments?
-
 
 def _get_grep_options_from_search_type(search_type: ClpJsonSearchType) -> list[str]:
     grep_cmd_options: list[str] = [
@@ -182,10 +188,9 @@ def _get_grep_options_from_search_type(search_type: ClpJsonSearchType) -> list[s
             grep_cmd_options.append("--ignore-case")
             return grep_cmd_options
         case _:
-            err_msg = (
-                f"Search type {search_type} has not been configured for grep command construction."
+            pytest.fail(
+                f"Search type '{search_type.name}' not configured for grep command construction."
             )
-            raise ValueError(err_msg)
 
 
 def _format_grep_result_for_search_type(grep_result: str, search_type: ClpJsonSearchType) -> str:
@@ -195,8 +200,9 @@ def _format_grep_result_for_search_type(grep_result: str, search_type: ClpJsonSe
         case ClpJsonSearchType.COUNT_RESULTS | ClpJsonSearchType.COUNT_BY_TIME:
             return str(len(grep_result.splitlines())) + "\n"
         case _:
-            err_msg = f"Search type '{search_type}' has not been configured for modification."
-            raise ValueError(err_msg)
+            pytest.fail(
+                f"Search type '{search_type.name}' not configured for grep result formatting."
+            )
 
 
 def _format_search_result_for_search_type(
@@ -209,8 +215,8 @@ def _format_search_result_for_search_type(
             match = re.search(r"count: (\d+)", search_result)
             if match:
                 return match.group(1) + "\n"
-            err_msg = f"The search result '{search_result}' wasn't in the correct format."
-            raise ValueError(err_msg)
+            pytest.fail(f"The search result '{search_result}' wasn't in the correct format.")
         case _:
-            err_msg = f"Search type '{search_type}' has not been configured for modification."
-            raise ValueError(err_msg)
+            pytest.fail(
+                f"Search type '{search_type.name}' not configured for search result formatting."
+            )

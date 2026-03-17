@@ -2,16 +2,21 @@
 
 import logging
 
+import pytest
 from clp_package_utils.general import EXTRACT_FILE_CMD
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
-from tests.clp_package_tests.utils.parsers import get_compress_parser, get_decompress_parser
+from tests.clp_package_tests.utils.parsers import (
+    get_compress_parser,
+    get_decompress_parser,
+)
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
+from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import (
     clear_directory,
@@ -46,8 +51,12 @@ def verify_compress_action_clp_text(
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """Docstring."""
+    logger.info(f"Verifying {clp_package.mode_name} package compression.")
     if compress_action.completed_proc.returncode != 0:
-        return False, "The compress.sh subprocess returned a non-zero exit code."
+        return format_action_failure_msg(
+            "The 'compress.sh' subprocess returned a non-zero exit code.",
+            compress_action,
+        )
 
     # Decompress the contents of `clp-package/var/data/archives`.
     path_config = clp_package.path_config
@@ -66,9 +75,11 @@ def verify_compress_action_clp_text(
         args_parser=get_decompress_parser(),
     )
     execute_external_action(decompress_action)
-    assert decompress_action.completed_proc.returncode == 0, (
-        "decompress.sh command returned non-zero exit code."
-    )
+    if decompress_action.completed_proc.returncode != 0:
+        pytest.fail(
+            f"During compress action verification, internal decompress.sh command returned a"
+            f" non-zero exit code. Subprocess log: {decompress_action.log_file_path}"
+        )
 
     # Verify equality between original logs and decompressed logs.
     original_logs_path = original_dataset.path_to_dataset_logs
@@ -80,8 +91,8 @@ def verify_compress_action_clp_text(
     clear_directory(path_config.package_decompression_dir)
     if equal:
         return True, ""
-    fail_msg = (
-        f"Mismatch between original logs at '{original_logs_path}' and decompressed logs at "
-        f"'{decompressed_logs_path}'"
+    return format_action_failure_msg(
+        f"Compress verification failure: mismatch between original logs at '{original_logs_path}'"
+        f" and decompressed logs at '{decompressed_logs_path}'.",
+        compress_action,
     )
-    return False, fail_msg

@@ -44,13 +44,8 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
         required_dirs = ["etc", "sbin"]
         missing_dirs = [d for d in required_dirs if not (clp_package_dir / d).is_dir()]
         if len(missing_dirs) > 0:
-            err_msg = (
-                f"CLP package at {clp_package_dir} is incomplete."
-                f" Missing directories: {', '.join(missing_dirs)}"
-            )
-            # TODO: change this error to something else.
-            # Maybe this check should go in package setup or something?
-            raise RuntimeError(err_msg)
+            err_msg = f"The CLP package has missing directories: {', '.join(missing_dirs)}"
+            pytest.fail(err_msg)
 
         # Create and set `temp_config_dir` within `test_cache_dir`.
         object.__setattr__(self, "temp_config_dir", self.test_cache_dir / "temp_configs")
@@ -152,7 +147,9 @@ class ClpPackage:
         try:
             ClpConfig.model_validate(self.clp_config)
         except ValidationError as err:
-            fail_msg = f"The `ClpConfig` pydantic object could not be validated: {err}"
+            fail_msg = (
+                f"The `ClpConfig` pydantic object for the CLP package could not be validated: {err}"
+            )
             pytest.fail(fail_msg)
 
     @property
@@ -182,15 +179,15 @@ class ClpPackage:
         try:
             contents = clp_instance_id_file_path.read_text(encoding="utf-8").strip()
         except OSError as err:
-            err_msg = f"Cannot read instance-id file '{clp_instance_id_file_path}'"
-            raise ValueError(err_msg) from err
+            err_msg = f"Cannot read instance-id file '{clp_instance_id_file_path}': {err}"
+            pytest.fail(err_msg)
 
         if not re.fullmatch(r"[0-9a-fA-F]{4}", contents):
             err_msg = (
                 f"Invalid instance ID in {clp_instance_id_file_path}: expected a 4-character"
                 f" hexadecimal string, but read {contents}."
             )
-            raise ValueError(err_msg)
+            pytest.fail(err_msg)
 
         return contents
 

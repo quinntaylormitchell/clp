@@ -10,6 +10,7 @@ from tests.utils.classes import IntegrationTestExternalAction
 logger = logging.getLogger(__name__)
 
 
+# TODO: Remove this function and change all former call sites.
 def construct_log_err_msg(err_msg: str) -> str:
     """
     Append a signal that directs readers to the test output log file.
@@ -24,6 +25,16 @@ def construct_log_err_msg(err_msg: str) -> str:
     )
 
 
+def format_action_failure_msg(
+    reason: str, *actions: IntegrationTestExternalAction
+) -> tuple[bool, str]:
+    """Docstring."""
+    action_log_paths: list[str] = []
+    for action in actions:
+        action_log_paths.append(str(action.log_file_path))
+    return False, f"{reason} See relevant subprocess log(s) at: {action_log_paths}"
+
+
 def log_subprocess_output_to_file(subprocess: IntegrationTestExternalAction) -> None:
     """Docstring."""
     now = datetime.datetime.now()  # noqa: DTZ005
@@ -34,13 +45,12 @@ def log_subprocess_output_to_file(subprocess: IntegrationTestExternalAction) -> 
         / f"{Path(subprocess.cmd[0]).name}_{test_run_id}.log"
     )
     subprocess_output_file_path.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.log_file_path = subprocess_output_file_path
 
     completed_proc = subprocess.completed_proc
-
     stdout_content = completed_proc.stdout or "(empty)"
     stderr_content = completed_proc.stderr or "(empty)"
 
-    # Ensure both end with a newline
     if not stdout_content.endswith("\n"):
         stdout_content += "\n"
     if not stderr_content.endswith("\n"):

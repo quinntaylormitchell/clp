@@ -23,34 +23,40 @@ BOLD = "\033[1m"
 RESET = "\033[0m"
 
 
-unique_testlog_dir: Path | None = None
+class _UniqueTestLogDir:
+    _path: Path | None = None
+
+    @classmethod
+    def set(cls, path: Path) -> None:
+        cls._path = path
+
+    @classmethod
+    def get(cls) -> Path:
+        if cls._path is None:
+            err_msg = "test log directory has not been initialized"
+            raise RuntimeError(err_msg)
+        return cls._path
 
 
 def get_test_log_dir() -> Path:
-    """Docstring."""
-    if unique_testlog_dir is None:
-        err_msg = "test log directory has not been initialized"
-        raise RuntimeError(err_msg)
-
-    return unique_testlog_dir
+    """Returns the unique test log directory for this test run."""
+    return _UniqueTestLogDir.get()
 
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
     """Docstring."""
-    global unique_testlog_dir  # noqa: PLW0603
-
     now = datetime.datetime.now()  # noqa: DTZ005
     test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
 
-    unique_testlog_dir = (
+    path = (
         resolve_path_env_var("CLP_BUILD_DIR")
         / "integration_tests"
         / "test_logs"
         / f"testrun_{test_run_id}"
     )
-
-    unique_testlog_dir.mkdir(parents=True, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
+    _UniqueTestLogDir.set(path)
 
 
 @pytest.hookimpl()
@@ -71,10 +77,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 @pytest.hookimpl(tryfirst=True)
 def pytest_report_header(config: pytest.Config) -> str:  # noqa: ARG001
     """Docstring."""
-    log_dir = get_test_log_dir()
+    log_dir = _UniqueTestLogDir.get()
     return f"Log directory for this test run: {log_dir}"
 
 
+@pytest.hookimpl()
 def pytest_report_collectionfinish(
     config: pytest.Config,  # noqa: ARG001
     start_path: Path,  # noqa: ARG001
@@ -105,11 +112,12 @@ def pytest_runtest_setup(item: pytest.Item) -> Iterator[None]:
         err_msg = "Expected pytest plugin 'logging-plugin' to be registered."
         raise RuntimeError(err_msg)
 
-    test_output_log_file = get_test_log_dir() / "test_output.log"
+    test_output_log_file = _UniqueTestLogDir.get() / "test_output.log"
     logging_plugin.set_log_path(str(test_output_log_file))
     yield
 
 
+@pytest.hookimpl()
 def pytest_itemcollected(item: pytest.Item) -> None:
     """
     Prettifies the name of the test for output purposes.

@@ -12,13 +12,16 @@ from tests.clp_package_tests.utils.parsers import (
     get_stop_clp_parser,
 )
 from tests.utils.docker_utils import list_running_services_in_compose_project
+from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.subprocess_utils import execute_external_action
 
 logger = logging.getLogger(__name__)
 
 
-def start_clp_package(clp_package: ClpPackage) -> tuple[bool, str]:
+def start_clp_package(clp_package: ClpPackage) -> ClpPackageExternalAction:
     """Docstring."""
+    logger.info(f"Starting up the '{clp_package.mode_name}' package.")
+
     path_config = clp_package.path_config
     start_clp_cmd: list[str] = [
         str(path_config.start_clp_path),
@@ -31,11 +34,13 @@ def start_clp_package(clp_package: ClpPackage) -> tuple[bool, str]:
     )
     execute_external_action(start_clp_action)
 
-    return verify_start_clp_action(start_clp_action, clp_package)
+    return start_clp_action
 
 
-def stop_clp_package(clp_package: ClpPackage) -> tuple[bool, str]:
+def stop_clp_package(clp_package: ClpPackage) -> ClpPackageExternalAction:
     """Docstring."""
+    logger.info(f"Stopping the '{clp_package.mode_name}' package.")
+
     path_config = clp_package.path_config
     stop_clp_cmd: list[str] = [
         str(path_config.stop_clp_path),
@@ -48,7 +53,7 @@ def stop_clp_package(clp_package: ClpPackage) -> tuple[bool, str]:
     )
     execute_external_action(stop_clp_action)
 
-    return verify_stop_clp_action(stop_clp_action, clp_package)
+    return stop_clp_action
 
 
 def verify_start_clp_action(
@@ -57,15 +62,18 @@ def verify_start_clp_action(
     """Docstring."""
     logger.info(f"Verifying the startup of the '{clp_package.mode_name}' package.")
     if start_clp_action.completed_proc.returncode != 0:
-        return False, "The start-clp.sh subprocess returned a non-zero exit code."
+        return format_action_failure_msg(
+            "The start-clp.sh subprocess returned a non-zero exit code.",
+            start_clp_action,
+        )
 
     package_running_validated, failure_message = _validate_clp_package_running(clp_package)
     if not package_running_validated:
-        return False, failure_message
+        return format_action_failure_msg(failure_message, start_clp_action)
 
     running_mode_correct_validated, failure_message = _validate_running_mode_correct(clp_package)
     if not running_mode_correct_validated:
-        return False, failure_message
+        return format_action_failure_msg(failure_message, start_clp_action)
 
     return True, ""
 
@@ -76,11 +84,13 @@ def verify_stop_clp_action(
     """Docstring."""
     logger.info(f"Verifying the spindown of the '{clp_package.mode_name}' package.")
     if stop_clp_action.completed_proc.returncode != 0:
-        return False, "The stop-clp.sh subprocess returned a non-zero exit code."
+        return format_action_failure_msg(
+            "The stop-clp.sh subprocess returned a non-zero exit code.", stop_clp_action
+        )
 
     package_not_running_validated, failure_message = _validate_clp_package_not_running(clp_package)
     if not package_not_running_validated:
-        return False, failure_message
+        return format_action_failure_msg(failure_message, stop_clp_action)
 
     return True, ""
 
@@ -99,7 +109,9 @@ def _validate_clp_package_running(clp_package: ClpPackage) -> tuple[bool, str]:
 
     # Construct failure message.
     mode_name = clp_package.mode_name
-    fail_msg = f"Component validation failed for the {mode_name} package test."
+    fail_msg = (
+        f"'{mode_name}' package start up verification failure: components could not be validated."
+    )
 
     missing_components = required_components - running_services
     if missing_components:
@@ -122,7 +134,10 @@ def _validate_running_mode_correct(clp_package: ClpPackage) -> tuple[bool, str]:
 
     # Construct failure message.
     mode_name = clp_package.mode_name
-    fail_msg = f"Mode validation failed for the {mode_name} package test."
+    fail_msg = (
+        f"'{mode_name}' package start up verification failure: operating mode could not be"
+        " validated."
+    )
 
     return False, fail_msg
 
@@ -140,7 +155,7 @@ def _validate_clp_package_not_running(clp_package: ClpPackage) -> tuple[bool, st
     # Construct failure message.
     mode_name = clp_package.mode_name
     fail_msg = (
-        f"There are components of the {mode_name} package that are still running: "
-        f"{running_services}"
+        f"'{mode_name}' package stop verification failure: there are components of the package that"
+        f" are still running: '{running_services}'"
     )
     return False, fail_msg

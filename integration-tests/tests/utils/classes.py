@@ -69,3 +69,6 @@ class IntegrationTestExternalAction:
 
     #: The completed process returned from `subprocess.run()`.
     completed_proc: subprocess.CompletedProcess[str] = field(init=False)
+
+    #: Path to the file where this action's subprocess output was logged.
+    log_file_path: Path = field(init=False)

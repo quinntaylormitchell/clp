@@ -5,12 +5,11 @@ import socket
 from dataclasses import dataclass
 from typing import Any
 
+import pytest
 from clp_py_utils.clp_config import (
     ClpConfig,
     REDUCER_COMPONENT_NAME,
 )
-
-from tests.utils.logging_utils import construct_log_err_msg
 
 logger = logging.getLogger(__name__)
 
@@ -78,11 +77,10 @@ def _check_ports_available(host: str, port_range: range) -> None:
         if not _is_port_free(port=port, host=host):
             range_str = _format_port_range(port_range)
             err_msg = (
-                f"Port '{port}' in the desired range ({range_str}) is already in use. "
-                "Choose a different port range for the test environment."
+                f"CLP package port assignment: port '{port}' in the desired range ({range_str}) is"
+                " already in use. Choose a different port range for the test environment."
             )
-            logger.error(construct_log_err_msg(err_msg))
-            raise ValueError(err_msg)
+            pytest.fail(err_msg)
 
 
 def _discover_port_assignments(clp_config: ClpConfig) -> list[PortAssignment]:
@@ -166,8 +164,8 @@ def _validate_port_range_bounds(port_range: range) -> None:
         required_range_str = _format_port_range(port_range)
         valid_range_str = _format_port_range(VALID_PORT_RANGE)
         err_msg = (
-            f"The port range derived from '--base-port' ({required_range_str}) must fall within"
-            f" the range of valid ports ({valid_range_str})."
+            "CLP package port assignment: the port range derived from '--base-port'"
+            f" ({required_range_str}) must fall within the range of valid ports"
+            f" ({valid_range_str})."
         )
-        logger.error(construct_log_err_msg(err_msg))
-        raise ValueError(err_msg)
+        pytest.fail(err_msg)

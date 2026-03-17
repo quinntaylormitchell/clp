@@ -29,7 +29,10 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
     execute_external_action(compose_ps_action)
 
     if compose_ps_action.completed_proc.returncode != 0:
-        pytest.fail("The docker compose subprocess returned a non-zero exit code.")
+        pytest.fail(
+            "When getting running services in docker compose project, supporting call to docker"
+            f" returned a non-zero exit code. Subprocess log: '{compose_ps_action.log_file_path}'"
+        )
 
     compose_ps_output = compose_ps_action.completed_proc.stdout
 
