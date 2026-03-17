@@ -69,5 +69,6 @@ def log_subprocess_output_to_file(subprocess: IntegrationTestExternalAction) -> 
         log_file.writelines(lines)
 
     logger.info(
-        f"Subprocess completed. stdout and stderr written to '{subprocess_output_file_path}'"
+        f"Subprocess completed. stdout and stderr written to log file:"
+        f" '{subprocess_output_file_path}'"
     )
