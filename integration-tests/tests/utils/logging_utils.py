@@ -20,7 +20,7 @@ def format_action_failure_msg(
     return False, f"{reason} See relevant subprocess log(s) at: {action_log_paths}"
 
 
-def log_subprocess_output_to_file(subprocess: IntegrationTestExternalAction) -> None:
+def log_action_output_to_file(subprocess: IntegrationTestExternalAction) -> None:
     """Docstring."""
     now = datetime.datetime.now()  # noqa: DTZ005
     test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -64,6 +64,6 @@ def log_subprocess_output_to_file(subprocess: IntegrationTestExternalAction) -> 
         log_file.writelines(lines)
 
     logger.info(
-        f"Subprocess completed. stdout and stderr written to log file:"
+        f"Subprocess returned. stdout and stderr written to log file:"
         f" '{subprocess_output_file_path}'"
     )

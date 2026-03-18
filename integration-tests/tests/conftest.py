@@ -22,44 +22,44 @@ BLUE = "\033[34m"
 BOLD = "\033[1m"
 RESET = "\033[0m"
 
-
-class _UniqueTestLogDir:
-    _path: Path | None = None
-
-    @classmethod
-    def set(cls, path: Path) -> None:
-        cls._path = path
-
-    @classmethod
-    def get(cls) -> Path:
-        if cls._path is None:
-            err_msg = "test log directory has not been initialized"
-            raise RuntimeError(err_msg)
-        return cls._path
+_test_log_dir: Path | None = None
 
 
 def get_test_log_dir() -> Path:
-    """Returns the unique test log directory for this test run."""
-    return _UniqueTestLogDir.get()
+    """
+    Returns the unique log directory for this test run.
+
+    :return: The path to the log directory for this test run.
+    :raise pytest.fail: If `_test_log_dir` is not initialized.
+    """
+    if _test_log_dir is None:
+        pytest.fail("test log directory has not been initialized")
+    return _test_log_dir
 
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
-    """Docstring."""
+    """
+    Initializes the unique log directory for this test run. Creates the directory under
+    `$CLP_BUILD_DIR/integration_tests/test_logs/` Stores the path to `_test_log_dir` for retrieval
+    via `get_test_log_dir()`.
+
+    :param config:
+    """
+    global _test_log_dir
+
     now = datetime.datetime.now()  # noqa: DTZ005
     test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
 
-    path = (
+    _test_log_dir = (
         resolve_path_env_var("CLP_BUILD_DIR")
         / "integration_tests"
         / "test_logs"
         / f"testrun_{test_run_id}"
     )
-    path.mkdir(parents=True, exist_ok=True)
-    _UniqueTestLogDir.set(path)
+    _test_log_dir.mkdir(parents=True, exist_ok=True)
 
 
-@pytest.hookimpl()
 def pytest_addoption(parser: pytest.Parser) -> None:
     """
     Adds options for `pytest`.
@@ -74,20 +74,40 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
+def pytest_itemcollected(item: pytest.Item) -> None:
+    """
+    Applies ANSI bold and blue formatting to each collected test's node ID, for the purposes of
+    test output readability.
+
+    :param item:
+    """
+    item._nodeid = f"{BOLD}{BLUE}{item.name}{RESET}"  # noqa: SLF001
+
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_report_header(config: pytest.Config) -> str:  # noqa: ARG001
-    """Docstring."""
-    log_dir = _UniqueTestLogDir.get()
-    return f"Log directory for this test run: {log_dir}"
+    """
+    Adds a line to the session header that reports the unique log directory for this test run.
+
+    :param config:
+    :return: A string containing the log directory path for display in the session header.
+    """
+    return f"Log directory for this test run: {get_test_log_dir()}"
 
 
-@pytest.hookimpl()
 def pytest_report_collectionfinish(
     config: pytest.Config,  # noqa: ARG001
     start_path: Path,  # noqa: ARG001
     items: Sequence[pytest.Item],
 ) -> str | list[str]:
-    """Docstring."""
+    """
+    Reports the list of collected tests for this session after collection is complete.
+
+    :param config:
+    :param start_path:
+    :param items:
+    :return: A formatted string listing each test name, or a warning if no tests were collected.
+    """
     report: str = ""
     if len(items) == 0:
         report = f"{BOLD}No tests match the specified parameters.{RESET}\n"
@@ -102,26 +122,18 @@ def pytest_report_collectionfinish(
 @pytest.hookimpl(wrapper=True)
 def pytest_runtest_setup(item: pytest.Item) -> Iterator[None]:
     """
-    Sets and stores the test_output log file.
+    Redirects the pytest logging plugin's output to the test_output.log file in the unique log
+    directory for this test run. The file will be created automatically if it does not already
+    exist.
 
     :param item:
+    :raise pytest.fail: If the `logging-plugin` is not registered with the plugin manager.
     """
     config = item.config
     logging_plugin = config.pluginmanager.get_plugin("logging-plugin")
     if logging_plugin is None:
-        err_msg = "Expected pytest plugin 'logging-plugin' to be registered."
-        raise RuntimeError(err_msg)
+        pytest.fail("Expected pytest plugin 'logging-plugin' to be registered.")
 
-    test_output_log_file = _UniqueTestLogDir.get() / "test_output.log"
+    test_output_log_file = get_test_log_dir() / "test_output.log"
     logging_plugin.set_log_path(str(test_output_log_file))
     yield
-
-
-@pytest.hookimpl()
-def pytest_itemcollected(item: pytest.Item) -> None:
-    """
-    Prettifies the name of the test for output purposes.
-
-    :param item:
-    """
-    item._nodeid = f"{BOLD}{BLUE}{item.name}{RESET}"  # noqa: SLF001
