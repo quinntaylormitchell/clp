@@ -48,7 +48,7 @@ class IntegrationTestPathConfig:
 
 @dataclass
 class IntegrationTestDataset:
-    """Metadata for a sample dataset stored in `clp/integration-tests/tests/data`."""
+    """Metadata for a sample dataset."""
 
     #: The name of the dataset (for logging purposes).
     dataset_name: str

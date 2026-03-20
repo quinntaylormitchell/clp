@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ClpPackageTestPathConfig(IntegrationTestPathConfig):
-    """Docstring for ClpPackageTestPathConfig."""
+    """Path configuration for CLP package integration tests."""
 
     #: Default CLP package directory.
     clp_package_dir: Path
@@ -125,7 +125,7 @@ class ClpPackageModeConfig:
 
 @dataclass
 class ClpPackage:
-    """Docstring for ClpPackage."""
+    """Metadata for the CLP package."""
 
     # The `ClpPackageTestPathConfig` object for this CLP package.
     path_config: ClpPackageTestPathConfig
@@ -140,9 +140,9 @@ class ClpPackage:
     component_list: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        """Docstring."""
-        # Validate clp_config pydantic object.
-        logger.info(f"Validating the ClpConfig pydantic object for the '{self.mode_name}' package.")
+        """Validate data members."""
+        log_msg = f"Validating the ClpConfig pydantic object for the '{self.mode_name}' package."
+        logger.info(log_msg)
         try:
             ClpConfig.model_validate(self.clp_config)
         except ValidationError as err:
@@ -165,7 +165,6 @@ class ClpPackage:
         """
         Reads the CLP instance ID for the package and validates its format.
 
-        :param clp_instance_id_file_path:
         :return: The 4-character hexadecimal instance ID.
         :raise ValueError: If the file cannot be read or contents are not a 4-character hex string.
         """
@@ -188,12 +187,12 @@ class ClpPackage:
 
 @dataclass
 class ClpPackageExternalAction(IntegrationTestExternalAction):
-    """Docstring for ClpPackageExternalAction."""
+    """Metadata for an external action executed during a CLP package integration test."""
 
-    #: Parser to define semantics for the content of `IntegrationTestExternalAction.cmd`.
+    #: Parser to define semantics for the content of `cmd`.
     args_parser: argparse.ArgumentParser
 
-    #: Namespace to hold information from `IntegrationTestExternalAction.cmd`.
+    #: Namespace to hold information from `cmd`.
     parsed_args: argparse.Namespace = field(init=False)
 
     def __post_init__(self) -> None:
