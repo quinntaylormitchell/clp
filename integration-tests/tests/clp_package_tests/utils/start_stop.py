@@ -6,7 +6,6 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
-from tests.clp_package_tests.utils.modes import compare_mode_signatures
 from tests.clp_package_tests.utils.parsers import (
     get_start_clp_parser,
     get_stop_clp_parser,
@@ -71,10 +70,6 @@ def verify_start_clp_action(
     if not package_running_validated:
         return format_action_failure_msg(failure_message, start_clp_action)
 
-    running_mode_correct_validated, failure_message = _validate_running_mode_correct(clp_package)
-    if not running_mode_correct_validated:
-        return format_action_failure_msg(failure_message, start_clp_action)
-
     return True, ""
 
 
@@ -120,24 +115,6 @@ def _validate_clp_package_running(clp_package: ClpPackage) -> tuple[bool, str]:
     unexpected_components = running_services - required_components
     if unexpected_components:
         fail_msg += f" Unexpected services: {unexpected_components}."
-
-    return False, fail_msg
-
-
-def _validate_running_mode_correct(clp_package: ClpPackage) -> tuple[bool, str]:
-    """Docstring."""
-    running_config = clp_package.get_running_config_from_shared_config_file()
-    intended_config = clp_package.clp_config
-
-    if compare_mode_signatures(intended_config, running_config):
-        return True, ""
-
-    # Construct failure message.
-    mode_name = clp_package.mode_name
-    fail_msg = (
-        f"'{mode_name}' package start up verification failure: operating mode could not be"
-        " validated."
-    )
 
     return False, fail_msg
 

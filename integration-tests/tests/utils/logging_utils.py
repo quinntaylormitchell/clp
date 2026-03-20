@@ -23,7 +23,7 @@ def format_action_failure_msg(
 def log_subprocess_output_to_file(subprocess: IntegrationTestExternalAction) -> None:
     """Docstring."""
     now = datetime.datetime.now()  # noqa: DTZ005
-    test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
+    test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S-%f")[:-3]
     subprocess_output_file_path = (
         get_test_log_dir()
         / "subprocess_output"
@@ -45,7 +45,7 @@ def log_subprocess_output_to_file(subprocess: IntegrationTestExternalAction) -> 
     lines = [
         "SUBPROCESS RUN SUMMARY\n",
         f"{sep}\n",
-        f"Timestamp at completion : {now.strftime('%Y-%m-%d %H:%M:%S')}\n",
+        f"Timestamp at completion : {now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}\n",
         f"Command                 : {completed_proc.args}\n",
         f"Return Code             : {completed_proc.returncode}\n",
         "\n\n",

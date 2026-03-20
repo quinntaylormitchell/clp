@@ -15,6 +15,7 @@ pytest_plugins = [
     "tests.clp_binary_tests.integration_test_logs",
     "tests.clp_binary_tests.clp_binary_path_configs",
     "tests.clp_package_tests.fixtures",
+    "tests.clp_package_tests.clp_presto.fixtures",
 ]
 
 

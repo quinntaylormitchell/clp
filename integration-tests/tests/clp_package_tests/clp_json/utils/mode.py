@@ -15,6 +15,9 @@ from tests.clp_package_tests.utils.classes import (
 from tests.clp_package_tests.utils.modes import (
     CLP_API_SERVER_COMPONENT,
     CLP_BASE_COMPONENTS,
+    CLP_GARBAGE_COLLECTOR_COMPONENT,
+    CLP_QUERY_COMPONENTS,
+    CLP_REDUCER_COMPONENT,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,5 +30,11 @@ CLP_JSON_MODE = ClpPackageModeConfig(
             query_engine=QueryEngine.CLP_S,
         ),
     ),
-    component_list=(*CLP_BASE_COMPONENTS, CLP_API_SERVER_COMPONENT),
+    component_list=(
+        *CLP_BASE_COMPONENTS,
+        CLP_REDUCER_COMPONENT,
+        *CLP_QUERY_COMPONENTS,
+        CLP_GARBAGE_COLLECTOR_COMPONENT,
+        CLP_API_SERVER_COMPONENT,
+    ),
 )

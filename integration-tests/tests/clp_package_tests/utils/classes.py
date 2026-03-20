@@ -14,7 +14,6 @@ from pydantic import ValidationError
 
 from tests.utils.classes import IntegrationTestExternalAction, IntegrationTestPathConfig
 from tests.utils.utils import (
-    load_yaml_to_dict,
     validate_dir_exists,
 )
 
@@ -162,11 +161,6 @@ class ClpPackage:
         """:return: The absolute path to the temporary configuration file for the package."""
         return self.path_config.package_logs_path / "instance-id"
 
-    @property
-    def shared_config_file_path(self) -> Path:
-        """:return: The absolute path to the temporary configuration file for the package."""
-        return self.path_config.package_logs_path / ".clp-config.yaml"
-
     def get_clp_instance_id(self) -> str:
         """
         Reads the CLP instance ID for the package and validates its format.
@@ -190,17 +184,6 @@ class ClpPackage:
             pytest.fail(err_msg)
 
         return contents
-
-    def get_running_config_from_shared_config_file(self) -> ClpConfig:
-        """Docstring."""
-        shared_config_dict = load_yaml_to_dict(self.shared_config_file_path)
-        try:
-            running_config = ClpConfig.model_validate(shared_config_dict)
-        except ValidationError as err:
-            fail_msg = f"The shared config file could not be validated: {err}"
-            pytest.fail(fail_msg)
-
-        return running_config
 
 
 @dataclass
