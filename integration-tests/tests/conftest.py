@@ -47,7 +47,7 @@ def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
 
     :param config:
     """
-    global _test_log_dir
+    global _test_log_dir  # noqa: PLW0603
 
     now = datetime.datetime.now()  # noqa: DTZ005
     test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")

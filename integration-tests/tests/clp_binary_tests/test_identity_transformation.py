@@ -5,13 +5,13 @@ compression and decompression.
 
 import pytest
 
-from tests.utils.subprocess_utils import run_subprocess
 from tests.clp_binary_tests.config import (
     ClpCorePathConfig,
     CompressionTestPathConfig,
     IntegrationTestLogs,
     OLDIntegrationTestPathConfig,
 )
+from tests.utils.subprocess_utils import run_subprocess
 from tests.utils.utils import (
     is_dir_tree_content_equal,
     is_json_file_structurally_equal,
@@ -113,7 +113,7 @@ def test_clp_s_identity_transform(
         logs_source_dir=integration_test_logs.extraction_dir,
         old_integration_test_path_config=old_integration_test_path_config,
     )
-    _clp_s_compress_and_decompress(request, clp_core_path_config, test_paths)
+    _clp_s_compress_and_decompress(clp_core_path_config, test_paths)
 
     # Recompress the decompressed output that's consolidated into a single json file, and decompress
     # it again to verify consistency. The compression input of the second iteration points to the
@@ -126,7 +126,7 @@ def test_clp_s_identity_transform(
         logs_source_dir=test_paths.decompression_dir,
         old_integration_test_path_config=old_integration_test_path_config,
     )
-    _clp_s_compress_and_decompress(request, clp_core_path_config, consolidated_json_test_paths)
+    _clp_s_compress_and_decompress(clp_core_path_config, consolidated_json_test_paths)
 
     _consolidated_json_file_name = "original"
     input_path = consolidated_json_test_paths.logs_source_dir / _consolidated_json_file_name
@@ -140,7 +140,6 @@ def test_clp_s_identity_transform(
 
 
 def _clp_s_compress_and_decompress(
-    request: pytest.FixtureRequest,
     clp_core_path_config: ClpCorePathConfig,
     test_paths: CompressionTestPathConfig,
 ) -> None:
