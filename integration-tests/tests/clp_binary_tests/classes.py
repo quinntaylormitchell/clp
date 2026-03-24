@@ -1,18 +1,17 @@
 """Classes used in CLP binary integration tests."""
 
 import argparse
-import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import pytest
-
-from tests.utils.classes import IntegrationTestExternalAction, IntegrationTestPathConfig
+from tests.utils.classes import (
+    IntegrationTestExternalAction,
+    IntegrationTestPathConfig,
+    static_path,
+)
 from tests.utils.utils import (
     validate_dir_exists,
 )
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -29,31 +28,20 @@ class ClpBinaryTestPathConfig(IntegrationTestPathConfig):
         """
         super().__post_init__()
 
-        clp_core_bins_dir = self.clp_core_bins_dir
-        validate_dir_exists(clp_core_bins_dir)
-        required_binaries = [
-            "clg",
-            "clo",
-            "clp",
-            "clp-s",
-            "indexer",
-            "log-converter",
-            "reducer-server",
-        ]
-        missing_binaries = [b for b in required_binaries if not (clp_core_bins_dir / b).is_file()]
-        if len(missing_binaries) > 0:
-            err_msg = (
-                f"CLP core binaries at {clp_core_bins_dir} are incomplete. Missing binaries:"
-                f" {', '.join(missing_binaries)}"
-            )
-            pytest.fail(err_msg)
+        # Validate that init directory exists.
+        validate_dir_exists(self.clp_core_bins_dir)
+
+        # Validate all static path properties.
+        self.validate_static_paths()
 
     @property
+    @static_path
     def clp_binary_path(self) -> Path:
         """:return: The absolute path to the `clp` binary."""
         return self.clp_core_bins_dir / "clp"
 
     @property
+    @static_path
     def clp_s_binary_path(self) -> Path:
         """:return: The absolute path to the `clp-s` binary."""
         return self.clp_core_bins_dir / "clp-s"
