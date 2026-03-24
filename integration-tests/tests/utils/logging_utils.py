@@ -63,7 +63,8 @@ def log_action_output_to_file(subprocess: IntegrationTestExternalAction) -> None
     with subprocess_output_file_path.open("w", encoding="utf-8") as log_file:
         log_file.writelines(lines)
 
-    logger.info(
+    log_msg = (
         f"Subprocess returned. stdout and stderr written to log file:"
         f" '{subprocess_output_file_path}'"
     )
+    logger.info(log_msg)

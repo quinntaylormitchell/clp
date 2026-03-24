@@ -8,6 +8,8 @@ import pytest
 
 from tests.utils.utils import resolve_path_env_var
 
+from tests.utils.utils import resolve_path_env_var
+
 # Define all fixtures globally so they are available without imports.
 pytest_plugins = [
     "tests.fixtures.datasets",
@@ -47,7 +49,7 @@ def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
 
     :param config:
     """
-    global _test_log_dir  # noqa: PLW0603
+    global _test_log_dir  # noqa:PLW0603
 
     now = datetime.datetime.now()  # noqa: DTZ005
     test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -82,7 +84,7 @@ def pytest_itemcollected(item: pytest.Item) -> None:
 
     :param item:
     """
-    item._nodeid = f"{BOLD}{BLUE}{item.name}{RESET}"  # noqa: SLF001
+    item._nodeid = f"{BOLD}{BLUE}{item.nodeid}{RESET}"  # noqa: SLF001
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -115,7 +117,7 @@ def pytest_report_collectionfinish(
     else:
         report = f"{BOLD}The following tests will run:{RESET}\n"
         for item in items:
-            report += f"\t{BOLD}{BLUE}{item.name}{RESET}\n"
+            report += f"\t{BOLD}{BLUE}{item.nodeid}{RESET}\n"
         report += f"\n{BOLD}Running tests now...{RESET}"
     return report
 

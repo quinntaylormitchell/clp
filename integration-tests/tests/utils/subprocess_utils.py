@@ -1,4 +1,4 @@
-"""Module docstring."""
+"""Utilities for subprocess management."""
 
 import logging
 import subprocess

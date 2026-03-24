@@ -24,6 +24,15 @@ pub enum ClientError {
 
     #[error("api_server configuration is missing")]
     ConfigIsNone,
+
+    #[error("Search job not found: {0}")]
+    SearchJobNotFound(u64),
+
+    #[error("Invalid dataset name")]
+    InvalidDatasetName,
+
+    #[error("Dataset not found: {0}")]
+    DatasetNotFound(String),
 }
 
 /// Empty trait to mark errors that indicate malformed data.
