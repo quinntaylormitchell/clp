@@ -8,8 +8,6 @@ import pytest
 
 from tests.utils.utils import resolve_path_env_var
 
-from tests.utils.utils import resolve_path_env_var
-
 # Define all fixtures globally so they are available without imports.
 pytest_plugins = [
     "tests.fixtures.datasets",

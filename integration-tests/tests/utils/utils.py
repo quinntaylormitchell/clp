@@ -24,19 +24,6 @@ def clear_directory(directory: Path) -> None:
         remove_path(item)
 
 
-def clear_directory(directory: Path) -> None:
-    """
-    Removes the contents of `directory` without removing `directory` itself.
-
-    :param directory:
-    """
-    if not directory.exists():
-        return
-
-    for item in directory.iterdir():
-        remove_path(item)
-
-
 def get_binary_path(name: str) -> str:
     """
     :param name: Name of the program binary to locate.
