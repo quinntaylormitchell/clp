@@ -7,12 +7,6 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
-from tests.clp_package_tests.utils.parsers import (
-    construct_start_clp_arg_dict,
-    construct_start_clp_cmd,
-    construct_stop_clp_arg_dict,
-    construct_stop_clp_cmd,
-)
 from tests.utils.docker_utils import list_running_services_in_compose_project
 from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.subprocess_utils import execute_external_action
@@ -129,3 +123,41 @@ def _validate_clp_package_not_running(clp_package: ClpPackage) -> tuple[bool, st
         f" are still running: '{running_services}'"
     )
     return False, fail_msg
+
+
+def construct_start_clp_arg_dict(clp_package: ClpPackage) -> dict[str, Any]:
+    """Docstring."""
+    path_config = clp_package.path_config
+
+    return {
+        "script_path": path_config.start_clp_path,
+        "config": clp_package.temp_config_file_path,
+    }
+
+
+def construct_start_clp_cmd(arg_dict: dict[str, Any]) -> list[str]:
+    """Docstring."""
+    return [
+        str(arg_dict["script_path"]),
+        "--config",
+        str(arg_dict["config"]),
+    ]
+
+
+def construct_stop_clp_arg_dict(clp_package: ClpPackage) -> dict[str, Any]:
+    """Docstring."""
+    path_config = clp_package.path_config
+
+    return {
+        "script_path": path_config.stop_clp_path,
+        "config": clp_package.temp_config_file_path,
+    }
+
+
+def construct_stop_clp_cmd(arg_dict: dict[str, Any]) -> list[str]:
+    """Docstring."""
+    return [
+        str(arg_dict["script_path"]),
+        "--config",
+        str(arg_dict["config"]),
+    ]
