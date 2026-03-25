@@ -1,14 +1,17 @@
 """Utilities that start/stop the CLP package."""
 
 import logging
+from typing import Any
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
 from tests.clp_package_tests.utils.parsers import (
-    get_start_clp_parser,
-    get_stop_clp_parser,
+    construct_start_clp_arg_dict,
+    construct_start_clp_cmd,
+    construct_stop_clp_arg_dict,
+    construct_stop_clp_cmd,
 )
 from tests.utils.docker_utils import list_running_services_in_compose_project
 from tests.utils.logging_utils import format_action_failure_msg
@@ -21,15 +24,10 @@ def start_clp_package(clp_package: ClpPackage) -> ClpPackageExternalAction:
     """Docstring."""
     logger.info(f"Starting up the '{clp_package.mode_name}' package.")
 
-    path_config = clp_package.path_config
-    start_clp_cmd: list[str] = [
-        str(path_config.start_clp_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-    ]
+    arg_dict: dict[str, Any] = construct_start_clp_arg_dict(clp_package)
     start_clp_action = ClpPackageExternalAction(
-        cmd=start_clp_cmd,
-        args_parser=get_start_clp_parser(),
+        cmd=construct_start_clp_cmd(arg_dict),
+        arg_dict=arg_dict,
     )
     execute_external_action(start_clp_action)
 
@@ -40,15 +38,10 @@ def stop_clp_package(clp_package: ClpPackage) -> ClpPackageExternalAction:
     """Docstring."""
     logger.info(f"Stopping the '{clp_package.mode_name}' package.")
 
-    path_config = clp_package.path_config
-    stop_clp_cmd: list[str] = [
-        str(path_config.stop_clp_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-    ]
+    arg_dict = construct_stop_clp_arg_dict(clp_package)
     stop_clp_action = ClpPackageExternalAction(
-        cmd=stop_clp_cmd,
-        args_parser=get_stop_clp_parser(),
+        cmd=construct_stop_clp_cmd(arg_dict),
+        arg_dict=arg_dict,
     )
     execute_external_action(stop_clp_action)
 

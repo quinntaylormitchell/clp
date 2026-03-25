@@ -5,9 +5,7 @@ import logging
 import pytest
 
 from tests.clp_package_tests.clp_json.utils.archive_manager import (
-    archive_manager_del_by_filter_clp_json,
-    archive_manager_del_by_ids_clp_json,
-    archive_manager_find_clp_json,
+    archive_manager_clp_json,
     verify_archive_manager_del_action_clp_json,
     verify_archive_manager_find_action_clp_json,
 )
@@ -17,19 +15,22 @@ from tests.clp_package_tests.clp_json.utils.compress import (
 )
 from tests.clp_package_tests.clp_json.utils.dataset_manager import (
     clear_package_archives_clp_json,
-    dataset_manager_del_clp_json,
-    dataset_manager_list_clp_json,
+    dataset_manager_clp_json,
     verify_dataset_manager_del_action_clp_json,
     verify_dataset_manager_list_action_clp_json,
 )
 from tests.clp_package_tests.clp_json.utils.mode import CLP_JSON_MODE
 from tests.clp_package_tests.clp_json.utils.search import (
-    ClpJsonSearchType,
     search_clp_json,
     verify_search_action_clp_json,
 )
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
+)
+from tests.clp_package_tests.utils.parsers import (
+    ClpPackageArchiveManagerType,
+    ClpPackageDatasetManagerType,
+    ClpPackageSearchType,
 )
 from tests.utils.classes import (
     IntegrationTestDataset,
@@ -90,7 +91,9 @@ def test_clp_json_search_json_multifile_basic(
     verified, failure_message = verify_compress_action_clp_json(compress_action, clp_package)
     assert verified, failure_message
 
-    for search_type in ClpJsonSearchType:
+    for search_type in ClpPackageSearchType:
+        if search_type is ClpPackageSearchType.FILE_PATH:
+            continue
         search_action = search_clp_json(
             clp_package=clp_package,
             dataset=json_multifile,
@@ -99,7 +102,9 @@ def test_clp_json_search_json_multifile_basic(
                 '"detail":"Roll program complete, heads down attitude achieved for ascent"'
             ),
         )
-        verified, failure_message = verify_search_action_clp_json(search_action, json_multifile)
+        verified, failure_message = verify_search_action_clp_json(
+            search_action, search_type, json_multifile
+        )
         assert verified, failure_message
 
     clear_package_archives_clp_json(clp_package)
@@ -122,14 +127,18 @@ def test_clp_json_dataset_manager_json_multifile(
     verified, failure_message = verify_compress_action_clp_json(compress_action, clp_package)
     assert verified, failure_message
 
-    dataset_manager_list_action = dataset_manager_list_clp_json(clp_package)
+    dataset_manager_list_action = dataset_manager_clp_json(
+        clp_package=clp_package,
+        dataset_manager_type=ClpPackageDatasetManagerType.LIST,
+    )
     verified, failure_message = verify_dataset_manager_list_action_clp_json(
         dataset_manager_list_action, clp_package
     )
     assert verified, failure_message
 
-    dataset_manager_del_action = dataset_manager_del_clp_json(
+    dataset_manager_del_action = dataset_manager_clp_json(
         clp_package=clp_package,
+        dataset_manager_type=ClpPackageDatasetManagerType.DEL,
         datasets_to_del=[
             json_multifile,
         ],
@@ -159,36 +168,44 @@ def test_clp_json_archive_manager_json_multifile(
     verified, failure_message = verify_compress_action_clp_json(compress_action, clp_package)
     assert verified, failure_message
 
-    archive_manager_find_all_action = archive_manager_find_clp_json(clp_package, json_multifile)
+    archive_manager_find_all_action = archive_manager_clp_json(
+        clp_package=clp_package,
+        dataset=json_multifile,
+        archive_manager_type=ClpPackageArchiveManagerType.FIND,
+    )
     verified, failure_message = verify_archive_manager_find_action_clp_json(
         archive_manager_find_all_action, clp_package, json_multifile
     )
     assert verified, failure_message
 
-    archive_manager_find_range_action = archive_manager_find_clp_json(
+    archive_manager_find_range_action = archive_manager_clp_json(
         clp_package=clp_package,
         dataset=json_multifile,
-        begin_ts=json_multifile.metadata_dict["begin_ts_ms"],
-        end_ts=json_multifile.metadata_dict["end_ts_ms"],
+        archive_manager_type=ClpPackageArchiveManagerType.FIND,
+        begin_ts=json_multifile.metadata_dict["begin_ts"],
+        end_ts=json_multifile.metadata_dict["end_ts"],
     )
     verified, failure_message = verify_archive_manager_find_action_clp_json(
         archive_manager_find_range_action, clp_package, json_multifile
     )
     assert verified, failure_message
 
-    archive_manager_del_by_ids_action = archive_manager_del_by_ids_clp_json(
-        clp_package, json_multifile
+    archive_manager_del_by_ids_action = archive_manager_clp_json(
+        clp_package=clp_package,
+        dataset=json_multifile,
+        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
     )
     verified, failure_message = verify_archive_manager_del_action_clp_json(
         archive_manager_del_by_ids_action, clp_package, json_multifile
     )
     assert verified, failure_message
 
-    archive_manager_del_by_filter_action = archive_manager_del_by_filter_clp_json(
+    archive_manager_del_by_filter_action = archive_manager_clp_json(
         clp_package=clp_package,
         dataset=json_multifile,
-        begin_ts=json_multifile.metadata_dict["begin_ts_ms"],
-        end_ts=json_multifile.metadata_dict["end_ts_ms"],
+        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_FILTER,
+        begin_ts=json_multifile.metadata_dict["begin_ts"],
+        end_ts=json_multifile.metadata_dict["end_ts"],
     )
     archive_manager_del_by_filter_verified, failure_message = (
         verify_archive_manager_del_action_clp_json(

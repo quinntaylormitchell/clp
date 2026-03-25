@@ -1,10 +1,20 @@
 {
-    "dataset_name": "json_multifile",
-    "data_type": "json",
+    "data": {
+        "type": "json",
+        "unstructured": false
+    },
+    "dataset": "json_multifile",
     "timestamp_key": "timestamp",
-    "begin_ts_ms": 1310138944000,
-    "end_ts_ms": 1311208074120,
-    "number_of_log_files": 5,
-    "number_of_events_per_log_file": 8,
-    "subdirectory_containing_log_files": "logs"
+    "begin_ts": 1310138944000,
+    "end_ts": 1311208074120,
+    "file_structure": {
+        "logs_subdir": "logs",
+        "file_names": [
+            "sts-135-2011-07-08.jsonl",
+            "sts-135-2011-07-09.jsonl",
+            "sts-135-2011-07-11.jsonl",
+            "sts-135-2011-07-19.jsonl",
+            "sts-135-2011-07-21.jsonl"
+        ]
+    }
 }

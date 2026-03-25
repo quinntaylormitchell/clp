@@ -5,9 +5,7 @@ import logging
 import pytest
 
 from tests.clp_package_tests.clp_text.utils.archive_manager import (
-    archive_manager_del_by_filter_clp_text,
-    archive_manager_del_by_ids_clp_text,
-    archive_manager_find_clp_text,
+    archive_manager_clp_text,
     clear_package_archives_clp_text,
     verify_archive_manager_del_action_clp_text,
     verify_archive_manager_find_action_clp_text,
@@ -18,13 +16,13 @@ from tests.clp_package_tests.clp_text.utils.compress import (
 )
 from tests.clp_package_tests.clp_text.utils.mode import CLP_TEXT_MODE
 from tests.clp_package_tests.clp_text.utils.search import (
-    ClpTextSearchType,
     search_clp_text,
     verify_search_action_clp_text,
 )
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
 )
+from tests.clp_package_tests.utils.parsers import ClpPackageArchiveManagerType, ClpPackageSearchType
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
@@ -89,14 +87,16 @@ def test_clp_text_search_text_multifile_basic(
     )
     assert verified, failure_message
 
-    for search_type in ClpTextSearchType:
+    for search_type in ClpPackageSearchType:
         search_action = search_clp_text(
             clp_package=clp_package,
             dataset=text_multifile,
             search_type=search_type,
             wildcard_query="Saturn",
         )
-        verified, failure_message = verify_search_action_clp_text(search_action, text_multifile)
+        verified, failure_message = verify_search_action_clp_text(
+            search_action, search_type, text_multifile
+        )
         assert verified, failure_message
 
     clear_package_archives_clp_text(clp_package)
@@ -120,32 +120,40 @@ def test_clp_text_archive_manager_text_multifile(
     )
     assert verified, failure_message
 
-    find_all_action = archive_manager_find_clp_text(clp_package)
+    find_all_action = archive_manager_clp_text(
+        clp_package=clp_package,
+        archive_manager_type=ClpPackageArchiveManagerType.FIND,
+    )
     verified, failure_message = verify_archive_manager_find_action_clp_text(
         find_all_action, clp_package
     )
     assert verified, failure_message
 
-    find_range_action = archive_manager_find_clp_text(
+    find_range_action = archive_manager_clp_text(
         clp_package=clp_package,
-        begin_ts=text_multifile.metadata_dict["begin_ts_ms"],
-        end_ts=text_multifile.metadata_dict["end_ts_ms"],
+        archive_manager_type=ClpPackageArchiveManagerType.FIND,
+        begin_ts=text_multifile.metadata_dict["begin_ts"],
+        end_ts=text_multifile.metadata_dict["end_ts"],
     )
     verified, failure_message = verify_archive_manager_find_action_clp_text(
         find_range_action, clp_package
     )
     assert verified, failure_message
 
-    del_by_ids_action = archive_manager_del_by_ids_clp_text(clp_package)
+    del_by_ids_action = archive_manager_clp_text(
+        clp_package=clp_package,
+        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
+    )
     verified, failure_message = verify_archive_manager_del_action_clp_text(
         del_by_ids_action, clp_package
     )
     assert verified, failure_message
 
-    del_by_filter_action = archive_manager_del_by_filter_clp_text(
+    del_by_filter_action = archive_manager_clp_text(
         clp_package=clp_package,
-        begin_ts=text_multifile.metadata_dict["begin_ts_ms"],
-        end_ts=text_multifile.metadata_dict["end_ts_ms"],
+        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_FILTER,
+        begin_ts=text_multifile.metadata_dict["begin_ts"],
+        end_ts=text_multifile.metadata_dict["end_ts"],
     )
     verified, failure_message = verify_archive_manager_del_action_clp_text(
         del_by_filter_action, clp_package

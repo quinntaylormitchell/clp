@@ -1,6 +1,7 @@
 """Docstring."""
 
 import logging
+from typing import Any
 
 import pytest
 from clp_package_utils.general import EXTRACT_FILE_CMD
@@ -10,8 +11,8 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackageExternalAction,
 )
 from tests.clp_package_tests.utils.parsers import (
-    get_compress_parser,
-    get_decompress_parser,
+    construct_compress_arg_dict,
+    construct_compress_cmd,
 )
 from tests.utils.classes import (
     IntegrationTestDataset,
@@ -34,14 +35,12 @@ def compress_clp_text(
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
 
-    compress_cmd: list[str] = [
-        str(clp_package.path_config.compress_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        str(dataset.path_to_dataset_logs),
-    ]
-    compress_action = ClpPackageExternalAction(cmd=compress_cmd, args_parser=get_compress_parser())
+    arg_dict: dict[str, Any] = construct_compress_arg_dict(clp_package, dataset)
+    compress_action = ClpPackageExternalAction(
+        cmd=construct_compress_cmd(arg_dict), arg_dict=arg_dict
+    )
     execute_external_action(compress_action)
+
     return compress_action
 
 
@@ -72,7 +71,7 @@ def verify_compress_action_clp_text(
     ]
     decompress_action = ClpPackageExternalAction(
         cmd=decompress_cmd,
-        args_parser=get_decompress_parser(),
+        arg_dict={},
     )
     execute_external_action(decompress_action)
     if decompress_action.completed_proc.returncode != 0:

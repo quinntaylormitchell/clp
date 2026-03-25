@@ -1,9 +1,9 @@
 """Classes used in clp-presto integration tests."""
 
-import argparse
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from tests.clp_package_tests.utils.classes import ClpPackageTestPathConfig
 from tests.utils.classes import IntegrationTestExternalAction
@@ -61,12 +61,5 @@ class PrestoCluster:
 class PrestoClusterExternalAction(IntegrationTestExternalAction):
     """Docstring for PrestoClusterExternalAction."""
 
-    #: Parser to define semantics for the content of `cmd`.
-    args_parser: argparse.ArgumentParser
-
-    #: Namespace to hold information from `cmd`.
-    parsed_args: argparse.Namespace = field(init=False)
-
-    def __post_init__(self) -> None:
-        """Parse command arguments."""
-        self.parsed_args = self.args_parser.parse_args(self.cmd[1:])
+    #: Semantic dictionary used to construct `cmd` and verify the Action.
+    arg_dict: dict[str, Any]

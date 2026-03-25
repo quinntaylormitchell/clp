@@ -2,7 +2,7 @@
 
 import logging
 import re
-from enum import auto, Enum
+from typing import Any
 
 import pytest
 
@@ -11,7 +11,9 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackageExternalAction,
 )
 from tests.clp_package_tests.utils.parsers import (
-    get_search_parser,
+    ClpPackageSearchType,
+    construct_search_arg_dict,
+    construct_search_cmd,
 )
 from tests.utils.classes import (
     IntegrationTestDataset,
@@ -26,88 +28,27 @@ from tests.utils.utils import (
 logger = logging.getLogger(__name__)
 
 
-class ClpTextSearchType(Enum):
-    """An enumeration of the types of search we can perform in `clp-text`."""
-
-    BASIC = auto()
-    FILE_PATH = auto()
-    IGNORE_CASE = auto()
-    COUNT_RESULTS = auto()
-    COUNT_BY_TIME = auto()
-    TIME_RANGE = auto()
-
-
 def search_clp_text(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
-    search_type: ClpTextSearchType,
+    search_type: ClpPackageSearchType,
     wildcard_query: str,
 ) -> ClpPackageExternalAction:
     """Docstring."""
     logger.info(f"Performing '{search_type.name}' search.")
 
-    search_cmd: list[str] = _build_search_cmd_for_search_type_clp_text(
-        clp_package,
-        dataset,
-        search_type,
-        wildcard_query,
+    arg_dict: dict[str, Any] = construct_search_arg_dict(
+        clp_package, dataset, search_type, wildcard_query
     )
-    search_action = ClpPackageExternalAction(
-        cmd=search_cmd,
-        args_parser=get_search_parser(),
-    )
+    search_action = ClpPackageExternalAction(cmd=construct_search_cmd(arg_dict), arg_dict=arg_dict)
     execute_external_action(search_action)
 
     return search_action
 
 
-def _build_search_cmd_for_search_type_clp_text(
-    clp_package: ClpPackage,
-    dataset: IntegrationTestDataset,
-    search_type: ClpTextSearchType,
-    wildcard_query: str,
-) -> list[str]:
-    """Docstring."""
-    search_cmd: list[str] = [
-        str(clp_package.path_config.search_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-    ]
-
-    match search_type:
-        case ClpTextSearchType.BASIC:
-            pass
-        case ClpTextSearchType.FILE_PATH:
-            search_cmd.append("--file-path")
-            search_cmd.append(
-                str(
-                    dataset.path_to_dataset_logs
-                    / dataset.metadata_dict["subfile_for_file_path_search"]
-                )
-            )
-        case ClpTextSearchType.IGNORE_CASE:
-            search_cmd.append("--ignore-case")
-        case ClpTextSearchType.COUNT_RESULTS:
-            search_cmd.append("--count")
-        case ClpTextSearchType.COUNT_BY_TIME:
-            search_cmd.append("--count-by-time")
-            search_cmd.append(str(10))
-        case ClpTextSearchType.TIME_RANGE:
-            search_cmd.append("--begin-time")
-            search_cmd.append(str(dataset.metadata_dict["begin_ts_ms"]))
-            search_cmd.append("--end-time")
-            search_cmd.append(str(dataset.metadata_dict["end_ts_ms"]))
-        case _:
-            pytest.fail(f"Unsupported search type for clp-text: '{search_type}'")
-
-    search_cmd.append("--raw")
-    search_cmd.append(wildcard_query)
-
-    return search_cmd
-
-
 def verify_search_action_clp_text(
     search_action: ClpPackageExternalAction,
+    search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """Docstring."""
@@ -118,9 +59,9 @@ def verify_search_action_clp_text(
         )
 
     # Construct and run grep command.
-    search_type = _get_search_type_for_action(search_action)
-    grep_cmd = _convert_search_action_to_grep_cmd(search_action, search_type, original_dataset)
-    grep_action = IntegrationTestExternalAction(cmd=grep_cmd)
+    grep_action = IntegrationTestExternalAction(
+        cmd=_construct_grep_verirfication_cmd(search_action, search_type, original_dataset)
+    )
     execute_external_action(grep_action)
 
     if grep_action.completed_proc.returncode != 0:
@@ -147,42 +88,26 @@ def verify_search_action_clp_text(
     return True, ""
 
 
-def _convert_search_action_to_grep_cmd(
+def _construct_grep_verirfication_cmd(
     search_action: ClpPackageExternalAction,
-    search_type: ClpTextSearchType,
+    search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> list[str]:
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
-    path_for_grep = search_action.parsed_args.file_path or original_dataset.path_to_dataset_logs
+    arg_dict = search_action.arg_dict
+    if "file_path" in arg_dict:
+        path_for_grep = arg_dict["file_path"]
+    else:
+        path_for_grep = original_dataset.path_to_dataset_logs
     return [
         get_binary_path("grep"),
         *grep_cmd_options,
-        search_action.parsed_args.wildcard_query,
+        search_action.arg_dict["wildcard_query"],
         path_for_grep,
     ]
 
 
-def _get_search_type_for_action(
-    search_action: ClpPackageExternalAction,
-) -> ClpTextSearchType:
-    parsed_args = search_action.parsed_args
-
-    if parsed_args.begin_time is not None or parsed_args.end_time is not None:
-        return ClpTextSearchType.TIME_RANGE
-    if parsed_args.count_by_time is not None:
-        return ClpTextSearchType.COUNT_BY_TIME
-    if parsed_args.count:
-        return ClpTextSearchType.COUNT_RESULTS
-    if parsed_args.ignore_case:
-        return ClpTextSearchType.IGNORE_CASE
-    if parsed_args.file_path:
-        return ClpTextSearchType.FILE_PATH
-    return ClpTextSearchType.BASIC
-
-    # TODO: what if the command has an invalid combination of arguments?
-
-
-def _get_grep_options_from_search_type(search_type: ClpTextSearchType) -> list[str]:
+def _get_grep_options_from_search_type(search_type: ClpPackageSearchType) -> list[str]:
     grep_cmd_options: list[str] = [
         "--recursive",
         "--no-filename",
@@ -191,14 +116,14 @@ def _get_grep_options_from_search_type(search_type: ClpTextSearchType) -> list[s
 
     match search_type:
         case (
-            ClpTextSearchType.BASIC
-            | ClpTextSearchType.FILE_PATH
-            | ClpTextSearchType.COUNT_RESULTS
-            | ClpTextSearchType.COUNT_BY_TIME
-            | ClpTextSearchType.TIME_RANGE
+            ClpPackageSearchType.BASIC
+            | ClpPackageSearchType.FILE_PATH
+            | ClpPackageSearchType.COUNT_RESULTS
+            | ClpPackageSearchType.COUNT_BY_TIME
+            | ClpPackageSearchType.TIME_RANGE
         ):
             return grep_cmd_options
-        case ClpTextSearchType.IGNORE_CASE:
+        case ClpPackageSearchType.IGNORE_CASE:
             grep_cmd_options.append("--ignore-case")
             return grep_cmd_options
         case _:
@@ -207,16 +132,16 @@ def _get_grep_options_from_search_type(search_type: ClpTextSearchType) -> list[s
             )
 
 
-def _format_grep_result_for_search_type(grep_result: str, search_type: ClpTextSearchType) -> str:
+def _format_grep_result_for_search_type(grep_result: str, search_type: ClpPackageSearchType) -> str:
     match search_type:
         case (
-            ClpTextSearchType.BASIC
-            | ClpTextSearchType.FILE_PATH
-            | ClpTextSearchType.IGNORE_CASE
-            | ClpTextSearchType.TIME_RANGE
+            ClpPackageSearchType.BASIC
+            | ClpPackageSearchType.FILE_PATH
+            | ClpPackageSearchType.IGNORE_CASE
+            | ClpPackageSearchType.TIME_RANGE
         ):
             return grep_result
-        case ClpTextSearchType.COUNT_RESULTS | ClpTextSearchType.COUNT_BY_TIME:
+        case ClpPackageSearchType.COUNT_RESULTS | ClpPackageSearchType.COUNT_BY_TIME:
             return str(len(grep_result.splitlines())) + "\n"
         case _:
             pytest.fail(
@@ -225,17 +150,17 @@ def _format_grep_result_for_search_type(grep_result: str, search_type: ClpTextSe
 
 
 def _format_search_result_for_search_type(
-    search_result: str, search_type: ClpTextSearchType
+    search_result: str, search_type: ClpPackageSearchType
 ) -> str:
     match search_type:
         case (
-            ClpTextSearchType.BASIC
-            | ClpTextSearchType.FILE_PATH
-            | ClpTextSearchType.IGNORE_CASE
-            | ClpTextSearchType.TIME_RANGE
+            ClpPackageSearchType.BASIC
+            | ClpPackageSearchType.FILE_PATH
+            | ClpPackageSearchType.IGNORE_CASE
+            | ClpPackageSearchType.TIME_RANGE
         ):
             return search_result
-        case ClpTextSearchType.COUNT_RESULTS | ClpTextSearchType.COUNT_BY_TIME:
+        case ClpPackageSearchType.COUNT_RESULTS | ClpPackageSearchType.COUNT_BY_TIME:
             match = re.search(r"count: (\d+)", search_result)
             if match:
                 return match.group(1) + "\n"

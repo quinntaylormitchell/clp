@@ -2,7 +2,7 @@
 
 import logging
 import re
-from enum import auto, Enum
+from typing import Any
 
 import pytest
 
@@ -11,7 +11,9 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackageExternalAction,
 )
 from tests.clp_package_tests.utils.parsers import (
-    get_search_parser,
+    ClpPackageSearchType,
+    construct_search_arg_dict,
+    construct_search_cmd,
 )
 from tests.utils.classes import (
     IntegrationTestDataset,
@@ -24,81 +26,27 @@ from tests.utils.utils import get_binary_path
 logger = logging.getLogger(__name__)
 
 
-class ClpJsonSearchType(Enum):
-    """An enumeration of the types of search we can perform in `clp-json`."""
-
-    BASIC = auto()
-    IGNORE_CASE = auto()
-    COUNT_RESULTS = auto()
-    COUNT_BY_TIME = auto()
-    TIME_RANGE = auto()
-
-
 def search_clp_json(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
-    search_type: ClpJsonSearchType,
+    search_type: ClpPackageSearchType,
     wildcard_query: str,
 ) -> ClpPackageExternalAction:
     """Docstring."""
     logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
 
-    search_cmd: list[str] = _build_search_cmd_for_search_type_clp_json(
-        clp_package,
-        dataset,
-        search_type,
-        wildcard_query,
+    arg_dict: dict[str, Any] = construct_search_arg_dict(
+        clp_package, dataset, search_type, wildcard_query
     )
-    search_action = ClpPackageExternalAction(
-        cmd=search_cmd,
-        args_parser=get_search_parser(),
-    )
+    search_action = ClpPackageExternalAction(cmd=construct_search_cmd(arg_dict), arg_dict=arg_dict)
     execute_external_action(search_action)
+
     return search_action
-
-
-def _build_search_cmd_for_search_type_clp_json(
-    clp_package: ClpPackage,
-    dataset: IntegrationTestDataset,
-    search_type: ClpJsonSearchType,
-    wildcard_query: str,
-) -> list[str]:
-    """Docstring."""
-    clp_package_test_path_config = clp_package.path_config
-    search_cmd: list[str] = [
-        str(clp_package_test_path_config.search_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "--dataset",
-        dataset.metadata_dict["dataset_name"],
-    ]
-
-    match search_type:
-        case ClpJsonSearchType.BASIC:
-            pass
-        case ClpJsonSearchType.IGNORE_CASE:
-            search_cmd.append("--ignore-case")
-        case ClpJsonSearchType.COUNT_RESULTS:
-            search_cmd.append("--count")
-        case ClpJsonSearchType.COUNT_BY_TIME:
-            search_cmd.append("--count-by-time")
-            search_cmd.append(str(10))
-        case ClpJsonSearchType.TIME_RANGE:
-            search_cmd.append("--begin-time")
-            search_cmd.append(str(dataset.metadata_dict["begin_ts_ms"]))
-            search_cmd.append("--end-time")
-            search_cmd.append(str(dataset.metadata_dict["end_ts_ms"]))
-        case _:
-            pytest.fail(f"Unsupported search type for clp-json: '{search_type}'")
-
-    search_cmd.append("--raw")
-    search_cmd.append(wildcard_query)
-
-    return search_cmd
 
 
 def verify_search_action_clp_json(
     search_action: ClpPackageExternalAction,
+    search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """Docstring."""
@@ -109,9 +57,9 @@ def verify_search_action_clp_json(
         )
 
     # Construct and run grep command.
-    search_type = _get_search_type_for_action(search_action)
-    grep_cmd = _convert_search_action_to_grep_cmd(search_action, search_type, original_dataset)
-    grep_action = IntegrationTestExternalAction(cmd=grep_cmd)
+    grep_action = IntegrationTestExternalAction(
+        cmd=_construct_grep_verirfication_cmd(search_action, search_type, original_dataset)
+    )
     execute_external_action(grep_action)
 
     if grep_action.completed_proc.returncode != 0:
@@ -138,9 +86,9 @@ def verify_search_action_clp_json(
     return True, ""
 
 
-def _convert_search_action_to_grep_cmd(
+def _construct_grep_verirfication_cmd(
     search_action: ClpPackageExternalAction,
-    search_type: ClpJsonSearchType,
+    search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> list[str]:
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
@@ -148,28 +96,12 @@ def _convert_search_action_to_grep_cmd(
     return [
         get_binary_path("grep"),
         *grep_cmd_options,
-        search_action.parsed_args.wildcard_query,
+        search_action.arg_dict["wildcard_query"],
         path_for_grep,
     ]
 
 
-def _get_search_type_for_action(
-    search_action: ClpPackageExternalAction,
-) -> ClpJsonSearchType:
-    parsed_args = search_action.parsed_args
-
-    if parsed_args.begin_time is not None or parsed_args.end_time is not None:
-        return ClpJsonSearchType.TIME_RANGE
-    if parsed_args.count_by_time is not None:
-        return ClpJsonSearchType.COUNT_BY_TIME
-    if parsed_args.count:
-        return ClpJsonSearchType.COUNT_RESULTS
-    if parsed_args.ignore_case:
-        return ClpJsonSearchType.IGNORE_CASE
-    return ClpJsonSearchType.BASIC
-
-
-def _get_grep_options_from_search_type(search_type: ClpJsonSearchType) -> list[str]:
+def _get_grep_options_from_search_type(search_type: ClpPackageSearchType) -> list[str]:
     grep_cmd_options: list[str] = [
         "--recursive",
         "--no-filename",
@@ -178,13 +110,13 @@ def _get_grep_options_from_search_type(search_type: ClpJsonSearchType) -> list[s
 
     match search_type:
         case (
-            ClpJsonSearchType.BASIC
-            | ClpJsonSearchType.COUNT_RESULTS
-            | ClpJsonSearchType.COUNT_BY_TIME
-            | ClpJsonSearchType.TIME_RANGE
+            ClpPackageSearchType.BASIC
+            | ClpPackageSearchType.COUNT_RESULTS
+            | ClpPackageSearchType.COUNT_BY_TIME
+            | ClpPackageSearchType.TIME_RANGE
         ):
             return grep_cmd_options
-        case ClpJsonSearchType.IGNORE_CASE:
+        case ClpPackageSearchType.IGNORE_CASE:
             grep_cmd_options.append("--ignore-case")
             return grep_cmd_options
         case _:
@@ -193,11 +125,15 @@ def _get_grep_options_from_search_type(search_type: ClpJsonSearchType) -> list[s
             )
 
 
-def _format_grep_result_for_search_type(grep_result: str, search_type: ClpJsonSearchType) -> str:
+def _format_grep_result_for_search_type(grep_result: str, search_type: ClpPackageSearchType) -> str:
     match search_type:
-        case ClpJsonSearchType.BASIC | ClpJsonSearchType.IGNORE_CASE | ClpJsonSearchType.TIME_RANGE:
+        case (
+            ClpPackageSearchType.BASIC
+            | ClpPackageSearchType.IGNORE_CASE
+            | ClpPackageSearchType.TIME_RANGE
+        ):
             return grep_result
-        case ClpJsonSearchType.COUNT_RESULTS | ClpJsonSearchType.COUNT_BY_TIME:
+        case ClpPackageSearchType.COUNT_RESULTS | ClpPackageSearchType.COUNT_BY_TIME:
             return str(len(grep_result.splitlines())) + "\n"
         case _:
             pytest.fail(
@@ -206,12 +142,16 @@ def _format_grep_result_for_search_type(grep_result: str, search_type: ClpJsonSe
 
 
 def _format_search_result_for_search_type(
-    search_result: str, search_type: ClpJsonSearchType
+    search_result: str, search_type: ClpPackageSearchType
 ) -> str:
     match search_type:
-        case ClpJsonSearchType.BASIC | ClpJsonSearchType.IGNORE_CASE | ClpJsonSearchType.TIME_RANGE:
+        case (
+            ClpPackageSearchType.BASIC
+            | ClpPackageSearchType.IGNORE_CASE
+            | ClpPackageSearchType.TIME_RANGE
+        ):
             return search_result
-        case ClpJsonSearchType.COUNT_RESULTS | ClpJsonSearchType.COUNT_BY_TIME:
+        case ClpPackageSearchType.COUNT_RESULTS | ClpPackageSearchType.COUNT_BY_TIME:
             match = re.search(r"count: (\d+)", search_result)
             if match:
                 return match.group(1) + "\n"

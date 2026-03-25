@@ -1,12 +1,16 @@
 """Docstring."""
 
 import logging
+from typing import Any
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
-from tests.clp_package_tests.utils.parsers import get_compress_parser
+from tests.clp_package_tests.utils.parsers import (
+    construct_compress_arg_dict,
+    construct_compress_cmd,
+)
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
@@ -24,19 +28,12 @@ def compress_clp_json(
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
 
-    clp_package_test_path_config = clp_package.path_config
-    compress_cmd: list[str] = [
-        str(clp_package_test_path_config.compress_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        "--dataset",
-        dataset.metadata_dict["dataset_name"],
-        "--timestamp-key",
-        dataset.metadata_dict["timestamp_key"],
-        str(dataset.path_to_dataset_logs),
-    ]
-    compress_action = ClpPackageExternalAction(cmd=compress_cmd, args_parser=get_compress_parser())
+    arg_dict: dict[str, Any] = construct_compress_arg_dict(clp_package, dataset)
+    compress_action = ClpPackageExternalAction(
+        cmd=construct_compress_cmd(arg_dict), arg_dict=arg_dict
+    )
     execute_external_action(compress_action)
+
     return compress_action
 
 

@@ -1,8 +1,8 @@
 """Classes used in CLP binary integration tests."""
 
-import argparse
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from tests.utils.classes import (
     IntegrationTestExternalAction,
@@ -51,12 +51,5 @@ class ClpBinaryTestPathConfig(IntegrationTestPathConfig):
 class ClpBinaryExternalAction(IntegrationTestExternalAction):
     """Metadata for an external action executed during a CLP binary integration test."""
 
-    #: Parser to define semantics for the content of `cmd`.
-    args_parser: argparse.ArgumentParser
-
-    #: Namespace to hold information from `cmd`.
-    parsed_args: argparse.Namespace = field(init=False)
-
-    def __post_init__(self) -> None:
-        """Parse command arguments."""
-        self.parsed_args = self.args_parser.parse_args(self.cmd[1:])
+    #: Semantic dictionary used to construct `cmd` and verify the Action.
+    arg_dict: dict[str, Any]

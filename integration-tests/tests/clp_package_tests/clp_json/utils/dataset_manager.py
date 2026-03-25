@@ -2,6 +2,7 @@
 
 import logging
 import re
+from typing import Any
 
 import pytest
 
@@ -10,7 +11,9 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackageExternalAction,
 )
 from tests.clp_package_tests.utils.parsers import (
-    get_dataset_manager_parser,
+    ClpPackageDatasetManagerType,
+    construct_dataset_manager_arg_dict,
+    construct_dataset_manager_cmd,
 )
 from tests.utils.classes import (
     IntegrationTestDataset,
@@ -21,38 +24,28 @@ from tests.utils.subprocess_utils import execute_external_action
 logger = logging.getLogger(__name__)
 
 
-def dataset_manager_list_clp_json(
+def dataset_manager_clp_json(
     clp_package: ClpPackage,
-) -> ClpPackageExternalAction:
-    """Docstring."""
-    logger.info("Performing 'list' operation with dataset-manager.")
-
-    cmd = _get_base_dataset_manager_cmd(clp_package)
-    cmd.append("list")
-
-    return _run_dataset_manager_action(cmd)
-
-
-def dataset_manager_del_clp_json(
-    clp_package: ClpPackage,
+    dataset_manager_type: ClpPackageDatasetManagerType,
     datasets_to_del: list[IntegrationTestDataset] | None = None,
     del_all: bool = False,
 ) -> ClpPackageExternalAction:
     """Docstring."""
-    logger.info("Performing 'del' operation with dataset-manager.")
+    log_msg = f"Performing '{dataset_manager_type.name}' operation with dataset-manager."
+    logger.info(log_msg)
 
-    cmd = _get_base_dataset_manager_cmd(clp_package)
-    cmd.append("del")
+    arg_dict: dict[str, Any] = construct_dataset_manager_arg_dict(
+        clp_package,
+        dataset_manager_type,
+        datasets_to_del,
+        del_all,
+    )
+    dataset_manager_action = ClpPackageExternalAction(
+        cmd=construct_dataset_manager_cmd(arg_dict), arg_dict=arg_dict
+    )
+    execute_external_action(dataset_manager_action)
 
-    if del_all:
-        cmd.append("--all")
-    elif datasets_to_del is not None:
-        for item in datasets_to_del:
-            cmd.append(item.dataset_name)
-    else:
-        pytest.fail("You must specify either `datasets_to_del` or `del_all` arguments.")
-
-    return _run_dataset_manager_action(cmd)
+    return dataset_manager_action
 
 
 def verify_dataset_manager_list_action_clp_json(
@@ -92,7 +85,10 @@ def verify_dataset_manager_del_action_clp_json(
         )
 
     # Get list of all datasets currently in archives.
-    list_action = dataset_manager_list_clp_json(clp_package)
+    list_action = dataset_manager_clp_json(
+        clp_package=clp_package,
+        dataset_manager_type=ClpPackageDatasetManagerType.LIST,
+    )
     verified, failure_message = verify_dataset_manager_list_action_clp_json(
         list_action, clp_package
     )
@@ -104,9 +100,9 @@ def verify_dataset_manager_del_action_clp_json(
         )
 
     current_datasets = _extract_dataset_names_from_output(list_action)
-    parsed_args = dataset_manager_action.parsed_args
-    datasets_specified_for_deletion = parsed_args.datasets
-    del_all_flag = parsed_args.del_all
+    arg_dict = dataset_manager_action.arg_dict
+    datasets_specified_for_deletion = arg_dict.get("datasets", [])
+    del_all_flag = arg_dict.get("del_all", False)
     if del_all_flag:
         if len(current_datasets) > 0:
             return format_action_failure_msg(
@@ -154,8 +150,9 @@ def clear_package_archives_clp_json(
 ) -> None:
     """Docstring."""
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
-    del_action = dataset_manager_del_clp_json(
+    del_action = dataset_manager_clp_json(
         clp_package=clp_package,
+        dataset_manager_type=ClpPackageDatasetManagerType.DEL,
         del_all=True,
     )
     verified, failure_message = verify_dataset_manager_del_action_clp_json(del_action, clp_package)
@@ -164,27 +161,6 @@ def clear_package_archives_clp_json(
             f"When clearing package archives, the call to dataset-manager 'del' could not be"
             f" verified: '{failure_message}' Subprocess log: '{del_action.log_file_path}'"
         )
-
-
-def _get_base_dataset_manager_cmd(
-    clp_package: ClpPackage,
-) -> list[str]:
-    """Build the common prefix shared by all dataset-manager commands."""
-    return [
-        str(clp_package.path_config.dataset_manager_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-    ]
-
-
-def _run_dataset_manager_action(cmd: list[str]) -> ClpPackageExternalAction:
-    """Construct and immediately execute a ClpPackageExternalAction."""
-    action = ClpPackageExternalAction(
-        cmd=cmd,
-        args_parser=get_dataset_manager_parser(),
-    )
-    execute_external_action(action)
-    return action
 
 
 def _get_action_output(action: ClpPackageExternalAction) -> str:
