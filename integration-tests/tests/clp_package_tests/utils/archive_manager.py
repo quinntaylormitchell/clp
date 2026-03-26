@@ -3,9 +3,10 @@
 import logging
 import re
 from enum import auto, Enum
-from typing import Any
+from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
 from strenum import StrEnum
 
 from tests.clp_package_tests.utils.classes import (
@@ -20,6 +21,46 @@ from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import get_rand_subdirectory_name
 
 logger = logging.getLogger(__name__)
+
+
+class ArchiveManagerArgs(BaseModel):
+    """Docstring."""
+
+    script_path: Path
+    config: Path
+    dataset: str | None = None
+    subcommand: str
+    del_subcommand: str | None = None
+    ids: list[str] | None = None
+    begin_ts: int | None = None
+    end_ts: int | None = None
+
+    def to_cmd(self) -> list[str]:
+        """Docstring."""
+        cmd: list[str] = [
+            str(self.script_path),
+            "--config",
+            str(self.config),
+        ]
+
+        if self.dataset:
+            cmd.append("--dataset")
+            cmd.append(self.dataset)
+
+        cmd.append(self.subcommand)
+
+        if self.del_subcommand:
+            cmd.append(self.del_subcommand)
+        if self.ids:
+            cmd.extend(self.ids)
+        if self.begin_ts is not None:
+            cmd.append("--begin-ts")
+            cmd.append(str(self.begin_ts))
+        if self.end_ts is not None:
+            cmd.append("--end-ts")
+            cmd.append(str(self.end_ts))
+
+        return cmd
 
 
 class ClpPackageArchiveManagerType(Enum):
@@ -51,12 +92,12 @@ def archive_manager_clp_package(  # noqa: PLR0913
     begin_ts: int | None = None,
     end_ts: int | None = None,
     ids_to_del: list[str] | None = None,
-) -> ClpPackageExternalAction:
+) -> ClpPackageExternalAction[ArchiveManagerArgs]:
     """Docstring."""
     log_msg = f"Performing '{archive_manager_type.name}' operation with archive-manager."
     logger.info(log_msg)
 
-    arg_dict: dict[str, Any] = construct_archive_manager_arg_dict(
+    args: ArchiveManagerArgs = _construct_archive_manager_args(
         clp_package,
         archive_manager_type,
         dataset,
@@ -64,98 +105,67 @@ def archive_manager_clp_package(  # noqa: PLR0913
         end_ts,
         ids_to_del,
     )
-    archive_manager_action = ClpPackageExternalAction(
-        cmd=construct_archive_manager_cmd(arg_dict), arg_dict=arg_dict
+    action: ClpPackageExternalAction[ArchiveManagerArgs] = ClpPackageExternalAction(
+        cmd=args.to_cmd(), args=args
     )
-    execute_external_action(archive_manager_action)
+    execute_external_action(action)
 
-    return archive_manager_action
+    return action
 
 
-def construct_archive_manager_arg_dict(  # noqa: PLR0913
+def _construct_archive_manager_args(  # noqa: PLR0913
     clp_package: ClpPackage,
     archive_manager_type: ClpPackageArchiveManagerType,
     dataset: IntegrationTestDataset | None,
     begin_ts: int | None = None,
     end_ts: int | None = None,
     ids_to_del: list[str] | None = None,
-) -> dict[str, Any]:
+) -> ArchiveManagerArgs:
     """Docstring."""
     path_config = clp_package.path_config
-
-    arg_dict: dict[str, Any] = {
-        "script_path": path_config.archive_manager_path,
-        "config": clp_package.temp_config_file_path,
-    }
+    args = ArchiveManagerArgs(
+        script_path=path_config.archive_manager_path,
+        config=clp_package.temp_config_file_path,
+        subcommand=_get_subcommand(archive_manager_type),
+    )
 
     if dataset is not None:
-        arg_dict["dataset"] = dataset.dataset_name
+        args.dataset = dataset.dataset_name
 
     match archive_manager_type:
         case ClpPackageArchiveManagerType.FIND:
-            arg_dict["subcommand"] = ClpPackageArchiveManagerSubcommand.FIND_COMMAND
             if begin_ts is not None:
-                arg_dict["begin_ts"] = begin_ts
+                args.begin_ts = begin_ts
             if end_ts is not None:
-                arg_dict["end_ts"] = end_ts
+                args.end_ts = end_ts
         case ClpPackageArchiveManagerType.DEL_BY_IDS:
-            arg_dict["subcommand"] = ClpPackageArchiveManagerSubcommand.DEL_COMMAND
-            arg_dict["del_subcommand"] = ClpPackageArchiveManagerDelSubcommand.BY_IDS_COMMAND
+            args.del_subcommand = ClpPackageArchiveManagerDelSubcommand.BY_IDS_COMMAND
             if ids_to_del is not None:
-                arg_dict["ids"] = ids_to_del
+                args.ids = ids_to_del
             else:
                 sample_id = get_rand_subdirectory_name(path_config.package_archives_path)
-                arg_dict["ids"] = [sample_id]
+                args.ids = [sample_id]
         case ClpPackageArchiveManagerType.DEL_BY_FILTER:
-            arg_dict["subcommand"] = ClpPackageArchiveManagerSubcommand.DEL_COMMAND
-            arg_dict["del_subcommand"] = ClpPackageArchiveManagerDelSubcommand.BY_FILTER_COMMAND
+            args.del_subcommand = ClpPackageArchiveManagerDelSubcommand.BY_FILTER_COMMAND
             if begin_ts is not None:
-                arg_dict["begin_ts"] = begin_ts
+                args.begin_ts = begin_ts
             if end_ts is None:
                 pytest.fail(
                     "`end_ts` parameter cannot be 'None' when using archive-manager"
                     " 'del by-filter'."
                 )
-            arg_dict["end_ts"] = end_ts
+            args.end_ts = end_ts
         case _:
             pytest.fail(
                 "Unsupported archive_management task type for CLP package:"
                 f" '{archive_manager_type}'"
             )
 
-    return arg_dict
-
-
-def construct_archive_manager_cmd(arg_dict: dict[str, Any]) -> list[str]:
-    """Docstring."""
-    cmd: list[str] = [
-        str(arg_dict["script_path"]),
-        "--config",
-        str(arg_dict["config"]),
-    ]
-
-    if "dataset" in arg_dict:
-        cmd.append("--dataset")
-        cmd.append(arg_dict["dataset"])
-
-    cmd.append(arg_dict["subcommand"])
-
-    if "del_subcommand" in arg_dict:
-        cmd.append(arg_dict["del_subcommand"])
-    if "ids" in arg_dict:
-        cmd.extend(arg_dict["ids"])
-    if "begin_ts" in arg_dict:
-        cmd.append("--begin-ts")
-        cmd.append(str(arg_dict["begin_ts"]))
-    if "end_ts" in arg_dict:
-        cmd.append("--end-ts")
-        cmd.append(str(arg_dict["end_ts"]))
-
-    return cmd
+    return args
 
 
 def verify_archive_manager_find_action(
-    archive_manager_action: ClpPackageExternalAction,
+    archive_manager_action: ClpPackageExternalAction[ArchiveManagerArgs],
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset | None = None,
 ) -> tuple[bool, str]:
@@ -167,9 +177,9 @@ def verify_archive_manager_find_action(
             archive_manager_action,
         )
 
-    arg_dict = archive_manager_action.arg_dict
-    begin_ts: int = arg_dict.get("begin_ts", 0)
-    end_ts: int | None = arg_dict.get("end_ts")
+    args = archive_manager_action.args
+    begin_ts = args.begin_ts if args.begin_ts is not None else 0
+    end_ts = args.end_ts
 
     current_archive_id_list: list[str] = []
 
@@ -236,7 +246,7 @@ def verify_archive_manager_find_action(
 
 
 def verify_archive_manager_del_action(
-    archive_manager_action: ClpPackageExternalAction,
+    archive_manager_action: ClpPackageExternalAction[ArchiveManagerArgs],
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset | None = None,
 ) -> tuple[bool, str]:
@@ -248,8 +258,8 @@ def verify_archive_manager_del_action(
             archive_manager_action,
         )
 
-    arg_dict = archive_manager_action.arg_dict
-    match arg_dict["del_subcommand"]:
+    args = archive_manager_action.args
+    match args.del_subcommand:
         case ClpPackageArchiveManagerDelSubcommand.BY_IDS_COMMAND:
             find_all_action = archive_manager_clp_package(
                 clp_package=clp_package,
@@ -267,7 +277,7 @@ def verify_archive_manager_del_action(
                 )
 
             current_ids = _extract_archive_ids_from_find_output(find_all_action)
-            if any(item in current_ids for item in arg_dict["ids"]):
+            if args.ids and any(item in current_ids for item in args.ids):
                 return format_action_failure_msg(
                     "Archive-manager 'del by-ids' verification failure: Some archives that were"
                     " specified for deletion are still present in the metadata database.",
@@ -275,8 +285,8 @@ def verify_archive_manager_del_action(
                     find_all_action,
                 )
         case ClpPackageArchiveManagerDelSubcommand.BY_FILTER_COMMAND:
-            begin_ts = arg_dict.get("begin_ts")
-            end_ts = arg_dict.get("end_ts")
+            begin_ts = args.begin_ts
+            end_ts = args.end_ts
             find_action = archive_manager_clp_package(
                 clp_package=clp_package,
                 archive_manager_type=ClpPackageArchiveManagerType.FIND,
@@ -311,7 +321,7 @@ def verify_archive_manager_del_action(
 
 
 def _extract_archive_ids_from_find_output(
-    archive_manager_action: ClpPackageExternalAction,
+    archive_manager_action: ClpPackageExternalAction[ArchiveManagerArgs],
 ) -> list[str]:
     output_archive_id_list: list[str] = []
     output_lines = _get_action_output(archive_manager_action).splitlines()
@@ -339,6 +349,14 @@ def _extract_archive_ids_from_find_output(
     return sorted(output_archive_id_list)
 
 
-def _get_action_output(action: ClpPackageExternalAction) -> str:
+def _get_action_output(action: ClpPackageExternalAction[ArchiveManagerArgs]) -> str:
     """Return the combined stdout + stderr from a completed action."""
     return action.completed_proc.stdout + action.completed_proc.stderr
+
+
+def _get_subcommand(archive_manager_type: ClpPackageArchiveManagerType) -> str:
+    return (
+        ClpPackageArchiveManagerSubcommand.FIND_COMMAND
+        if archive_manager_type == ClpPackageArchiveManagerType.FIND
+        else ClpPackageArchiveManagerSubcommand.DEL_COMMAND
+    )

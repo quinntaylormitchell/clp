@@ -1,10 +1,11 @@
 """Functions to facilitate CLP package compression testing."""
 
 import logging
-from typing import Any
+from pathlib import Path
 
 import pytest
 from clp_py_utils.clp_config import StorageEngine
+from pydantic import BaseModel
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
@@ -24,67 +25,76 @@ from tests.utils.utils import (
 logger = logging.getLogger(__name__)
 
 
+class CompressArgs(BaseModel):
+    """Docstring."""
+
+    script_path: Path
+    config: Path
+    dataset: str | None = None
+    timestamp_key: str | None = None
+    unstructured: bool = False
+    paths: list[Path]
+
+    def to_cmd(self) -> list[str]:
+        """Docstring."""
+        cmd: list[str] = [
+            str(self.script_path),
+            "--config",
+            str(self.config),
+        ]
+
+        if self.dataset:
+            cmd.append("--dataset")
+            cmd.append(self.dataset)
+        if self.timestamp_key:
+            cmd.append("--timestamp-key")
+            cmd.append(self.timestamp_key)
+        if self.unstructured:
+            cmd.append("--unstructured")
+
+        cmd.extend([str(path) for path in self.paths])
+
+        return cmd
+
+
 def compress_clp_package(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
-) -> ClpPackageExternalAction:
+) -> ClpPackageExternalAction[CompressArgs]:
     """Docstring."""
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
 
-    arg_dict: dict[str, Any] = construct_compress_arg_dict(clp_package, dataset)
-    compress_action = ClpPackageExternalAction(
-        cmd=construct_compress_cmd(arg_dict), arg_dict=arg_dict
+    args: CompressArgs = _construct_compress_args(clp_package, dataset)
+    action: ClpPackageExternalAction[CompressArgs] = ClpPackageExternalAction(
+        cmd=args.to_cmd(), args=args
     )
-    execute_external_action(compress_action)
+    execute_external_action(action)
 
-    return compress_action
+    return action
 
 
-def construct_compress_arg_dict(
+def _construct_compress_args(
     clp_package: ClpPackage, dataset: IntegrationTestDataset
-) -> dict[str, Any]:
+) -> CompressArgs:
     """Docstring."""
     path_config = clp_package.path_config
-
-    arg_dict: dict[str, Any] = {
-        "script_path": path_config.compress_path,
-        "config": clp_package.temp_config_file_path,
-    }
+    args = CompressArgs(
+        script_path=path_config.compress_path,
+        config=clp_package.temp_config_file_path,
+        paths=[dataset.path_to_dataset_logs],
+    )
 
     if clp_package.clp_config.package.storage_engine == StorageEngine.CLP_S:
-        arg_dict["dataset"] = dataset.metadata_dict["dataset"]
-        arg_dict["timestamp_key"] = dataset.metadata_dict["timestamp_key"]
-        arg_dict["unstructured"] = dataset.metadata_dict["data"]["unstructured"]
+        args.dataset = dataset.metadata_dict["dataset"]
+        args.timestamp_key = dataset.metadata_dict["timestamp_key"]
+        args.unstructured = dataset.metadata_dict["data"]["unstructured"]
 
-    arg_dict["paths"] = [dataset.path_to_dataset_logs]
-
-    return arg_dict
-
-
-def construct_compress_cmd(arg_dict: dict[str, Any]) -> list[str]:
-    """Docstring."""
-    compress_cmd: list[str] = [
-        str(arg_dict["script_path"]),
-        "--config",
-        str(arg_dict["config"]),
-    ]
-    if "dataset" in arg_dict:
-        compress_cmd.append("--dataset")
-        compress_cmd.append(arg_dict["dataset"])
-    if "timestamp_key" in arg_dict:
-        compress_cmd.append("--timestamp-key")
-        compress_cmd.append(arg_dict["timestamp_key"])
-    if arg_dict.get("unstructured"):
-        compress_cmd.append("--unstructured")
-    if "paths" in arg_dict:
-        compress_cmd.extend(arg_dict["paths"])
-
-    return compress_cmd
+    return args
 
 
 def verify_compress_action(
-    compress_action: ClpPackageExternalAction,
+    compress_action: ClpPackageExternalAction[CompressArgs],
     clp_package: ClpPackage,
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
@@ -111,7 +121,7 @@ def verify_compress_action(
 
 
 def _verify_compress_action_clp_json(
-    compress_action: ClpPackageExternalAction, clp_package: ClpPackage
+    compress_action: ClpPackageExternalAction[CompressArgs], clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info(f"Verifying {clp_package.mode_name} package compression.")
@@ -126,7 +136,7 @@ def _verify_compress_action_clp_json(
 
 
 def _verify_compress_action_clp_text(
-    compress_action: ClpPackageExternalAction,
+    compress_action: ClpPackageExternalAction[CompressArgs],
     clp_package: ClpPackage,
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:

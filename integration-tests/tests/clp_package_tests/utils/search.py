@@ -3,10 +3,11 @@
 import logging
 import re
 from enum import auto, Enum
-from typing import Any
+from pathlib import Path
 
 import pytest
 from clp_py_utils.clp_config import StorageEngine
+from pydantic import BaseModel
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
@@ -28,6 +29,56 @@ logger = logging.getLogger(__name__)
 DEFAULT_COUNT_BY_TIME_INTERVAL = 10
 
 
+class SearchArgs(BaseModel):
+    """Docstring."""
+
+    script_path: Path
+    config: Path
+    wildcard_query: str
+    raw: bool = True
+    dataset: str | None = None
+    file_path: Path | None = None
+    ignore_case: bool = False
+    count: bool = False
+    count_by_time: int | None = None
+    begin_ts: int | None = None
+    end_ts: int | None = None
+
+    def to_cmd(self) -> list[str]:
+        """Docstring."""
+        cmd: list[str] = [
+            str(self.script_path),
+            "--config",
+            str(self.config),
+        ]
+
+        if self.dataset:
+            cmd.append("--dataset")
+            cmd.append(self.dataset)
+        if self.file_path:
+            cmd.append("--file-path")
+            cmd.append(str(self.file_path))
+        if self.ignore_case:
+            cmd.append("--ignore-case")
+        if self.count:
+            cmd.append("--count")
+        if self.count_by_time is not None:
+            cmd.append("--count-by-time")
+            cmd.append(str(self.count_by_time))
+        if self.begin_ts is not None:
+            cmd.append("--begin-time")
+            cmd.append(str(self.begin_ts))
+        if self.end_ts is not None:
+            cmd.append("--end-time")
+            cmd.append(str(self.end_ts))
+        if self.raw:
+            cmd.append("--raw")
+
+        cmd.append(self.wildcard_query)
+
+        return cmd
+
+
 class ClpPackageSearchType(Enum):
     """An enumeration of the types of search we can perform with the CLP package."""
 
@@ -44,97 +95,61 @@ def search_clp_package(
     dataset: IntegrationTestDataset,
     search_type: ClpPackageSearchType,
     wildcard_query: str,
-) -> ClpPackageExternalAction:
+) -> ClpPackageExternalAction[SearchArgs]:
     """Docstring."""
     logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
 
-    arg_dict: dict[str, Any] = construct_search_arg_dict(
-        clp_package, dataset, search_type, wildcard_query
+    args: SearchArgs = _construct_search_args(clp_package, dataset, search_type, wildcard_query)
+    action: ClpPackageExternalAction[SearchArgs] = ClpPackageExternalAction(
+        cmd=args.to_cmd(), args=args
     )
-    search_action = ClpPackageExternalAction(cmd=construct_search_cmd(arg_dict), arg_dict=arg_dict)
-    execute_external_action(search_action)
+    execute_external_action(action)
 
-    return search_action
+    return action
 
 
-def construct_search_arg_dict(
+def _construct_search_args(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     search_type: ClpPackageSearchType,
     wildcard_query: str,
-) -> dict[str, Any]:
+) -> SearchArgs:
     """Docstring."""
     path_config = clp_package.path_config
-
-    arg_dict: dict[str, Any] = {
-        "script_path": path_config.search_path,
-        "config": clp_package.temp_config_file_path,
-    }
+    args = SearchArgs(
+        script_path=path_config.search_path,
+        config=clp_package.temp_config_file_path,
+        wildcard_query=wildcard_query,
+    )
 
     if clp_package.clp_config.package.storage_engine == StorageEngine.CLP_S:
-        arg_dict["dataset"] = dataset.metadata_dict["dataset"]
+        args.dataset = dataset.metadata_dict["dataset"]
 
     match search_type:
         case ClpPackageSearchType.BASIC:
             pass
         case ClpPackageSearchType.FILE_PATH:
-            arg_dict["file_path"] = (
+            args.file_path = (
                 dataset.path_to_dataset_logs
                 / dataset.metadata_dict["file_structure"]["file_names"][0]
             )
         case ClpPackageSearchType.IGNORE_CASE:
-            arg_dict["ignore_case"] = True
+            args.ignore_case = True
         case ClpPackageSearchType.COUNT_RESULTS:
-            arg_dict["count"] = True
+            args.count = True
         case ClpPackageSearchType.COUNT_BY_TIME:
-            arg_dict["count_by_time"] = DEFAULT_COUNT_BY_TIME_INTERVAL
+            args.count_by_time = DEFAULT_COUNT_BY_TIME_INTERVAL
         case ClpPackageSearchType.TIME_RANGE:
-            arg_dict["begin_time"] = dataset.metadata_dict["begin_ts"]
-            arg_dict["end_time"] = dataset.metadata_dict["end_ts"]
+            args.begin_ts = dataset.metadata_dict["begin_ts"]
+            args.end_ts = dataset.metadata_dict["end_ts"]
         case _:
             pytest.fail(f"Unsupported search type for CLP package: '{search_type}'")
 
-    arg_dict["raw"] = True
-    arg_dict["wildcard_query"] = wildcard_query
-
-    return arg_dict
-
-
-def construct_search_cmd(arg_dict: dict[str, Any]) -> list[str]:
-    """Docstring."""
-    search_cmd: list[str] = [
-        str(arg_dict["script_path"]),
-        "--config",
-        str(arg_dict["config"]),
-    ]
-    if "dataset" in arg_dict:
-        search_cmd.append("--dataset")
-        search_cmd.append(arg_dict["dataset"])
-    if "file_path" in arg_dict:
-        search_cmd.append("--file-path")
-        search_cmd.append(str(arg_dict["file_path"]))
-    if arg_dict.get("ignore_case"):
-        search_cmd.append("--ignore-case")
-    if arg_dict.get("count"):
-        search_cmd.append("--count")
-    if "count_by_time" in arg_dict:
-        search_cmd.append("--count-by-time")
-        search_cmd.append(str(arg_dict["count_by_time"]))
-    if "begin_time" in arg_dict:
-        search_cmd.append("--begin-time")
-        search_cmd.append(str(arg_dict["begin_time"]))
-    if "end_time" in arg_dict:
-        search_cmd.append("--end-time")
-        search_cmd.append(str(arg_dict["end_time"]))
-    if arg_dict.get("raw"):
-        search_cmd.append("--raw")
-    search_cmd.append(arg_dict["wildcard_query"])
-
-    return search_cmd
+    return args
 
 
 def verify_search_action(
-    search_action: ClpPackageExternalAction,
+    search_action: ClpPackageExternalAction[SearchArgs],
     search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
@@ -176,21 +191,18 @@ def verify_search_action(
 
 
 def _construct_grep_verification_cmd(
-    search_action: ClpPackageExternalAction,
+    search_action: ClpPackageExternalAction[SearchArgs],
     search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> list[str]:
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
-    arg_dict = search_action.arg_dict
-    if "file_path" in arg_dict:
-        path_for_grep = arg_dict["file_path"]
-    else:
-        path_for_grep = original_dataset.path_to_dataset_logs
+    args = search_action.args
+    path_for_grep = args.file_path or original_dataset.path_to_dataset_logs
     return [
         get_binary_path("grep"),
         *grep_cmd_options,
-        search_action.arg_dict["wildcard_query"],
-        path_for_grep,
+        args.wildcard_query,
+        str(path_for_grep),
     ]
 
 

@@ -1,9 +1,11 @@
 """Functions to facilitate CLP package decompression testing."""
 
 import logging
+from pathlib import Path
 from typing import Any
 
 from clp_package_utils.general import EXTRACT_FILE_CMD
+from pydantic import BaseModel
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
@@ -14,55 +16,62 @@ from tests.utils.subprocess_utils import execute_external_action
 logger = logging.getLogger(__name__)
 
 
+class DecompressArgs(BaseModel):
+    """Docstring."""
+
+    script_path: Path
+    config: Path
+    extraction_dir: Path
+    paths: list[Path] | None = None
+
+    def to_cmd(self) -> list[str]:
+        """Docstring."""
+        cmd: list[str] = [
+            str(self.script_path),
+            "--config",
+            str(self.config),
+            EXTRACT_FILE_CMD,
+            "--extraction-dir",
+            str(self.extraction_dir),
+        ]
+
+        if self.paths:
+            cmd.extend([str(path) for path in self.paths])
+
+        return cmd
+
+
 def decompress_clp_package(
     clp_package: ClpPackage,
     extraction_dir: Any,
-    paths: list[str] | None = None,
-) -> ClpPackageExternalAction:
+    paths: list[Path] | None = None,
+) -> ClpPackageExternalAction[DecompressArgs]:
     """Docstring."""
     logger.info(f"Decompressing '{clp_package.mode_name}' package.")
 
-    arg_dict: dict[str, Any] = construct_decompress_arg_dict(clp_package, extraction_dir, paths)
-    decompress_action = ClpPackageExternalAction(
-        cmd=construct_decompress_cmd(arg_dict), arg_dict=arg_dict
+    args: DecompressArgs = _construct_decompress_args(clp_package, extraction_dir, paths)
+    action: ClpPackageExternalAction[DecompressArgs] = ClpPackageExternalAction(
+        cmd=args.to_cmd(), args=args
     )
-    execute_external_action(decompress_action)
+    execute_external_action(action)
 
-    return decompress_action
+    return action
 
 
-def construct_decompress_arg_dict(
+def _construct_decompress_args(
     clp_package: ClpPackage,
     extraction_dir: Any,
-    paths: list[str] | None = None,
-) -> dict[str, Any]:
+    paths: list[Path] | None = None,
+) -> DecompressArgs:
     """Docstring."""
     path_config = clp_package.path_config
-
-    arg_dict: dict[str, Any] = {
-        "script_path": path_config.decompress_path,
-        "config": clp_package.temp_config_file_path,
-        "extraction_dir": extraction_dir,
-    }
+    args = DecompressArgs(
+        script_path=path_config.decompress_path,
+        config=clp_package.temp_config_file_path,
+        extraction_dir=extraction_dir,
+    )
 
     if paths:
-        arg_dict["paths"] = paths
+        args.paths = paths
 
-    return arg_dict
-
-
-def construct_decompress_cmd(arg_dict: dict[str, Any]) -> list[str]:
-    """Docstring."""
-    decompress_cmd: list[str] = [
-        str(arg_dict["script_path"]),
-        "--config",
-        str(arg_dict["config"]),
-        EXTRACT_FILE_CMD,
-        "--extraction-dir",
-        str(arg_dict["extraction_dir"]),
-    ]
-
-    if "paths" in arg_dict:
-        decompress_cmd.extend(arg_dict["paths"])
-
-    return decompress_cmd
+    return args

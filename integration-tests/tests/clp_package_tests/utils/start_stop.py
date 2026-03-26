@@ -1,7 +1,9 @@
 """Utilities that start/stop the CLP package."""
 
 import logging
-from typing import Any
+from pathlib import Path
+
+from pydantic import BaseModel
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
@@ -14,36 +16,69 @@ from tests.utils.subprocess_utils import execute_external_action
 logger = logging.getLogger(__name__)
 
 
-def start_clp_package(clp_package: ClpPackage) -> ClpPackageExternalAction:
+class StartStopArgs(BaseModel):
+    """Docstring."""
+
+    script_path: Path
+    config: Path
+
+    def to_cmd(self) -> list[str]:
+        """Docstring."""
+        return [
+            str(self.script_path),
+            "--config",
+            str(self.config),
+        ]
+
+
+def start_clp_package(
+    clp_package: ClpPackage,
+) -> ClpPackageExternalAction[StartStopArgs]:
     """Docstring."""
     logger.info(f"Starting up the '{clp_package.mode_name}' package.")
 
-    arg_dict: dict[str, Any] = construct_start_clp_arg_dict(clp_package)
-    start_clp_action = ClpPackageExternalAction(
-        cmd=construct_start_clp_cmd(arg_dict),
-        arg_dict=arg_dict,
+    args: StartStopArgs = _construct_start_clp_args(clp_package)
+    action: ClpPackageExternalAction[StartStopArgs] = ClpPackageExternalAction(
+        cmd=args.to_cmd(), args=args
     )
-    execute_external_action(start_clp_action)
+    execute_external_action(action)
 
-    return start_clp_action
+    return action
 
 
-def stop_clp_package(clp_package: ClpPackage) -> ClpPackageExternalAction:
+def stop_clp_package(
+    clp_package: ClpPackage,
+) -> ClpPackageExternalAction[StartStopArgs]:
     """Docstring."""
     logger.info(f"Stopping the '{clp_package.mode_name}' package.")
 
-    arg_dict = construct_stop_clp_arg_dict(clp_package)
-    stop_clp_action = ClpPackageExternalAction(
-        cmd=construct_stop_clp_cmd(arg_dict),
-        arg_dict=arg_dict,
+    args: StartStopArgs = _construct_stop_clp_args(clp_package)
+    action: ClpPackageExternalAction[StartStopArgs] = ClpPackageExternalAction(
+        cmd=args.to_cmd(), args=args
     )
-    execute_external_action(stop_clp_action)
+    execute_external_action(action)
 
-    return stop_clp_action
+    return action
+
+
+def _construct_start_clp_args(clp_package: ClpPackage) -> StartStopArgs:
+    """Docstring."""
+    path_config = clp_package.path_config
+    return StartStopArgs(
+        script_path=path_config.start_clp_path, config=clp_package.temp_config_file_path
+    )
+
+
+def _construct_stop_clp_args(clp_package: ClpPackage) -> StartStopArgs:
+    """Docstring."""
+    path_config = clp_package.path_config
+    return StartStopArgs(
+        script_path=path_config.stop_clp_path, config=clp_package.temp_config_file_path
+    )
 
 
 def verify_start_clp_action(
-    start_clp_action: ClpPackageExternalAction, clp_package: ClpPackage
+    start_clp_action: ClpPackageExternalAction[StartStopArgs], clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info(f"Verifying the startup of the '{clp_package.mode_name}' package.")
@@ -61,7 +96,7 @@ def verify_start_clp_action(
 
 
 def verify_stop_clp_action(
-    stop_clp_action: ClpPackageExternalAction, clp_package: ClpPackage
+    stop_clp_action: ClpPackageExternalAction[StartStopArgs], clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info(f"Verifying the spindown of the '{clp_package.mode_name}' package.")
@@ -123,41 +158,3 @@ def _validate_clp_package_not_running(clp_package: ClpPackage) -> tuple[bool, st
         f" are still running: '{running_services}'"
     )
     return False, fail_msg
-
-
-def construct_start_clp_arg_dict(clp_package: ClpPackage) -> dict[str, Any]:
-    """Docstring."""
-    path_config = clp_package.path_config
-
-    return {
-        "script_path": path_config.start_clp_path,
-        "config": clp_package.temp_config_file_path,
-    }
-
-
-def construct_start_clp_cmd(arg_dict: dict[str, Any]) -> list[str]:
-    """Docstring."""
-    return [
-        str(arg_dict["script_path"]),
-        "--config",
-        str(arg_dict["config"]),
-    ]
-
-
-def construct_stop_clp_arg_dict(clp_package: ClpPackage) -> dict[str, Any]:
-    """Docstring."""
-    path_config = clp_package.path_config
-
-    return {
-        "script_path": path_config.stop_clp_path,
-        "config": clp_package.temp_config_file_path,
-    }
-
-
-def construct_stop_clp_cmd(arg_dict: dict[str, Any]) -> list[str]:
-    """Docstring."""
-    return [
-        str(arg_dict["script_path"]),
-        "--config",
-        str(arg_dict["config"]),
-    ]
