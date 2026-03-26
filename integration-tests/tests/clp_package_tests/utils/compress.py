@@ -1,16 +1,16 @@
-"""Functions to facilitate CLP package compression."""
+"""Functions to facilitate CLP package compression testing."""
 
 import logging
 from typing import Any
 
 import pytest
-from clp_package_utils.general import EXTRACT_FILE_CMD
 from clp_py_utils.clp_config import StorageEngine
 
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
     ClpPackageExternalAction,
 )
+from tests.clp_package_tests.utils.decompress import decompress_clp_package
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
@@ -142,23 +142,11 @@ def _verify_compress_action_clp_text(
     path_config = clp_package.path_config
     clear_directory(path_config.package_decompression_dir)
 
-    decompress_cmd = [
-        str(path_config.decompress_path),
-        "--config",
-        str(clp_package.temp_config_file_path),
-        EXTRACT_FILE_CMD,
-        "--extraction-dir",
-        str(path_config.package_decompression_dir),
-    ]
-    decompress_action = ClpPackageExternalAction(
-        cmd=decompress_cmd,
-        arg_dict={},
-    )
-    execute_external_action(decompress_action)
+    decompress_action = decompress_clp_package(clp_package, path_config.package_decompression_dir)
     if decompress_action.completed_proc.returncode != 0:
         pytest.fail(
-            f"During compress action verification, internal decompress.sh command returned a"
-            f" non-zero exit code. Subprocess log: {decompress_action.log_file_path}"
+            "During compress action verification, internal decompress.sh command returned a"
+            f"non-zero exit code. Subprocess log: {decompress_action.log_file_path}"
         )
 
     # Verify equality between original logs and decompressed logs.
