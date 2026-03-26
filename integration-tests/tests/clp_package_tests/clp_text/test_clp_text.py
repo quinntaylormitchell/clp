@@ -90,7 +90,7 @@ def test_clp_text_search_basic_text_multifile(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.BASIC,
-        wildcard_query="Saturn",
+        wildcard_query=text_multifile.metadata_dict["single_match_wildcard_query"],
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.BASIC, text_multifile
@@ -120,7 +120,7 @@ def test_clp_text_search_file_path_text_multifile(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.FILE_PATH,
-        wildcard_query="Saturn",
+        wildcard_query=text_multifile.metadata_dict["single_match_wildcard_query"],
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.FILE_PATH, text_multifile
@@ -150,7 +150,7 @@ def test_clp_text_search_ignore_case_text_multifile(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.IGNORE_CASE,
-        wildcard_query="Saturn",
+        wildcard_query=text_multifile.metadata_dict["single_match_wildcard_query"],
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.IGNORE_CASE, text_multifile
@@ -180,7 +180,7 @@ def test_clp_text_search_count_results_text_multifile(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.COUNT_RESULTS,
-        wildcard_query="Saturn",
+        wildcard_query=text_multifile.metadata_dict["single_match_wildcard_query"],
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.COUNT_RESULTS, text_multifile
@@ -210,7 +210,7 @@ def test_clp_text_search_count_by_time_text_multifile(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.COUNT_BY_TIME,
-        wildcard_query="Saturn",
+        wildcard_query=text_multifile.metadata_dict["single_match_wildcard_query"],
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.COUNT_BY_TIME, text_multifile
@@ -240,7 +240,7 @@ def test_clp_text_search_time_range_text_multifile(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.TIME_RANGE,
-        wildcard_query="Saturn",
+        wildcard_query=text_multifile.metadata_dict["single_match_wildcard_query"],
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.TIME_RANGE, text_multifile
