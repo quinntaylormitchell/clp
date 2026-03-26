@@ -4,7 +4,9 @@ import logging
 
 import pytest
 
-from tests.clp_package_tests.clp_json.utils.clear_archives import clear_package_archives_clp_json
+from tests.clp_package_tests.clp_json.utils.clear_archives import (
+    clear_package_archives_clp_json,
+)
 from tests.clp_package_tests.clp_json.utils.dataset_manager import (
     ClpPackageDatasetManagerType,
     dataset_manager_clp_json,
@@ -21,7 +23,10 @@ from tests.clp_package_tests.utils.archive_manager import (
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
 )
-from tests.clp_package_tests.utils.compress import compress_clp_json, verify_compress_action
+from tests.clp_package_tests.utils.compress import (
+    compress_clp_json,
+    verify_compress_action,
+)
 from tests.clp_package_tests.utils.search import (
     ClpPackageSearchType,
     search_clp_json,
@@ -74,12 +79,12 @@ def test_clp_json_compression_json_multifile(
 
 
 @pytest.mark.search
-def test_clp_json_search_json_multifile_basic(
+def test_clp_json_search_basic_json_multifile(
     clp_package: ClpPackage,
     json_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    logger.info("Starting test: 'test_clp_json_search_json_multifile_basic'")
+    logger.info("Starting test: 'test_clp_json_search_basic_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
 
@@ -87,33 +92,160 @@ def test_clp_json_search_json_multifile_basic(
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    for search_type in ClpPackageSearchType:
-        if search_type is ClpPackageSearchType.FILE_PATH:
-            continue
-        search_action = search_clp_json(
-            clp_package=clp_package,
-            dataset=json_multifile,
-            search_type=search_type,
-            wildcard_query=(
-                '"detail":"Roll program complete, heads down attitude achieved for ascent"'
-            ),
-        )
-        verified, failure_message = verify_search_action(search_action, search_type, json_multifile)
-        assert verified, failure_message
+    search_action = search_clp_json(
+        clp_package=clp_package,
+        dataset=json_multifile,
+        search_type=ClpPackageSearchType.BASIC,
+        wildcard_query=(
+            '"detail":"Roll program complete, heads down attitude achieved for ascent"'
+        ),
+    )
+    verified, failure_message = verify_search_action(
+        search_action, ClpPackageSearchType.BASIC, json_multifile
+    )
+    assert verified, failure_message
 
     clear_package_archives_clp_json(clp_package)
 
-    logger.info("Test complete: 'test_clp_json_search_json_multifile_basic'")
+    logger.info("Test complete: 'test_clp_json_search_basic_json_multifile'")
 
 
-@pytest.mark.admin_tools
-@pytest.mark.dataset_manager
-def test_clp_json_dataset_manager_json_multifile(
+@pytest.mark.search
+def test_clp_json_search_ignore_case_json_multifile(
     clp_package: ClpPackage,
     json_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    logger.info("Starting test: 'test_clp_json_dataset_manager_json_multifile'")
+    logger.info("Starting test: 'test_clp_json_search_ignore_case_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert verified, failure_message
+
+    search_action = search_clp_json(
+        clp_package=clp_package,
+        dataset=json_multifile,
+        search_type=ClpPackageSearchType.IGNORE_CASE,
+        wildcard_query=(
+            '"detail":"Roll program complete, heads down attitude achieved for ascent"'
+        ),
+    )
+    verified, failure_message = verify_search_action(
+        search_action, ClpPackageSearchType.IGNORE_CASE, json_multifile
+    )
+    assert verified, failure_message
+
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_search_ignore_case_json_multifile'")
+
+
+@pytest.mark.search
+def test_clp_json_search_count_results_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_search_count_results_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert verified, failure_message
+
+    search_action = search_clp_json(
+        clp_package=clp_package,
+        dataset=json_multifile,
+        search_type=ClpPackageSearchType.COUNT_RESULTS,
+        wildcard_query=(
+            '"detail":"Roll program complete, heads down attitude achieved for ascent"'
+        ),
+    )
+    verified, failure_message = verify_search_action(
+        search_action, ClpPackageSearchType.COUNT_RESULTS, json_multifile
+    )
+    assert verified, failure_message
+
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_search_count_results_json_multifile'")
+
+
+@pytest.mark.search
+def test_clp_json_search_count_by_time_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_search_count_by_time_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert verified, failure_message
+
+    search_action = search_clp_json(
+        clp_package=clp_package,
+        dataset=json_multifile,
+        search_type=ClpPackageSearchType.COUNT_BY_TIME,
+        wildcard_query=(
+            '"detail":"Roll program complete, heads down attitude achieved for ascent"'
+        ),
+    )
+    verified, failure_message = verify_search_action(
+        search_action, ClpPackageSearchType.COUNT_BY_TIME, json_multifile
+    )
+    assert verified, failure_message
+
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_search_count_by_time_json_multifile'")
+
+
+@pytest.mark.search
+def test_clp_json_search_time_range_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_search_time_range_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert verified, failure_message
+
+    search_action = search_clp_json(
+        clp_package=clp_package,
+        dataset=json_multifile,
+        search_type=ClpPackageSearchType.TIME_RANGE,
+        wildcard_query=(
+            '"detail":"Roll program complete, heads down attitude achieved for ascent"'
+        ),
+    )
+    verified, failure_message = verify_search_action(
+        search_action, ClpPackageSearchType.TIME_RANGE, json_multifile
+    )
+    assert verified, failure_message
+
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_search_time_range_json_multifile'")
+
+
+@pytest.mark.admin_tools
+@pytest.mark.dataset_manager
+def test_clp_json_dataset_manager_list_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_dataset_manager_list_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
 
@@ -130,6 +262,26 @@ def test_clp_json_dataset_manager_json_multifile(
     )
     assert verified, failure_message
 
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_dataset_manager_list_json_multifile'")
+
+
+@pytest.mark.admin_tools
+@pytest.mark.dataset_manager
+def test_clp_json_dataset_manager_del_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_dataset_manager_del_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert verified, failure_message
+
     dataset_manager_del_action = dataset_manager_clp_json(
         clp_package=clp_package,
         dataset_manager_type=ClpPackageDatasetManagerType.DEL,
@@ -144,17 +296,17 @@ def test_clp_json_dataset_manager_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    logger.info("Test complete: 'test_clp_json_dataset_manager_json_multifile'")
+    logger.info("Test complete: 'test_clp_json_dataset_manager_del_json_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
-def test_clp_json_archive_manager_json_multifile(
+def test_clp_json_archive_manager_find_all_json_multifile(
     clp_package: ClpPackage,
     json_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    logger.info("Starting test: 'test_clp_json_archive_manager_json_multifile'")
+    logger.info("Starting test: 'test_clp_json_archive_manager_find_all_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
 
@@ -172,6 +324,26 @@ def test_clp_json_archive_manager_json_multifile(
     )
     assert verified, failure_message
 
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_archive_manager_find_all_json_multifile'")
+
+
+@pytest.mark.admin_tools
+@pytest.mark.archive_manager
+def test_clp_json_archive_manager_find_range_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_archive_manager_find_range_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert verified, failure_message
+
     archive_manager_find_range_action = archive_manager_clp_json(
         clp_package=clp_package,
         dataset=json_multifile,
@@ -184,6 +356,26 @@ def test_clp_json_archive_manager_json_multifile(
     )
     assert verified, failure_message
 
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_archive_manager_find_range_json_multifile'")
+
+
+@pytest.mark.admin_tools
+@pytest.mark.archive_manager
+def test_clp_json_archive_manager_del_by_ids_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_archive_manager_del_by_ids_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert verified, failure_message
+
     archive_manager_del_by_ids_action = archive_manager_clp_json(
         clp_package=clp_package,
         dataset=json_multifile,
@@ -192,6 +384,26 @@ def test_clp_json_archive_manager_json_multifile(
     verified, failure_message = verify_archive_manager_del_action(
         archive_manager_del_by_ids_action, clp_package, json_multifile
     )
+    assert verified, failure_message
+
+    clear_package_archives_clp_json(clp_package)
+
+    logger.info("Test complete: 'test_clp_json_archive_manager_del_by_ids_json_multifile'")
+
+
+@pytest.mark.admin_tools
+@pytest.mark.archive_manager
+def test_clp_json_archive_manager_del_by_filter_json_multifile(
+    clp_package: ClpPackage,
+    json_multifile: IntegrationTestDataset,
+) -> None:
+    """Docstring."""
+    logger.info("Starting test: 'test_clp_json_archive_manager_del_by_filter_json_multifile'")
+
+    clear_package_archives_clp_json(clp_package)
+
+    compress_action = compress_clp_json(clp_package, json_multifile)
+    verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
     archive_manager_del_by_filter_action = archive_manager_clp_json(
@@ -208,4 +420,4 @@ def test_clp_json_archive_manager_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    logger.info("Test complete: 'test_clp_json_archive_manager_json_multifile'")
+    logger.info("Test complete: 'test_clp_json_archive_manager_del_by_filter_json_multifile'")
