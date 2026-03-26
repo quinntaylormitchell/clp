@@ -18,7 +18,7 @@ from tests.clp_package_tests.clp_presto.utils.split_filters import (
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
 )
-from tests.clp_package_tests.utils.compress import compress_clp_json, verify_compress_action
+from tests.clp_package_tests.utils.compress import compress_clp_package, verify_compress_action
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
@@ -58,7 +58,7 @@ def test_clp_presto_compression_json_multifile(
     clear_package_archives_clp_json(clp_package)
     clear_split_filter_file(presto_cluster)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
     add_split_filter_for_dataset(json_multifile, presto_cluster)
@@ -83,7 +83,7 @@ def test_clp_presto_query_json_multifile_basic(
     clear_package_archives_clp_json(clp_package)
     clear_split_filter_file(presto_cluster)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
     add_split_filter_for_dataset(json_multifile, presto_cluster)

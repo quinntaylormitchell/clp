@@ -9,7 +9,7 @@ from tests.clp_package_tests.clp_text.utils.clear_archives import (
 )
 from tests.clp_package_tests.clp_text.utils.mode import CLP_TEXT_MODE
 from tests.clp_package_tests.utils.archive_manager import (
-    archive_manager_clp_text,
+    archive_manager_clp_package,
     ClpPackageArchiveManagerType,
     verify_archive_manager_del_action,
     verify_archive_manager_find_action,
@@ -18,12 +18,12 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackage,
 )
 from tests.clp_package_tests.utils.compress import (
-    compress_clp_text,
+    compress_clp_package,
     verify_compress_action,
 )
 from tests.clp_package_tests.utils.search import (
     ClpPackageSearchType,
-    search_clp_text,
+    search_clp_package,
     verify_search_action,
 )
 from tests.utils.classes import (
@@ -63,7 +63,7 @@ def test_clp_text_compression_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
@@ -82,11 +82,11 @@ def test_clp_text_search_basic_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_text(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.BASIC,
@@ -112,11 +112,11 @@ def test_clp_text_search_file_path_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_text(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.FILE_PATH,
@@ -142,11 +142,11 @@ def test_clp_text_search_ignore_case_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_text(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.IGNORE_CASE,
@@ -172,11 +172,11 @@ def test_clp_text_search_count_results_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_text(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.COUNT_RESULTS,
@@ -202,11 +202,11 @@ def test_clp_text_search_count_by_time_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_text(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.COUNT_BY_TIME,
@@ -232,11 +232,11 @@ def test_clp_text_search_time_range_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_text(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=text_multifile,
         search_type=ClpPackageSearchType.TIME_RANGE,
@@ -263,11 +263,11 @@ def test_clp_text_archive_manager_find_all_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    archive_manager_find_all_action = archive_manager_clp_text(
+    archive_manager_find_all_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
     )
@@ -292,11 +292,11 @@ def test_clp_text_archive_manager_find_range_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    archive_manager_find_range_action = archive_manager_clp_text(
+    archive_manager_find_range_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
         begin_ts=text_multifile.metadata_dict["begin_ts"],
@@ -323,11 +323,11 @@ def test_clp_text_archive_manager_del_by_ids_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    archive_manager_del_by_ids_action = archive_manager_clp_text(
+    archive_manager_del_by_ids_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
     )
@@ -352,11 +352,11 @@ def test_clp_text_archive_manager_del_by_filter_text_multifile(
 
     clear_package_archives_clp_text(clp_package)
 
-    compress_action = compress_clp_text(clp_package, text_multifile)
+    compress_action = compress_clp_package(clp_package, text_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
     assert verified, failure_message
 
-    archive_manager_del_by_filter_action = archive_manager_clp_text(
+    archive_manager_del_by_filter_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_FILTER,
         begin_ts=text_multifile.metadata_dict["begin_ts"],

@@ -15,7 +15,7 @@ from tests.clp_package_tests.clp_json.utils.dataset_manager import (
 )
 from tests.clp_package_tests.clp_json.utils.mode import CLP_JSON_MODE
 from tests.clp_package_tests.utils.archive_manager import (
-    archive_manager_clp_json,
+    archive_manager_clp_package,
     ClpPackageArchiveManagerType,
     verify_archive_manager_del_action,
     verify_archive_manager_find_action,
@@ -24,12 +24,12 @@ from tests.clp_package_tests.utils.classes import (
     ClpPackage,
 )
 from tests.clp_package_tests.utils.compress import (
-    compress_clp_json,
+    compress_clp_package,
     verify_compress_action,
 )
 from tests.clp_package_tests.utils.search import (
     ClpPackageSearchType,
-    search_clp_json,
+    search_clp_package,
     verify_search_action,
 )
 from tests.utils.classes import (
@@ -69,7 +69,7 @@ def test_clp_json_compression_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
@@ -88,11 +88,11 @@ def test_clp_json_search_basic_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_json(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.BASIC,
@@ -120,11 +120,11 @@ def test_clp_json_search_ignore_case_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_json(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.IGNORE_CASE,
@@ -152,11 +152,11 @@ def test_clp_json_search_count_results_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_json(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.COUNT_RESULTS,
@@ -184,11 +184,11 @@ def test_clp_json_search_count_by_time_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_json(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.COUNT_BY_TIME,
@@ -216,11 +216,11 @@ def test_clp_json_search_time_range_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    search_action = search_clp_json(
+    search_action = search_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.TIME_RANGE,
@@ -249,7 +249,7 @@ def test_clp_json_dataset_manager_list_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
@@ -278,7 +278,7 @@ def test_clp_json_dataset_manager_del_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
@@ -310,11 +310,11 @@ def test_clp_json_archive_manager_find_all_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    archive_manager_find_all_action = archive_manager_clp_json(
+    archive_manager_find_all_action = archive_manager_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
@@ -340,11 +340,11 @@ def test_clp_json_archive_manager_find_range_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    archive_manager_find_range_action = archive_manager_clp_json(
+    archive_manager_find_range_action = archive_manager_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
@@ -372,11 +372,11 @@ def test_clp_json_archive_manager_del_by_ids_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    archive_manager_del_by_ids_action = archive_manager_clp_json(
+    archive_manager_del_by_ids_action = archive_manager_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
@@ -402,11 +402,11 @@ def test_clp_json_archive_manager_del_by_filter_json_multifile(
 
     clear_package_archives_clp_json(clp_package)
 
-    compress_action = compress_clp_json(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 
-    archive_manager_del_by_filter_action = archive_manager_clp_json(
+    archive_manager_del_by_filter_action = archive_manager_clp_package(
         clp_package=clp_package,
         dataset=json_multifile,
         archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_FILTER,

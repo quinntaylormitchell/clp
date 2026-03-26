@@ -6,7 +6,7 @@ import pytest
 
 from tests.clp_package_tests.utils.archive_manager import (
     _extract_archive_ids_from_find_output,
-    archive_manager_clp_text,
+    archive_manager_clp_package,
     ClpPackageArchiveManagerType,
     verify_archive_manager_del_action,
     verify_archive_manager_find_action,
@@ -23,7 +23,7 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
 
     # Find all.
-    find_archive_manager_action = archive_manager_clp_text(
+    find_archive_manager_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
     )
@@ -40,7 +40,7 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     # Delete.
     archive_ids_to_delete = _extract_archive_ids_from_find_output(find_archive_manager_action)
     if len(archive_ids_to_delete) > 0:
-        del_by_ids_action = archive_manager_clp_text(
+        del_by_ids_action = archive_manager_clp_package(
             clp_package=clp_package,
             archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
             ids_to_del=archive_ids_to_delete,

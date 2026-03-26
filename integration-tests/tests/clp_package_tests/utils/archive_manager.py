@@ -44,35 +44,7 @@ class ClpPackageArchiveManagerDelSubcommand(StrEnum):
     BY_FILTER_COMMAND = "by-filter"
 
 
-def archive_manager_clp_json(  # noqa: PLR0913
-    clp_package: ClpPackage,
-    archive_manager_type: ClpPackageArchiveManagerType,
-    dataset: IntegrationTestDataset | None = None,
-    begin_ts: int | None = None,
-    end_ts: int | None = None,
-    ids_to_del: list[str] | None = None,
-) -> ClpPackageExternalAction:
-    """Docstring."""
-    log_msg = f"Performing '{archive_manager_type.name}' operation with archive-manager."
-    logger.info(log_msg)
-
-    arg_dict: dict[str, Any] = construct_archive_manager_arg_dict(
-        clp_package,
-        archive_manager_type,
-        dataset,
-        begin_ts,
-        end_ts,
-        ids_to_del,
-    )
-    archive_manager_action = ClpPackageExternalAction(
-        cmd=construct_archive_manager_cmd(arg_dict), arg_dict=arg_dict
-    )
-    execute_external_action(archive_manager_action)
-
-    return archive_manager_action
-
-
-def archive_manager_clp_text(  # noqa: PLR0913
+def archive_manager_clp_package(  # noqa: PLR0913
     clp_package: ClpPackage,
     archive_manager_type: ClpPackageArchiveManagerType,
     dataset: IntegrationTestDataset | None = None,
@@ -203,7 +175,7 @@ def verify_archive_manager_find_action(
 
     # Find archives before begin_ts.
     if begin_ts > 0:
-        chunk1_action = archive_manager_clp_json(
+        chunk1_action = archive_manager_clp_package(
             clp_package=clp_package,
             archive_manager_type=ClpPackageArchiveManagerType.FIND,
             dataset=dataset,
@@ -223,7 +195,7 @@ def verify_archive_manager_find_action(
 
     # Find archives after end_ts.
     if end_ts is not None:
-        chunk3_action = archive_manager_clp_json(
+        chunk3_action = archive_manager_clp_package(
             clp_package=clp_package,
             archive_manager_type=ClpPackageArchiveManagerType.FIND,
             dataset=dataset,
@@ -238,7 +210,7 @@ def verify_archive_manager_find_action(
         current_archive_id_list.extend(_extract_archive_ids_from_find_output(chunk3_action))
 
     # Find all.
-    find_all_action = archive_manager_clp_json(
+    find_all_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
         dataset=dataset,
@@ -279,7 +251,7 @@ def verify_archive_manager_del_action(
     arg_dict = archive_manager_action.arg_dict
     match arg_dict["del_subcommand"]:
         case ClpPackageArchiveManagerDelSubcommand.BY_IDS_COMMAND:
-            find_all_action = archive_manager_clp_json(
+            find_all_action = archive_manager_clp_package(
                 clp_package=clp_package,
                 archive_manager_type=ClpPackageArchiveManagerType.FIND,
                 dataset=dataset,
@@ -305,7 +277,7 @@ def verify_archive_manager_del_action(
         case ClpPackageArchiveManagerDelSubcommand.BY_FILTER_COMMAND:
             begin_ts = arg_dict.get("begin_ts")
             end_ts = arg_dict.get("end_ts")
-            find_action = archive_manager_clp_json(
+            find_action = archive_manager_clp_package(
                 clp_package=clp_package,
                 archive_manager_type=ClpPackageArchiveManagerType.FIND,
                 dataset=dataset,

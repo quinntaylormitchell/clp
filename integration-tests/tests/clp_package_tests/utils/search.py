@@ -39,7 +39,7 @@ class ClpPackageSearchType(Enum):
     TIME_RANGE = auto()
 
 
-def search_clp_json(
+def search_clp_package(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     search_type: ClpPackageSearchType,
@@ -47,24 +47,6 @@ def search_clp_json(
 ) -> ClpPackageExternalAction:
     """Docstring."""
     logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
-
-    arg_dict: dict[str, Any] = construct_search_arg_dict(
-        clp_package, dataset, search_type, wildcard_query
-    )
-    search_action = ClpPackageExternalAction(cmd=construct_search_cmd(arg_dict), arg_dict=arg_dict)
-    execute_external_action(search_action)
-
-    return search_action
-
-
-def search_clp_text(
-    clp_package: ClpPackage,
-    dataset: IntegrationTestDataset,
-    search_type: ClpPackageSearchType,
-    wildcard_query: str,
-) -> ClpPackageExternalAction:
-    """Docstring."""
-    logger.info(f"Performing '{search_type.name}' search.")
 
     arg_dict: dict[str, Any] = construct_search_arg_dict(
         clp_package, dataset, search_type, wildcard_query

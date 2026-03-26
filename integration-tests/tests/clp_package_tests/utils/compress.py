@@ -24,24 +24,7 @@ from tests.utils.utils import (
 logger = logging.getLogger(__name__)
 
 
-def compress_clp_json(
-    clp_package: ClpPackage,
-    dataset: IntegrationTestDataset,
-) -> ClpPackageExternalAction:
-    """Docstring."""
-    log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
-    logger.info(log_msg)
-
-    arg_dict: dict[str, Any] = construct_compress_arg_dict(clp_package, dataset)
-    compress_action = ClpPackageExternalAction(
-        cmd=construct_compress_cmd(arg_dict), arg_dict=arg_dict
-    )
-    execute_external_action(compress_action)
-
-    return compress_action
-
-
-def compress_clp_text(
+def compress_clp_package(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
 ) -> ClpPackageExternalAction:
