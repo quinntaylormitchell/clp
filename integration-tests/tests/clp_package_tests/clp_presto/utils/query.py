@@ -26,7 +26,6 @@ def query_clp_presto(
         "--file",
         str(docker_compose_file_path),
         "exec",
-        "-T",
         PRESTO_COORDINATOR_COMPONENT_NAME,
         "presto-cli",
         "--catalog",
