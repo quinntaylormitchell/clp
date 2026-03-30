@@ -11,6 +11,7 @@ from tests.clp_package_tests.clp_presto.utils.classes import (
 from tests.clp_package_tests.clp_presto.utils.mode import (
     CLP_PRESTO_MODE,
 )
+from tests.clp_package_tests.clp_presto.utils.query import query_clp_presto
 from tests.clp_package_tests.clp_presto.utils.split_filters import (
     add_split_filter_for_dataset,
     clear_split_filter_file,
@@ -63,7 +64,16 @@ def test_clp_presto_compression_json_multifile(
     assert verified, failure_message
     add_split_filter_for_dataset(json_multifile, presto_cluster)
 
-    # TODO: some sort of split filter verification?
+    # TODO: query for the dataset in Presto CLI (SHOW TABLES;)
+    # ^^^ actually should that be part of verification?
+    query_clp_presto(
+        presto_cluster=presto_cluster,
+        query="SHOW TABLES;",
+    )
+    query_clp_presto(
+        presto_cluster=presto_cluster,
+        query=f"DESCRIBE {json_multifile.dataset_name};",
+    )
 
     clear_split_filter_file(presto_cluster)
     clear_package_archives_clp_json(clp_package)
@@ -72,13 +82,13 @@ def test_clp_presto_compression_json_multifile(
 
 
 @pytest.mark.search
-def test_clp_presto_query_json_multifile_basic(
+def test_clp_presto_query_basic_json_multifile(
     clp_package: ClpPackage,
     presto_cluster: PrestoCluster,
     json_multifile: IntegrationTestDataset,
 ) -> None:
     """Docstring."""
-    logger.info("Starting test: 'test_clp_presto_query_json_multifile_basic'")
+    logger.info("Starting test: 'test_clp_presto_query_basic_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
     clear_split_filter_file(presto_cluster)
@@ -88,11 +98,12 @@ def test_clp_presto_query_json_multifile_basic(
     assert verified, failure_message
     add_split_filter_for_dataset(json_multifile, presto_cluster)
 
-    # TODO: some sort of split filter verification?
+    # TODO: query for the dataset in Presto CLI (SHOW TABLES;)
+    # ^^^ actually should that be part of verification?
 
-    # TODO: presto queries
+    # TODO: basic Presto query
 
     clear_split_filter_file(presto_cluster)
     clear_package_archives_clp_json(clp_package)
 
-    logger.info("Test complete: 'test_clp_presto_query_json_multifile_basic'")
+    logger.info("Test complete: 'test_clp_presto_query_basic_json_multifile'")

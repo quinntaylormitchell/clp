@@ -3,16 +3,23 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Generic, TypeVar
+
+from pydantic import BaseModel
 
 from tests.clp_package_tests.utils.classes import ClpPackageTestPathConfig
-from tests.utils.classes import IntegrationTestExternalAction
+from tests.utils.classes import (
+    IntegrationTestExternalAction,
+)
 from tests.utils.utils import (
     validate_dir_exists,
     validate_file_exists,
 )
 
 logger = logging.getLogger(__name__)
+
+
+T = TypeVar("T", bound=BaseModel)
 
 
 @dataclass
@@ -58,8 +65,8 @@ class PrestoCluster:
 
 
 @dataclass
-class PrestoClusterExternalAction(IntegrationTestExternalAction):
+class PrestoClusterExternalAction(IntegrationTestExternalAction, Generic[T]):
     """Docstring for PrestoClusterExternalAction."""
 
-    #: Semantic dictionary used to construct `cmd` and verify the Action.
-    arg_dict: dict[str, Any]
+    #: Pydantic object storing semantic info required to construct `cmd` and verify the Action.
+    args: T
