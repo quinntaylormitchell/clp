@@ -15,7 +15,6 @@ from pydantic import BaseModel, ValidationError
 from tests.utils.classes import (
     IntegrationTestExternalAction,
     IntegrationTestPathConfig,
-    static_path,
 )
 from tests.utils.utils import (
     validate_dir_exists,
@@ -36,10 +35,10 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
 
     def __post_init__(self) -> None:
         """Create and validate directories."""
-        super().__post_init__()
-
         # Validate that init directory exists.
         validate_dir_exists(self.clp_package_dir)
+
+        super().__post_init__()
 
         # Create `temp_config_dir`.
         self.temp_config_dir.mkdir(parents=True, exist_ok=True)
@@ -47,35 +46,27 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
         # Create `package_decompression_dir`.
         self.package_decompression_dir.mkdir(parents=True, exist_ok=True)
 
-        # Validate all static path properties.
-        self.validate_static_paths()
-
     @property
-    @static_path
     def archive_manager_path(self) -> Path:
         """:return: The absolute path to the package archive-manager script."""
         return self.clp_package_dir / "sbin" / "admin-tools" / "archive-manager.sh"
 
     @property
-    @static_path
     def compress_from_s3_path(self) -> Path:
         """:return: The absolute path to the package compress-from-s3 script."""
         return self.clp_package_dir / "sbin" / "compress-from-s3.sh"
 
     @property
-    @static_path
     def compress_path(self) -> Path:
         """:return: The absolute path to the package compress script."""
         return self.clp_package_dir / "sbin" / "compress.sh"
 
     @property
-    @static_path
     def dataset_manager_path(self) -> Path:
         """:return: The absolute path to the package dataset-manager script."""
         return self.clp_package_dir / "sbin" / "admin-tools" / "dataset-manager.sh"
 
     @property
-    @static_path
     def decompress_path(self) -> Path:
         """:return: The absolute path to the package decompress script."""
         return self.clp_package_dir / "sbin" / "decompress.sh"
@@ -96,19 +87,16 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
         return self.clp_package_dir / "var" / "log"
 
     @property
-    @static_path
     def search_path(self) -> Path:
         """:return: The absolute path to the package search script."""
         return self.clp_package_dir / "sbin" / "search.sh"
 
     @property
-    @static_path
     def start_clp_path(self) -> Path:
         """:return: The absolute path to the package start-clp script."""
         return self.clp_package_dir / "sbin" / "start-clp.sh"
 
     @property
-    @static_path
     def stop_clp_path(self) -> Path:
         """:return: The absolute path to the package stop-clp script."""
         return self.clp_package_dir / "sbin" / "stop-clp.sh"
@@ -117,6 +105,20 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
     def temp_config_dir(self) -> Path:
         """:return: The absolute path to the directory storing temporary package config files."""
         return self.test_cache_dir / "temp_configs"
+
+    def _static_paths(self) -> list[Path]:
+        """:return: Paths that must exist on disk at construction time."""
+        return [
+            *super()._static_paths(),
+            self.archive_manager_path,
+            self.compress_from_s3_path,
+            self.compress_path,
+            self.dataset_manager_path,
+            self.decompress_path,
+            self.search_path,
+            self.start_clp_path,
+            self.stop_clp_path,
+        ]
 
 
 @dataclass
@@ -151,6 +153,7 @@ class ClpPackage:
 
     def __post_init__(self) -> None:
         """Validate data members."""
+        # Validate the `clp_config` pydantic object. This object is not validated elsewhere.
         log_msg = f"Validating the ClpConfig pydantic object for the '{self.mode_name}' package."
         logger.info(log_msg)
         try:

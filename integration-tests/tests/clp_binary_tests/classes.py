@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from tests.utils.classes import (
     IntegrationTestExternalAction,
     IntegrationTestPathConfig,
-    static_path,
 )
 from tests.utils.utils import (
     validate_dir_exists,
@@ -30,25 +29,28 @@ class ClpBinaryTestPathConfig(IntegrationTestPathConfig):
         Validates that the CLP core binaries directory exists and contains all required
         executables.
         """
-        super().__post_init__()
-
         # Validate that init directory exists.
         validate_dir_exists(self.clp_core_bins_dir)
 
-        # Validate all static path properties.
-        self.validate_static_paths()
+        super().__post_init__()
 
     @property
-    @static_path
     def clp_binary_path(self) -> Path:
         """:return: The absolute path to the `clp` binary."""
         return self.clp_core_bins_dir / "clp"
 
     @property
-    @static_path
     def clp_s_binary_path(self) -> Path:
         """:return: The absolute path to the `clp-s` binary."""
         return self.clp_core_bins_dir / "clp-s"
+
+    def _static_paths(self) -> list[Path]:
+        """:return: Paths that must exist on disk at construction time."""
+        return [
+            *super()._static_paths(),
+            self.clp_binary_path,
+            self.clp_s_binary_path,
+        ]
 
 
 @dataclass
