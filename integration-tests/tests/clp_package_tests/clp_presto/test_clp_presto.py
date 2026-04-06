@@ -4,7 +4,9 @@ import logging
 
 import pytest
 
-from tests.clp_package_tests.clp_json.utils.clear_archives import clear_package_archives_clp_json
+from tests.clp_package_tests.clp_json.utils.clear_archives import (
+    clear_package_archives_clp_json,
+)
 from tests.clp_package_tests.clp_presto.utils.classes import (
     PrestoCluster,
 )
@@ -24,7 +26,10 @@ from tests.clp_package_tests.clp_presto.utils.split_filters import (
 from tests.clp_package_tests.utils.classes import (
     ClpPackage,
 )
-from tests.clp_package_tests.utils.compress import compress_clp_package, verify_compress_action
+from tests.clp_package_tests.utils.compress import (
+    compress_clp_package,
+    verify_compress_action,
+)
 from tests.utils.classes import (
     IntegrationTestDataset,
 )
@@ -75,21 +80,27 @@ def test_clp_presto_json_multifile(
         presto_cluster=presto_cluster,
         query="SHOW TABLES;",
     )
-    verified, failure_message = verify_show_tables_action_clp_presto(show_tables_action, [json_multifile])
+    verified, failure_message = verify_show_tables_action_clp_presto(
+        show_tables_action, [json_multifile]
+    )
     assert verified, failure_message
 
     describe_dataset_action = query_clp_presto(
         presto_cluster=presto_cluster,
         query=f"DESCRIBE {json_multifile.dataset_name};",
     )
-    verified, failure_message = verify_describe_dataset_action_clp_presto(describe_dataset_action, json_multifile)
+    verified, failure_message = verify_describe_dataset_action_clp_presto(
+        describe_dataset_action, json_multifile
+    )
     assert verified, failure_message
 
     select_logs_action = query_clp_presto(
         presto_cluster=presto_cluster,
         query=f"SELECT * FROM {json_multifile.dataset_name};",
     )
-    verified, failure_message = verify_select_logs_action_clp_presto(select_logs_action, json_multifile)
+    verified, failure_message = verify_select_logs_action_clp_presto(
+        select_logs_action, json_multifile
+    )
     assert verified, failure_message
 
     clear_split_filter_file(presto_cluster)

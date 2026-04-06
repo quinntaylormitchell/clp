@@ -1,7 +1,7 @@
 """Functions and classes to facilitate clp-presto queries."""
 
-import logging
 import json
+import logging
 from typing import Any
 
 import pytest
@@ -21,9 +21,7 @@ from tests.utils.utils import (
     get_binary_path,
 )
 
-
 logger = logging.getLogger(__name__)
-
 
 
 def query_clp_presto(

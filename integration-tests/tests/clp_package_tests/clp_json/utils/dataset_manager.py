@@ -228,6 +228,8 @@ def _get_action_output(action: ClpPackageExternalAction[DatasetManagerArgs]) -> 
 def _get_names_of_directories_in_package_archives(clp_package: ClpPackage) -> list[str]:
     directories_in_package_archives = []
     archives_dir = clp_package.path_config.package_archives_path
+    if not archives_dir.exists():
+        return []
     for item in archives_dir.iterdir():
         if item.is_dir():
             directories_in_package_archives.append(item.name)
