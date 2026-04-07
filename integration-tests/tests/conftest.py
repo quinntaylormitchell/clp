@@ -12,10 +12,10 @@ from tests.utils.utils import resolve_path_env_var
 pytest_plugins = [
     "tests.fixtures.datasets",
     "tests.fixtures.path_configs",
-    "tests.clp_binary_tests.integration_test_logs",
-    "tests.clp_binary_tests.clp_binary_path_configs",
-    "tests.clp_package_tests.fixtures",
-    "tests.clp_package_tests.clp_presto.fixtures",
+    "tests.binary_tests.integration_test_logs",
+    "tests.binary_tests.clp_binary_path_configs",
+    "tests.package_tests.fixtures",
+    "tests.package_tests.clp_presto.fixtures",
 ]
 
 
