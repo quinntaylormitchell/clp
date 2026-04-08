@@ -133,15 +133,6 @@ class IntegrationTestDataset:
             return None
 
 
-    def _static_paths(self) -> list[Path]:
-        """:return: List of paths that must exist on disk at construction time."""
-        return [
-            self.logs_path,
-            self.metadata_file_path,
-            self.columns_file_path
-        ]
-
-
 @dataclass
 class IntegrationTestExternalAction:
     """Metadata for an external action executed during an integration test."""
