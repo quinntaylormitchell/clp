@@ -98,7 +98,13 @@ def verify_describe_dataset_action_clp_presto(
     except (json.JSONDecodeError, KeyError) as e:
         return False, f"Failed to parse output of `DESCRIBE <dataset_name>;` as JSON: {e}"
 
-    expected: list[dict[str, Any]] = load_json_to_dict(dataset.columns_file_path)["columns"]
+    if dataset.columns_file_path is not None:
+        expected: list[dict[str, Any]] = load_json_to_dict(dataset.columns_file_path)["columns"]
+    else:
+        pytest.fail(
+            f"The '{dataset}' dataset doesn't have a file that describes the column structure"
+            " (should be `columns.json`)."
+        )
 
     if actual != expected:
         return (

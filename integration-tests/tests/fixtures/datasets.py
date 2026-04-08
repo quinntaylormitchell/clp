@@ -1,7 +1,5 @@
 """Session-scoped test log fixtures shared across integration tests."""
 
-from pathlib import Path
-
 import pytest
 
 from tests.utils.classes import (
@@ -32,6 +30,7 @@ def text_multifile(
         dataset_name=dataset_name,
         path_to_dataset_root=integration_test_path_config.test_data_path / dataset_name,
     )
+
 
 @pytest.fixture(scope="session")
 def json_s3_multifile(
