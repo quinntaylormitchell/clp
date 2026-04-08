@@ -96,7 +96,7 @@ def test_clp_json_search_basic_json_multifile(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.BASIC,
-        wildcard_query=json_multifile.metadata_dict["single_match_wildcard_query"],
+        wildcard_query=json_multifile.metadata.single_match_wildcard_query,
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.BASIC, json_multifile
@@ -126,7 +126,7 @@ def test_clp_json_search_ignore_case_json_multifile(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.IGNORE_CASE,
-        wildcard_query=json_multifile.metadata_dict["single_match_wildcard_query"],
+        wildcard_query=json_multifile.metadata.single_match_wildcard_query,
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.IGNORE_CASE, json_multifile
@@ -156,7 +156,7 @@ def test_clp_json_search_count_results_json_multifile(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.COUNT_RESULTS,
-        wildcard_query=json_multifile.metadata_dict["single_match_wildcard_query"],
+        wildcard_query=json_multifile.metadata.single_match_wildcard_query,
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.COUNT_RESULTS, json_multifile
@@ -186,7 +186,7 @@ def test_clp_json_search_count_by_time_json_multifile(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.COUNT_BY_TIME,
-        wildcard_query=json_multifile.metadata_dict["single_match_wildcard_query"],
+        wildcard_query=json_multifile.metadata.single_match_wildcard_query,
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.COUNT_BY_TIME, json_multifile
@@ -216,7 +216,7 @@ def test_clp_json_search_time_range_json_multifile(
         clp_package=clp_package,
         dataset=json_multifile,
         search_type=ClpPackageSearchType.TIME_RANGE,
-        wildcard_query=json_multifile.metadata_dict["single_match_wildcard_query"],
+        wildcard_query=json_multifile.metadata.single_match_wildcard_query,
     )
     verified, failure_message = verify_search_action(
         search_action, ClpPackageSearchType.TIME_RANGE, json_multifile
@@ -338,8 +338,8 @@ def test_clp_json_archive_manager_find_range_json_multifile(
         clp_package=clp_package,
         dataset=json_multifile,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
-        begin_ts=json_multifile.metadata_dict["begin_ts"],
-        end_ts=json_multifile.metadata_dict["end_ts"],
+        begin_ts=json_multifile.metadata.begin_ts,
+        end_ts=json_multifile.metadata.end_ts,
     )
     verified, failure_message = verify_archive_manager_find_action(
         archive_manager_find_range_action, clp_package, json_multifile
@@ -400,8 +400,8 @@ def test_clp_json_archive_manager_del_by_filter_json_multifile(
         clp_package=clp_package,
         dataset=json_multifile,
         archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_FILTER,
-        begin_ts=json_multifile.metadata_dict["begin_ts"],
-        end_ts=json_multifile.metadata_dict["end_ts"],
+        begin_ts=json_multifile.metadata.begin_ts,
+        end_ts=json_multifile.metadata.end_ts,
     )
     archive_manager_del_by_filter_verified, failure_message = verify_archive_manager_del_action(
         archive_manager_del_by_filter_action, clp_package, json_multifile

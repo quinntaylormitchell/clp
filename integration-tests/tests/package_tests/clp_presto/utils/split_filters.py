@@ -45,7 +45,7 @@ def _construct_split_filter_for_dataset(
     dataset: IntegrationTestDataset,
 ) -> dict[str, Any]:
     """Docstring."""
-    timestamp_key = dataset.metadata_dict["timestamp_key"]
+    timestamp_key = dataset.metadata.timestamp_key
     return {
         f"clp.default.{dataset.dataset_name}": [
             {

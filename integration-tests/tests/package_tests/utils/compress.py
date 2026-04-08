@@ -82,13 +82,13 @@ def _construct_compress_args(
     args = CompressArgs(
         script_path=path_config.compress_path,
         config=clp_package.temp_config_file_path,
-        paths=[dataset.path_to_dataset_logs],
+        paths=[dataset.logs_path],
     )
 
     if clp_package.clp_config.package.storage_engine == StorageEngine.CLP_S:
-        args.dataset = dataset.metadata_dict["dataset"]
-        args.timestamp_key = dataset.metadata_dict["timestamp_key"]
-        args.unstructured = dataset.metadata_dict["data"]["unstructured"]
+        args.dataset = dataset.metadata.dataset_name
+        args.timestamp_key = dataset.metadata.timestamp_key
+        args.unstructured = dataset.metadata.unstructured
 
     return args
 
@@ -160,7 +160,7 @@ def _verify_compress_action_clp_text(
         )
 
     # Verify equality between original logs and decompressed logs.
-    original_logs_path = original_dataset.path_to_dataset_logs
+    original_logs_path = original_dataset.logs_path
     decompressed_logs_path = path_config.package_decompression_dir / original_logs_path.relative_to(
         original_logs_path.anchor
     )

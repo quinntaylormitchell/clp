@@ -19,6 +19,7 @@ from tests.utils.classes import (
 from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import (
     get_binary_path,
+    load_json_to_dict,
 )
 
 logger = logging.getLogger(__name__)
@@ -97,7 +98,7 @@ def verify_describe_dataset_action_clp_presto(
     except (json.JSONDecodeError, KeyError) as e:
         return False, f"Failed to parse output of `DESCRIBE <dataset_name>;` as JSON: {e}"
 
-    expected: list[dict[str, Any]] = dataset.metadata_dict["columns"]
+    expected: list[dict[str, Any]] = load_json_to_dict(dataset.columns_file_path)["columns"]
 
     if actual != expected:
         return (
@@ -127,7 +128,7 @@ def verify_select_logs_action_clp_presto(
         "--no-filename",
         "--color=never",
         ".*",
-        str(dataset.path_to_dataset_logs),
+        str(dataset.logs_path),
     ]
     grep_action = IntegrationTestExternalAction(cmd)
     execute_external_action(grep_action)

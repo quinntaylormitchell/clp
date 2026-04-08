@@ -10,6 +10,7 @@ import pytest
 from tests.utils.utils import (
     validate_dir_exists,
 )
+from pydantic import BaseModel, field_validator, model_validator
 
 
 @dataclass
@@ -59,18 +60,86 @@ class IntegrationTestPathConfig:
         return [self.test_data_path]
 
 
+class IntegrationTestDatasetMetadata(BaseModel):
+    dataset_name: str
+    unstructured: bool
+    timestamp_key: str | None
+    begin_ts: int
+    end_ts: int
+    logs_subdir: str
+    file_names: list[str]
+    single_match_wildcard_query: str
+    columns_file_name: str
+
+
 @dataclass
 class IntegrationTestDataset:
     """Metadata for a sample dataset."""
-
+ 
     #: The name of the dataset (for logging purposes).
     dataset_name: str
+    
+    #: Absolute path to the dataset root.
+    path_to_dataset_root: Path
+ 
+    #: Pydantic model of metadata describing the dataset.
+    metadata: IntegrationTestDatasetMetadata = field(init=False)
+    
+    def __post_init__(self) -> None:
+        """Validate data members and load metadata."""
+        validate_dir_exists(self.path_to_dataset_root)
+        
+        # Load metadata.
+        validate_dir_exists(self.metadata_file_path)
+        raw_metadata = self.metadata_file_path.read_text()
+        self.metadata = IntegrationTestDatasetMetadata.model_validate_json(raw_metadata)
 
-    #: Path to the dataset logs.
-    path_to_dataset_logs: Path
+        # Validate metadata properties.
+        validate_dir_exists(self.logs_path)
 
-    #: A dictionary of metadata describing the dataset.
-    metadata_dict: dict[str, Any]
+        if self.columns_file_path is not None:
+            validate_dir_exists(self.columns_file_path)
+
+        if self.metadata.dataset_name != self.dataset_name:
+            pytest.fail(f"Dataset '{self.dataset_name}' carries the incorrect name in its metadata: '{self.metadata.dataset_name}'")
+
+        if self.metadata.begin_ts > self.metadata.end_ts:
+            pytest.fail(f"Dataset metadata failure: `begin_ts` '{self.metadata.begin_ts}' is larger than `end_ts` '{self.metadata.end_ts}'")
+
+        for file_path in self.metadata.file_names:
+            file_path_abs = self.logs_path / file_path
+            if not file_path_abs.is_file():
+                pytest.fail(f"Dataset metadata failure: log file specified in `file_names` does not exist: '{file_path_abs}'")
+
+
+    @property
+    def metadata_file_path(self) -> Path:
+        """:return: The absolute path to the file containing metadata for the dataset."""
+        return self.path_to_dataset_root / "metadata.json"
+
+
+    @property
+    def logs_path(self) -> Path:
+        """:return: The absolute path to the subdirectory containing logs."""
+        return self.path_to_dataset_root / self.metadata.logs_subdir
+
+
+    @property
+    def columns_file_path(self) -> Path | None:
+        """:return: The absolute path to the file containing a description of the dataset columns, or None if there is no such file."""
+        if self.metadata.columns_file_name is not None:
+            return self.path_to_dataset_root / self.metadata.columns_file_name
+        else:
+            return None
+
+
+    def _static_paths(self) -> list[Path]:
+        """:return: List of paths that must exist on disk at construction time."""
+        return [
+            self.logs_path,
+            self.metadata_file_path,
+            self.columns_file_path
+        ]
 
 
 @dataclass

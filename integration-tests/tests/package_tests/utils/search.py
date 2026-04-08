@@ -123,15 +123,15 @@ def _construct_search_args(
     )
 
     if clp_package.clp_config.package.storage_engine == StorageEngine.CLP_S:
-        args.dataset = dataset.metadata_dict["dataset"]
+        args.dataset = dataset.metadata.dataset_name
 
     match search_type:
         case ClpPackageSearchType.BASIC:
             pass
         case ClpPackageSearchType.FILE_PATH:
             args.file_path = (
-                dataset.path_to_dataset_logs
-                / dataset.metadata_dict["file_structure"]["file_names"][0]
+                dataset.logs_path
+                / dataset.metadata.file_names[0]
             )
         case ClpPackageSearchType.IGNORE_CASE:
             args.ignore_case = True
@@ -140,8 +140,8 @@ def _construct_search_args(
         case ClpPackageSearchType.COUNT_BY_TIME:
             args.count_by_time = DEFAULT_COUNT_BY_TIME_INTERVAL
         case ClpPackageSearchType.TIME_RANGE:
-            args.begin_ts = dataset.metadata_dict["begin_ts"]
-            args.end_ts = dataset.metadata_dict["end_ts"]
+            args.begin_ts = dataset.metadata.begin_ts
+            args.end_ts = dataset.metadata.end_ts
         case _:
             pytest.fail(f"Unsupported search type for CLP package: '{search_type}'")
 
@@ -197,7 +197,7 @@ def _construct_grep_verification_cmd(
 ) -> list[str]:
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
     args = search_action.args
-    path_for_grep = args.file_path or original_dataset.path_to_dataset_logs
+    path_for_grep = args.file_path or original_dataset.logs_path
     return [
         get_binary_path("grep"),
         *grep_cmd_options,

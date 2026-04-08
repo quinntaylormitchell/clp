@@ -73,13 +73,13 @@ def _construct_compress_s3_args(
 ) -> CompressS3Args:
     """Docstring."""
     path_config = clp_package.path_config
-    metadata_dict = dataset.metadata_dict
+    metadata = dataset.metadata
     return CompressS3Args(
         script_path=path_config.compress_from_s3_path,
         config=clp_package.temp_config_file_path,
-        dataset=metadata_dict["dataset"],
-        timestamp_key=metadata_dict["timestamp_key"],
-        unstructured=metadata_dict["data"]["unstructured"],
+        dataset=metadata.dataset_name,
+        timestamp_key=metadata.timestamp_key,
+        unstructured=metadata.unstructured,
         subcommand="s3-key-prefix",
         inputs=[
             "https://private-clp-test-bucket.s3.us-west-1.amazonaws.com/integration_tests/permanent/json_s3_multifile/"
