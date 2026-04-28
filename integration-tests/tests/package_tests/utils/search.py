@@ -7,18 +7,10 @@ from pathlib import Path
 
 import pytest
 from clp_py_utils.clp_config import StorageEngine
-from pydantic import BaseModel
 
-from tests.package_tests.utils.classes import (
-    ClpPackage,
-    ClpPackageExternalAction,
-)
-from tests.utils.classes import (
-    IntegrationTestDataset,
-    IntegrationTestExternalAction,
-)
+from tests.package_tests.utils.classes import ClpPackage
+from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset
 from tests.utils.logging_utils import format_action_failure_msg
-from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import (
     get_binary_path,
 )
@@ -29,7 +21,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_COUNT_BY_TIME_INTERVAL = 10
 
 
-class SearchArgs(BaseModel):
+class SearchArgs(CmdArgs):
     """Docstring."""
 
     script_path: Path
@@ -95,17 +87,12 @@ def search_clp_package(
     dataset: IntegrationTestDataset,
     search_type: ClpPackageSearchType,
     wildcard_query: str,
-) -> ClpPackageExternalAction[SearchArgs]:
+) -> tuple[ExternalAction, SearchArgs]:
     """Docstring."""
     logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
 
     args: SearchArgs = _construct_search_args(clp_package, dataset, search_type, wildcard_query)
-    action: ClpPackageExternalAction[SearchArgs] = ClpPackageExternalAction(
-        cmd=args.to_cmd(), args=args
-    )
-    execute_external_action(action)
-
-    return action
+    return ExternalAction(cmd=args.to_cmd()), args
 
 
 def _construct_search_args(
@@ -146,22 +133,22 @@ def _construct_search_args(
 
 
 def verify_search_action(
-    search_action: ClpPackageExternalAction[SearchArgs],
+    search_action: ExternalAction,
+    search_args: SearchArgs,
     search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info("Verifying search.")
     if search_action.completed_proc.returncode != 0:
-        return format_action_failure_msg(
+        return False, format_action_failure_msg(
             "The 'search.sh' subprocess returned a non-zero exit code.", search_action
         )
 
     # Construct and run grep command.
-    grep_action = IntegrationTestExternalAction(
-        cmd=_construct_grep_verification_cmd(search_action, search_type, original_dataset)
+    grep_action = ExternalAction(
+        cmd=_construct_grep_verification_cmd(search_args, search_type, original_dataset)
     )
-    execute_external_action(grep_action)
 
     if grep_action.completed_proc.returncode != 0:
         pytest.fail(
@@ -177,7 +164,7 @@ def verify_search_action(
         search_action.completed_proc.stdout, search_type
     )
     if formatted_grep_result != formatted_search_result:
-        return format_action_failure_msg(
+        return False, format_action_failure_msg(
             f"Search verification failure: mismatch between formatted search result"
             f" '{formatted_search_result}' and formatted grep result '{formatted_grep_result}'.",
             search_action,
@@ -188,17 +175,16 @@ def verify_search_action(
 
 
 def _construct_grep_verification_cmd(
-    search_action: ClpPackageExternalAction[SearchArgs],
+    search_args: SearchArgs,
     search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> list[str]:
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
-    args = search_action.args
-    path_for_grep = args.file_path or original_dataset.logs_path
+    path_for_grep = search_args.file_path or original_dataset.logs_path
     return [
         get_binary_path("grep"),
         *grep_cmd_options,
-        args.wildcard_query,
+        search_args.wildcard_query,
         str(path_for_grep),
     ]
 

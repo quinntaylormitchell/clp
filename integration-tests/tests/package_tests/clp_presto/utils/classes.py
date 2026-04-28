@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from tests.package_tests.utils.classes import ClpPackageTestPathConfig
 from tests.utils.classes import (
-    IntegrationTestExternalAction,
+    ExternalAction,
 )
 from tests.utils.utils import (
     validate_dir_exists,
@@ -65,7 +65,7 @@ class PrestoCluster:
 
 
 @dataclass
-class PrestoClusterExternalAction(IntegrationTestExternalAction, Generic[T]):
+class PrestoClusterExternalAction(ExternalAction, Generic[T]):
     """Docstring for PrestoClusterExternalAction."""
 
     #: Pydantic object storing semantic info required to construct `cmd` and verify the Action.

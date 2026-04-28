@@ -4,8 +4,7 @@ import re
 
 import pytest
 
-from tests.utils.classes import IntegrationTestExternalAction
-from tests.utils.subprocess_utils import execute_external_action
+from tests.utils.classes import ExternalAction
 from tests.utils.utils import get_binary_path
 
 
@@ -25,8 +24,7 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
         "--format",
         "{{.Service}}",
     ]
-    compose_ps_action = IntegrationTestExternalAction(cmd=compose_ps_cmd)
-    execute_external_action(compose_ps_action)
+    compose_ps_action = ExternalAction(cmd=compose_ps_cmd)
 
     if compose_ps_action.completed_proc.returncode != 0:
         pytest.fail(
@@ -60,8 +58,7 @@ def list_running_containers_with_prefix(prefix: str) -> list[str]:
         "--filter",
         f"name={prefix}",
     ]
-    docker_ps_action = IntegrationTestExternalAction(cmd=docker_ps_cmd)
-    execute_external_action(docker_ps_action)
+    docker_ps_action = ExternalAction(cmd=docker_ps_cmd)
     docker_ps_proc = docker_ps_action.completed_proc
     if docker_ps_proc.returncode != 0:
         pytest.fail(

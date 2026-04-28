@@ -11,7 +11,7 @@ from tests.binary_tests.config import (
     IntegrationTestLogs,
     OLDIntegrationTestPathConfig,
 )
-from tests.utils.subprocess_utils import run_subprocess
+from tests.utils.classes import ExternalAction
 from tests.utils.utils import (
     is_dir_tree_content_equal,
     is_json_file_structurally_equal,
@@ -73,10 +73,16 @@ def test_clp_identity_transform(
         src_path,
     ]
     # fmt: on
-    run_subprocess(compression_cmd)
+    compression_action = ExternalAction(cmd=compression_cmd)
+    assert compression_action.completed_proc.returncode == 0, (
+        f"Compression failed with return code {compression_action.completed_proc.returncode}."
+    )
 
     decompression_cmd = [bin_path, "x", compression_path, decompression_path]
-    run_subprocess(decompression_cmd)
+    decompression_action = ExternalAction(cmd=decompression_cmd)
+    assert decompression_action.completed_proc.returncode == 0, (
+        f"Decompression failed with return code {decompression_action.completed_proc.returncode}."
+    )
 
     input_path = test_paths.logs_source_dir
     output_path = test_paths.decompression_dir
@@ -148,5 +154,11 @@ def _clp_s_compress_and_decompress(
     src_path = str(test_paths.logs_source_dir)
     compression_path = str(test_paths.compression_dir)
     decompression_path = str(test_paths.decompression_dir)
-    run_subprocess([bin_path, "c", compression_path, src_path])
-    run_subprocess([bin_path, "x", compression_path, decompression_path])
+    compression_action = ExternalAction(cmd=[bin_path, "c", compression_path, src_path])
+    assert compression_action.completed_proc.returncode == 0, (
+        f"Compression failed with return code {compression_action.completed_proc.returncode}."
+    )
+    decompression_action = ExternalAction(cmd=[bin_path, "x", compression_path, decompression_path])
+    assert decompression_action.completed_proc.returncode == 0, (
+        f"Decompression failed with return code {decompression_action.completed_proc.returncode}."
+    )

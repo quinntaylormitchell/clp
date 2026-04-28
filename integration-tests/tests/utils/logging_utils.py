@@ -1,81 +1,20 @@
 """Utilities for logging during the test run."""
 
-import datetime
 import logging
-from pathlib import Path
 
-from tests.conftest import get_test_log_dir
-from tests.utils.classes import IntegrationTestExternalAction
+from tests.utils.classes import ExternalAction
 
 logger = logging.getLogger(__name__)
 
 
-def format_action_failure_msg(
-    reason: str, *actions: IntegrationTestExternalAction
-) -> tuple[bool, str]:
+def format_action_failure_msg(reason: str, *actions: ExternalAction) -> str:
     """
     Formats a failure message that indicates where to find the subprocess log(s) relevant to the
-    failure.
+    failure. This function associates a single failure with one or more external actions.
 
     :param reason:
     :param actions:
-    :return: `False` and the failure message.
+    :return: The failure message.
     """
-    action_log_paths: list[str] = []
-    for action in actions:
-        action_log_paths.append(str(action.log_file_path))
-    return False, f"{reason} See relevant subprocess log(s) at: {action_log_paths}"
-
-
-def log_action_output_to_file(subprocess: IntegrationTestExternalAction) -> None:
-    """
-    Logs the output of a subprocess to a unique file.
-
-    :param subprocess:
-    """
-    now = datetime.datetime.now()  # noqa: DTZ005
-    test_run_id = now.strftime("%Y-%m-%d-%H-%M-%S-%f")[:-3]
-    subprocess_output_file_path = (
-        get_test_log_dir()
-        / "subprocess_output"
-        / f"{Path(subprocess.cmd[0]).name}_{test_run_id}.log"
-    )
-    subprocess_output_file_path.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.log_file_path = subprocess_output_file_path
-
-    completed_proc = subprocess.completed_proc
-    stdout_content = completed_proc.stdout or "(empty)"
-    stderr_content = completed_proc.stderr or "(empty)"
-
-    if not stdout_content.endswith("\n"):
-        stdout_content += "\n"
-    if not stderr_content.endswith("\n"):
-        stderr_content += "\n"
-
-    sep = "-" * 32
-    lines = [
-        "SUBPROCESS RUN SUMMARY\n",
-        f"{sep}\n",
-        f"Timestamp at completion : {now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}\n",
-        f"Command                 : {completed_proc.args}\n",
-        f"Return Code             : {completed_proc.returncode}\n",
-        "\n\n",
-        "captured stdout\n",
-        f"{sep}\n",
-        stdout_content,
-        "\n",
-        "\n\n",
-        "captured stderr\n",
-        f"{sep}\n",
-        stderr_content,
-        "\n",
-    ]
-
-    with subprocess_output_file_path.open("w", encoding="utf-8") as log_file:
-        log_file.writelines(lines)
-
-    log_msg = (
-        f"Subprocess returned. stdout and stderr written to log file:"
-        f" '{subprocess_output_file_path}'"
-    )
-    logger.info(log_msg)
+    action_log_paths = [str(action.log_file_path) for action in actions]
+    return f"{reason} See relevant subprocess log(s) at: {action_log_paths}"

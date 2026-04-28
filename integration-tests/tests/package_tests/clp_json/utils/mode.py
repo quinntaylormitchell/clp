@@ -1,6 +1,4 @@
-"""Docstring."""
-
-import logging
+"""Provides definition of the clp-json operating mode."""
 
 from clp_py_utils.clp_config import (
     ClpConfig,
@@ -16,11 +14,10 @@ from tests.package_tests.utils.modes import (
     CLP_API_SERVER_COMPONENT,
     CLP_BASE_COMPONENTS,
     CLP_GARBAGE_COLLECTOR_COMPONENT,
+    CLP_LOG_INGESTOR_COMPONENT,
     CLP_QUERY_COMPONENTS,
     CLP_REDUCER_COMPONENT,
 )
-
-logger = logging.getLogger(__name__)
 
 CLP_JSON_MODE = ClpPackageModeConfig(
     mode_name="clp-json",
@@ -36,5 +33,6 @@ CLP_JSON_MODE = ClpPackageModeConfig(
         *CLP_QUERY_COMPONENTS,
         CLP_GARBAGE_COLLECTOR_COMPONENT,
         CLP_API_SERVER_COMPONENT,
+        CLP_LOG_INGESTOR_COMPONENT,
     ),
 )

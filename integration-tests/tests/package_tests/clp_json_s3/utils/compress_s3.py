@@ -3,21 +3,13 @@
 import logging
 from pathlib import Path
 
-from pydantic import BaseModel
-
-from tests.package_tests.utils.classes import (
-    ClpPackage,
-    ClpPackageExternalAction,
-)
-from tests.utils.classes import (
-    IntegrationTestDataset,
-)
-from tests.utils.subprocess_utils import execute_external_action
+from tests.package_tests.utils.classes import ClpPackage
+from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset
 
 logger = logging.getLogger(__name__)
 
 
-class CompressS3Args(BaseModel):
+class CompressS3Args(CmdArgs):
     """Docstring."""
 
     script_path: Path
@@ -54,18 +46,13 @@ class CompressS3Args(BaseModel):
 def compress_s3_clp_package(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
-) -> ClpPackageExternalAction[CompressS3Args]:
+) -> tuple[ExternalAction, CompressS3Args]:
     """Docstring."""
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset with S3."
     logger.info(log_msg)
 
     args: CompressS3Args = _construct_compress_s3_args(clp_package, dataset)
-    action: ClpPackageExternalAction[CompressS3Args] = ClpPackageExternalAction(
-        cmd=args.to_cmd(), args=args
-    )
-    execute_external_action(action)
-
-    return action
+    return ExternalAction(cmd=args.to_cmd()), args
 
 
 def _construct_compress_s3_args(

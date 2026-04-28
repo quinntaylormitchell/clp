@@ -4,16 +4,14 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generic, TypeVar
 
 import pytest
 from clp_py_utils.clp_config import (
     ClpConfig,
 )
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from tests.utils.classes import (
-    IntegrationTestExternalAction,
     IntegrationTestPathConfig,
 )
 from tests.utils.utils import (
@@ -21,9 +19,6 @@ from tests.utils.utils import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-T = TypeVar("T", bound=BaseModel)
 
 
 @dataclass
@@ -196,11 +191,3 @@ class ClpPackage:
             pytest.fail(err_msg)
 
         return contents
-
-
-@dataclass
-class ClpPackageExternalAction(IntegrationTestExternalAction, Generic[T]):
-    """Metadata for an external action executed during a CLP package integration test."""
-
-    #: Pydantic object storing semantic info required to construct `cmd` and verify the Action.
-    args: T

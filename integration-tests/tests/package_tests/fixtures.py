@@ -67,14 +67,14 @@ def clp_package(
     )
 
     try:
-        start_clp_action = start_clp_package(clp_package)
+        start_clp_action, _ = start_clp_package(clp_package)
         start_clp_action_verified, failure_message = verify_start_clp_action(
             start_clp_action, clp_package
         )
         assert start_clp_action_verified, failure_message
         yield clp_package
     finally:
-        stop_clp_action = stop_clp_package(clp_package)
+        stop_clp_action, _ = stop_clp_package(clp_package)
         stop_clp_action_verified, failure_message = verify_stop_clp_action(
             stop_clp_action, clp_package
         )

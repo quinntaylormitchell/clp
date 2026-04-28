@@ -23,12 +23,12 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
 
     # Find all.
-    find_archive_manager_action = archive_manager_clp_package(
+    find_archive_manager_action, args = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
     )
     find_archive_manager_action_verified, failure_message = verify_archive_manager_find_action(
-        find_archive_manager_action, clp_package
+        find_archive_manager_action, args, clp_package
     )
     if not find_archive_manager_action_verified:
         pytest.fail(
@@ -40,13 +40,13 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     # Delete.
     archive_ids_to_delete = _extract_archive_ids_from_find_output(find_archive_manager_action)
     if len(archive_ids_to_delete) > 0:
-        del_by_ids_action = archive_manager_clp_package(
+        del_by_ids_action, args = archive_manager_clp_package(
             clp_package=clp_package,
             archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
             ids_to_del=archive_ids_to_delete,
         )
         archive_manager_action_verified, failure_message = verify_archive_manager_del_action(
-            del_by_ids_action, clp_package
+            del_by_ids_action, args, clp_package
         )
         if not archive_manager_action_verified:
             pytest.fail(

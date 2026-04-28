@@ -15,8 +15,7 @@ from tests.package_tests.clp_presto.utils.start_stop import (
     verify_start_presto_action,
     verify_stop_presto_action,
 )
-from tests.utils.classes import IntegrationTestExternalAction
-from tests.utils.subprocess_utils import execute_external_action
+from tests.utils.classes import ExternalAction
 from tests.utils.utils import resolve_path_env_var
 
 logger = logging.getLogger(__name__)
@@ -42,8 +41,7 @@ def presto_cluster(
         str(presto_cluster_test_path_config.set_up_config_path),
         str(presto_cluster_test_path_config.clp_package_dir),
     ]
-    setup_presto_action = IntegrationTestExternalAction(cmd=setup_presto_cmd)
-    execute_external_action(setup_presto_action)
+    setup_presto_action = ExternalAction(cmd=setup_presto_cmd)
     if setup_presto_action.completed_proc.returncode != 0:
         pytest.fail(
             "During Presto cluster setup, supporting call to set-up-config.sh returned a non-zero"

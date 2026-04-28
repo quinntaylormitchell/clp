@@ -13,10 +13,9 @@ from tests.package_tests.clp_presto.utils.classes import (
     PrestoCluster,
 )
 from tests.utils.classes import (
+    ExternalAction,
     IntegrationTestDataset,
-    IntegrationTestExternalAction,
 )
-from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import (
     get_binary_path,
     load_json_to_dict,
@@ -28,7 +27,7 @@ logger = logging.getLogger(__name__)
 def query_clp_presto(
     presto_cluster: PrestoCluster,
     query: str,
-) -> IntegrationTestExternalAction:
+) -> ExternalAction:
     """Docstring."""
     logger.info(f"Running Presto query: '{query}'")
 
@@ -51,14 +50,11 @@ def query_clp_presto(
         query,
     ]
 
-    action = IntegrationTestExternalAction(cmd=cmd)
-    execute_external_action(action)
-
-    return action
+    return ExternalAction(cmd=cmd)
 
 
 def verify_show_tables_action_clp_presto(
-    show_tables_action: IntegrationTestExternalAction,
+    show_tables_action: ExternalAction,
     current_datasets: list[IntegrationTestDataset],
 ) -> tuple[bool, str]:
     """Verify that `SHOW TABLES;` output is accurate w.r.t. current datasets."""
@@ -83,7 +79,7 @@ def verify_show_tables_action_clp_presto(
 
 
 def verify_describe_dataset_action_clp_presto(
-    describe_dataset_action: IntegrationTestExternalAction,
+    describe_dataset_action: ExternalAction,
     dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """
@@ -117,7 +113,7 @@ def verify_describe_dataset_action_clp_presto(
 
 
 def verify_select_logs_action_clp_presto(
-    select_logs_action: IntegrationTestExternalAction,
+    select_logs_action: ExternalAction,
     dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """
@@ -136,8 +132,7 @@ def verify_select_logs_action_clp_presto(
         ".*",
         str(dataset.logs_path),
     ]
-    grep_action = IntegrationTestExternalAction(cmd)
-    execute_external_action(grep_action)
+    grep_action = ExternalAction(cmd)
     if grep_action.completed_proc.returncode != 0:
         pytest.fail(
             "During `SELECT * FROM <dataset_name>;` verification, supporting `grep` call returned a"

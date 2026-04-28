@@ -13,10 +13,8 @@ def json_multifile(
     integration_test_path_config: IntegrationTestPathConfig,
 ) -> IntegrationTestDataset:
     """Returns an object corresponding to the `json_multifile` test dataset."""
-    dataset_name = "json_multifile"
     return IntegrationTestDataset(
-        dataset_name=dataset_name,
-        path_to_dataset_root=integration_test_path_config.test_data_path / dataset_name,
+        dataset_root_dir=integration_test_path_config.test_data_dir / "json_multifile",
     )
 
 
@@ -25,10 +23,8 @@ def text_multifile(
     integration_test_path_config: IntegrationTestPathConfig,
 ) -> IntegrationTestDataset:
     """Returns an object corresponding to the `text_multifile` test dataset."""
-    dataset_name = "text_multifile"
     return IntegrationTestDataset(
-        dataset_name=dataset_name,
-        path_to_dataset_root=integration_test_path_config.test_data_path / dataset_name,
+        dataset_root_dir=integration_test_path_config.test_data_dir / "text_multifile",
     )
 
 
@@ -37,8 +33,6 @@ def json_s3_multifile(
     integration_test_path_config: IntegrationTestPathConfig,
 ) -> IntegrationTestDataset:
     """Returns an object corresponding to the `json_s3_multifile` test dataset."""
-    dataset_name = "json_s3_multifile"
     return IntegrationTestDataset(
-        dataset_name=dataset_name,
-        path_to_dataset_root=integration_test_path_config.test_data_path / dataset_name,
+        dataset_root_dir=integration_test_path_config.test_data_dir / "json_s3_multifile",
     )

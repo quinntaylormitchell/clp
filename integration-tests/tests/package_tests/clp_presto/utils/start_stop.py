@@ -6,12 +6,11 @@ from tests.package_tests.clp_presto.utils.classes import (
     PrestoCluster,
 )
 from tests.package_tests.utils.modes import CLP_PRESTO_COMPONENTS
-from tests.utils.classes import IntegrationTestExternalAction
+from tests.utils.classes import ExternalAction
 from tests.utils.docker_utils import (
     list_running_containers_with_prefix,
 )
 from tests.utils.logging_utils import format_action_failure_msg
-from tests.utils.subprocess_utils import execute_external_action
 from tests.utils.utils import get_binary_path
 
 logger = logging.getLogger(__name__)
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def start_presto_cluster(
     presto_cluster: PrestoCluster,
-) -> IntegrationTestExternalAction:
+) -> ExternalAction:
     """
     Starts a Presto cluster for the CLP package.
 
@@ -34,12 +33,10 @@ def start_presto_cluster(
         "up",
         "--wait",
     ]
-    start_presto_action = IntegrationTestExternalAction(cmd=start_presto_cmd)
-    execute_external_action(start_presto_action)
-    return start_presto_action
+    return ExternalAction(cmd=start_presto_cmd)
 
 
-def stop_presto_cluster(presto_cluster: PrestoCluster) -> IntegrationTestExternalAction:
+def stop_presto_cluster(presto_cluster: PrestoCluster) -> ExternalAction:
     """
     Stops a Presto cluster for the CLP package.
 
@@ -53,43 +50,41 @@ def stop_presto_cluster(presto_cluster: PrestoCluster) -> IntegrationTestExterna
         str(path_config.docker_compose_file_path),
         "down",
     ]
-    stop_presto_action = IntegrationTestExternalAction(cmd=stop_presto_cmd)
-    execute_external_action(stop_presto_action)
-    return stop_presto_action
+    return ExternalAction(cmd=stop_presto_cmd)
 
 
 def verify_start_presto_action(
-    start_presto_cluster_action: IntegrationTestExternalAction,
+    start_presto_cluster_action: ExternalAction,
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info("Verifying the startup of the Presto cluster.")
     if start_presto_cluster_action.completed_proc.returncode != 0:
-        return format_action_failure_msg(
+        return False, format_action_failure_msg(
             "The Presto startup subprocess returned a non-zero exit code.",
             start_presto_cluster_action,
         )
 
     verified, failure_message = _validate_presto_cluster_running()
     if not verified:
-        return format_action_failure_msg(failure_message, start_presto_cluster_action)
+        return False, format_action_failure_msg(failure_message, start_presto_cluster_action)
 
     return True, ""
 
 
 def verify_stop_presto_action(
-    stop_presto_cluster_action: IntegrationTestExternalAction,
+    stop_presto_cluster_action: ExternalAction,
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info("Verifying the spindown of the Presto cluster.")
     if stop_presto_cluster_action.completed_proc.returncode != 0:
-        return format_action_failure_msg(
+        return False, format_action_failure_msg(
             "The Presto spindown subprocess returned a non-zero exit code.",
             stop_presto_cluster_action,
         )
 
     verified, failure_message = _validate_presto_cluster_not_running()
     if not verified:
-        return format_action_failure_msg(failure_message, stop_presto_cluster_action)
+        return False, format_action_failure_msg(failure_message, stop_presto_cluster_action)
 
     return True, ""
 

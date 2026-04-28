@@ -5,18 +5,14 @@ from pathlib import Path
 from typing import Any
 
 from clp_package_utils.general import EXTRACT_FILE_CMD
-from pydantic import BaseModel
 
-from tests.package_tests.utils.classes import (
-    ClpPackage,
-    ClpPackageExternalAction,
-)
-from tests.utils.subprocess_utils import execute_external_action
+from tests.package_tests.utils.classes import ClpPackage
+from tests.utils.classes import CmdArgs, ExternalAction
 
 logger = logging.getLogger(__name__)
 
 
-class DecompressArgs(BaseModel):
+class DecompressArgs(CmdArgs):
     """Docstring."""
 
     script_path: Path
@@ -45,17 +41,12 @@ def decompress_clp_package(
     clp_package: ClpPackage,
     extraction_dir: Any,
     paths: list[Path] | None = None,
-) -> ClpPackageExternalAction[DecompressArgs]:
+) -> tuple[ExternalAction, DecompressArgs]:
     """Docstring."""
     logger.info(f"Decompressing '{clp_package.mode_name}' package.")
 
     args: DecompressArgs = _construct_decompress_args(clp_package, extraction_dir, paths)
-    action: ClpPackageExternalAction[DecompressArgs] = ClpPackageExternalAction(
-        cmd=args.to_cmd(), args=args
-    )
-    execute_external_action(action)
-
-    return action
+    return ExternalAction(cmd=args.to_cmd()), args
 
 
 def _construct_decompress_args(

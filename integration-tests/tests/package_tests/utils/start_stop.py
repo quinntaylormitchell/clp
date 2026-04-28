@@ -3,20 +3,15 @@
 import logging
 from pathlib import Path
 
-from pydantic import BaseModel
-
-from tests.package_tests.utils.classes import (
-    ClpPackage,
-    ClpPackageExternalAction,
-)
+from tests.package_tests.utils.classes import ClpPackage
+from tests.utils.classes import CmdArgs, ExternalAction
 from tests.utils.docker_utils import list_running_services_in_compose_project
 from tests.utils.logging_utils import format_action_failure_msg
-from tests.utils.subprocess_utils import execute_external_action
 
 logger = logging.getLogger(__name__)
 
 
-class StartStopArgs(BaseModel):
+class StartStopArgs(CmdArgs):
     """Docstring."""
 
     script_path: Path
@@ -33,32 +28,20 @@ class StartStopArgs(BaseModel):
 
 def start_clp_package(
     clp_package: ClpPackage,
-) -> ClpPackageExternalAction[StartStopArgs]:
+) -> tuple[ExternalAction, StartStopArgs]:
     """Docstring."""
     logger.info(f"Starting up the '{clp_package.mode_name}' package.")
-
     args: StartStopArgs = _construct_start_clp_args(clp_package)
-    action: ClpPackageExternalAction[StartStopArgs] = ClpPackageExternalAction(
-        cmd=args.to_cmd(), args=args
-    )
-    execute_external_action(action)
-
-    return action
+    return ExternalAction(cmd=args.to_cmd()), args
 
 
 def stop_clp_package(
     clp_package: ClpPackage,
-) -> ClpPackageExternalAction[StartStopArgs]:
+) -> tuple[ExternalAction, StartStopArgs]:
     """Docstring."""
     logger.info(f"Stopping the '{clp_package.mode_name}' package.")
-
     args: StartStopArgs = _construct_stop_clp_args(clp_package)
-    action: ClpPackageExternalAction[StartStopArgs] = ClpPackageExternalAction(
-        cmd=args.to_cmd(), args=args
-    )
-    execute_external_action(action)
-
-    return action
+    return ExternalAction(cmd=args.to_cmd()), args
 
 
 def _construct_start_clp_args(clp_package: ClpPackage) -> StartStopArgs:
@@ -78,36 +61,36 @@ def _construct_stop_clp_args(clp_package: ClpPackage) -> StartStopArgs:
 
 
 def verify_start_clp_action(
-    start_clp_action: ClpPackageExternalAction[StartStopArgs], clp_package: ClpPackage
+    start_clp_action: ExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info(f"Verifying the startup of the '{clp_package.mode_name}' package.")
     if start_clp_action.completed_proc.returncode != 0:
-        return format_action_failure_msg(
+        return False, format_action_failure_msg(
             "The start-clp.sh subprocess returned a non-zero exit code.",
             start_clp_action,
         )
 
     package_running_validated, failure_message = _validate_clp_package_running(clp_package)
     if not package_running_validated:
-        return format_action_failure_msg(failure_message, start_clp_action)
+        return False, format_action_failure_msg(failure_message, start_clp_action)
 
     return True, ""
 
 
 def verify_stop_clp_action(
-    stop_clp_action: ClpPackageExternalAction[StartStopArgs], clp_package: ClpPackage
+    stop_clp_action: ExternalAction, clp_package: ClpPackage
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info(f"Verifying the spindown of the '{clp_package.mode_name}' package.")
     if stop_clp_action.completed_proc.returncode != 0:
-        return format_action_failure_msg(
+        return False, format_action_failure_msg(
             "The stop-clp.sh subprocess returned a non-zero exit code.", stop_clp_action
         )
 
     package_not_running_validated, failure_message = _validate_clp_package_not_running(clp_package)
     if not package_not_running_validated:
-        return format_action_failure_msg(failure_message, stop_clp_action)
+        return False, format_action_failure_msg(failure_message, stop_clp_action)
 
     return True, ""
 
