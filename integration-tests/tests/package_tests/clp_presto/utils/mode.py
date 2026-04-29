@@ -11,7 +11,7 @@ from clp_py_utils.clp_config import (
     StorageEngine,
 )
 
-from tests.package_tests.utils.classes import (
+from tests.package_tests.classes import (
     ClpPackageModeConfig,
 )
 from tests.package_tests.utils.modes import (

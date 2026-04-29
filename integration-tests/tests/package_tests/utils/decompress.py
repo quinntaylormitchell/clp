@@ -6,7 +6,7 @@ from typing import Any
 
 from clp_package_utils.general import EXTRACT_FILE_CMD
 
-from tests.package_tests.utils.classes import ClpPackage
+from tests.package_tests.classes import ClpPackage
 from tests.utils.classes import CmdArgs, ExternalAction
 
 logger = logging.getLogger(__name__)

@@ -1,5 +1,4 @@
 {
-
     "dataset_name": "json_s3_multifile",
     "unstructured": false,
     "timestamp_key": "timestamp",

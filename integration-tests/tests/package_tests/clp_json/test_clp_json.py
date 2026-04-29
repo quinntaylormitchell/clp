@@ -4,6 +4,9 @@ import logging
 
 import pytest
 
+from tests.package_tests.classes import (
+    ClpPackage,
+)
 from tests.package_tests.clp_json.utils.clear_archives import (
     clear_package_archives_clp_json,
 )
@@ -19,9 +22,6 @@ from tests.package_tests.utils.archive_manager import (
     ClpPackageArchiveManagerType,
     verify_archive_manager_del_action,
     verify_archive_manager_find_action,
-)
-from tests.package_tests.utils.classes import (
-    ClpPackage,
 )
 from tests.package_tests.utils.compress import (
     compress_clp_package,

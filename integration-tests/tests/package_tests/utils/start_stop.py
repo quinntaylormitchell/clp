@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from tests.package_tests.utils.classes import ClpPackage
+from tests.package_tests.classes import ClpPackage
 from tests.utils.classes import CmdArgs, ExternalAction
 from tests.utils.docker_utils import list_running_services_in_compose_project
 from tests.utils.logging_utils import format_action_failure_msg

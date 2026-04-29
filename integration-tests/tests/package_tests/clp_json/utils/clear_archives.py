@@ -4,13 +4,13 @@ import logging
 
 import pytest
 
+from tests.package_tests.classes import (
+    ClpPackage,
+)
 from tests.package_tests.clp_json.utils.dataset_manager import (
     ClpPackageDatasetManagerType,
     dataset_manager_clp_json,
     verify_dataset_manager_del_action_clp_json,
-)
-from tests.package_tests.utils.classes import (
-    ClpPackage,
 )
 
 logger = logging.getLogger(__name__)

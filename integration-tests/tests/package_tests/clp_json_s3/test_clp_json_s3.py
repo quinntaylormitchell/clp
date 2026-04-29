@@ -4,6 +4,9 @@ import logging
 
 import pytest
 
+from tests.package_tests.classes import (
+    ClpPackage,
+)
 from tests.package_tests.clp_json.utils.clear_archives import (
     clear_package_archives_clp_json,
 )
@@ -11,9 +14,6 @@ from tests.package_tests.clp_json_s3.utils.compress_s3 import (
     compress_s3_clp_package,
 )
 from tests.package_tests.clp_json_s3.utils.mode import CLP_JSON_S3_MODE
-from tests.package_tests.utils.classes import (
-    ClpPackage,
-)
 from tests.utils.classes import (
     IntegrationTestDataset,
 )

@@ -5,7 +5,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.package_tests.utils.classes import (
+from tests.package_tests.classes import (
     ClpPackage,
     ClpPackageTestPathConfig,
 )

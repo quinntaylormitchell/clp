@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from tests.package_tests.utils.classes import ClpPackage
+from tests.package_tests.classes import ClpPackage
 from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset
 
 logger = logging.getLogger(__name__)

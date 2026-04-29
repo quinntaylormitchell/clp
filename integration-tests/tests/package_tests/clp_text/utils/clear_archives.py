@@ -4,15 +4,15 @@ import logging
 
 import pytest
 
+from tests.package_tests.classes import (
+    ClpPackage,
+)
 from tests.package_tests.utils.archive_manager import (
     _extract_archive_ids_from_find_output,
     archive_manager_clp_package,
     ClpPackageArchiveManagerType,
     verify_archive_manager_del_action,
     verify_archive_manager_find_action,
-)
-from tests.package_tests.utils.classes import (
-    ClpPackage,
 )
 
 logger = logging.getLogger(__name__)

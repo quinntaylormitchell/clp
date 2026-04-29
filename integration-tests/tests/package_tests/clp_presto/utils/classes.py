@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from tests.package_tests.utils.classes import ClpPackageTestPathConfig
+from tests.package_tests.classes import ClpPackageTestPathConfig
 from tests.utils.utils import (
     validate_dir_exists,
     validate_file_exists,

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from clp_py_utils.clp_config import StorageEngine
 
-from tests.package_tests.utils.classes import ClpPackage
+from tests.package_tests.classes import ClpPackage
 from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset
 from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.utils import (

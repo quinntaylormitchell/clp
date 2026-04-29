@@ -6,17 +6,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from clp_py_utils.clp_config import (
-    ClpConfig,
-)
+from clp_py_utils.clp_config import ClpConfig
 from pydantic import ValidationError
 
-from tests.utils.classes import (
-    IntegrationTestPathConfig,
-)
-from tests.utils.utils import (
-    validate_dir_exists,
-)
+from tests.utils.classes import IntegrationTestPathConfig
+from tests.utils.utils import validate_dir_exists
 
 logger = logging.getLogger(__name__)
 

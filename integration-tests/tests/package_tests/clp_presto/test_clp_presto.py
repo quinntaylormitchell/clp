@@ -4,6 +4,9 @@ import logging
 
 import pytest
 
+from tests.package_tests.classes import (
+    ClpPackage,
+)
 from tests.package_tests.clp_json.utils.clear_archives import (
     clear_package_archives_clp_json,
 )
@@ -22,9 +25,6 @@ from tests.package_tests.clp_presto.utils.query import (
 from tests.package_tests.clp_presto.utils.split_filters import (
     add_split_filter_for_dataset,
     clear_split_filter_file,
-)
-from tests.package_tests.utils.classes import (
-    ClpPackage,
 )
 from tests.package_tests.utils.compress import (
     compress_clp_package,

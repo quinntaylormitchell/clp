@@ -224,7 +224,7 @@ class ExternalAction:
             "SUBPROCESS RUN SUMMARY\n",
             f"{sep}\n",
             f"Timestamp at completion : {now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}\n",
-            f"Command                 : {self.cmd}\n",
+            f"Command                 : {completed_proc.args}\n",
             f"Return Code             : {completed_proc.returncode}\n",
             "\n\n",
             "captured stdout\n",
