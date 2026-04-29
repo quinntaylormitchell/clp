@@ -8,7 +8,7 @@ from clp_py_utils.clp_config import StorageEngine
 
 from tests.package_tests.classes import ClpPackage
 from tests.package_tests.utils.decompress import decompress_clp_package
-from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset
+from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset, VerificationResult
 from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.utils import (
     clear_directory,
@@ -85,13 +85,15 @@ def verify_compress_action(
     compress_action: ExternalAction,
     clp_package: ClpPackage,
     original_dataset: IntegrationTestDataset,
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info(f"Verifying {clp_package.mode_name} package compression.")
     if compress_action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The compress.sh subprocess returned a non-zero exit code.",
-            compress_action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The compress.sh subprocess returned a non-zero exit code.",
+                compress_action,
+            )
         )
 
     mode = clp_package.mode_name
@@ -110,30 +112,34 @@ def verify_compress_action(
 
 def _verify_compress_action_clp_json(
     compress_action: ExternalAction, clp_package: ClpPackage
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info(f"Verifying {clp_package.mode_name} package compression.")
     if compress_action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The compress.sh subprocess returned a non-zero exit code.",
-            compress_action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The compress.sh subprocess returned a non-zero exit code.",
+                compress_action,
+            )
         )
 
     # TODO: Waiting for PR 1299 (clp-json decompression) to be merged.
-    return True, ""
+    return VerificationResult.ok()
 
 
 def _verify_compress_action_clp_text(
     compress_action: ExternalAction,
     clp_package: ClpPackage,
     original_dataset: IntegrationTestDataset,
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info(f"Verifying {clp_package.mode_name} package compression.")
     if compress_action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The 'compress.sh' subprocess returned a non-zero exit code.",
-            compress_action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The 'compress.sh' subprocess returned a non-zero exit code.",
+                compress_action,
+            )
         )
 
     # Decompress the contents of `clp-package/var/data/archives`.
@@ -156,9 +162,11 @@ def _verify_compress_action_clp_text(
     equal = is_dir_tree_content_equal(original_logs_path, decompressed_logs_path)
     clear_directory(path_config.package_decompression_dir)
     if equal:
-        return True, ""
-    return False, format_action_failure_msg(
-        f"Compress verification failure: mismatch between original logs at '{original_logs_path}'"
-        f" and decompressed logs at '{decompressed_logs_path}'.",
-        compress_action,
+        return VerificationResult.ok()
+    return VerificationResult.fail(
+        format_action_failure_msg(
+            f"Compress verification failure: mismatch between original logs at"
+            f" '{original_logs_path}' and decompressed logs at '{decompressed_logs_path}'.",
+            compress_action,
+        )
     )

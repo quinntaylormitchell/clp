@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
+from typing_extensions import Self
 
 from tests.conftest import get_test_log_dir
 from tests.utils.utils import validate_dir_exists, validate_file_exists
@@ -246,3 +247,28 @@ class ExternalAction:
             f"Subprocess returned. stdout and stderr written to log file: '{self.log_file_path}'"
         )
         logger.info(log_msg)
+
+
+@dataclass(frozen=True)
+class VerificationResult:
+    """Outcome from a verification function."""
+
+    #: Whether or not the verification was successful.
+    success: bool
+
+    #: Message describing the failure, if the verification failed.
+    failure_message: str = ""
+
+    def __bool__(self) -> bool:
+        """Makes class truthy."""
+        return self.success
+
+    @classmethod
+    def ok(cls) -> Self:
+        """:return: A successful `VerificationResult`."""
+        return cls(success=True)
+
+    @classmethod
+    def fail(cls, failure_message: str) -> Self:
+        """:return: A failed `VerificationResult` carrying `failure_message`."""
+        return cls(success=False, failure_message=failure_message)

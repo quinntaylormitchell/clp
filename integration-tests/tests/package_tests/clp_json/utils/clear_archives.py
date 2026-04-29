@@ -26,9 +26,10 @@ def clear_package_archives_clp_json(
         dataset_manager_type=ClpPackageDatasetManagerType.DEL,
         del_all=True,
     )
-    verified, failure_message = verify_dataset_manager_del_action_clp_json(del_action, clp_package)
-    if not verified:
+    del_result = verify_dataset_manager_del_action_clp_json(del_action, clp_package)
+    if not del_result:
         pytest.fail(
             f"When clearing package archives, the call to dataset-manager 'del' could not be"
-            f" verified: '{failure_message}' Subprocess log: '{del_action.log_file_path}'"
+            f" verified: '{del_result.failure_message}' Subprocess log:"
+            f" '{del_action.log_file_path}'"
         )

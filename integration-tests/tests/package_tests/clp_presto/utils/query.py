@@ -15,6 +15,7 @@ from tests.package_tests.clp_presto.utils.classes import (
 from tests.utils.classes import (
     ExternalAction,
     IntegrationTestDataset,
+    VerificationResult,
 )
 from tests.utils.utils import (
     get_binary_path,
@@ -56,7 +57,7 @@ def query_clp_presto(
 def verify_show_tables_action_clp_presto(
     show_tables_action: ExternalAction,
     current_datasets: list[IntegrationTestDataset],
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Verify that `SHOW TABLES;` output is accurate w.r.t. current datasets."""
     logger.info("Verifying `SHOW TABLES;` Presto query.")
 
@@ -64,24 +65,23 @@ def verify_show_tables_action_clp_presto(
     try:
         actual: set[str] = {json.loads(line)["Table"] for line in output_lines if line.strip()}
     except (json.JSONDecodeError, KeyError) as e:
-        return False, f"Failed to parse output of `SHOW TABLES;` as JSON: {e}"
+        return VerificationResult.fail(f"Failed to parse output of `SHOW TABLES;` as JSON: {e}")
 
     expected: set[str] = {ds.dataset_name for ds in current_datasets}
 
     if actual != expected:
-        return (
-            False,
+        return VerificationResult.fail(
             f"Mismatch between set of tables from `SHOW TABLES;` query: '{actual}' and expected"
-            f" set: '{expected}'",
+            f" set: '{expected}'"
         )
 
-    return True, ""
+    return VerificationResult.ok()
 
 
 def verify_describe_dataset_action_clp_presto(
     describe_dataset_action: ExternalAction,
     dataset: IntegrationTestDataset,
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """
     Verify that `DESCRIBE <dataset_name>;` output is accurate w.r.t. "columns" field from dataset
     metadata.
@@ -92,7 +92,9 @@ def verify_describe_dataset_action_clp_presto(
     try:
         actual: list[dict[str, Any]] = [json.loads(line) for line in output_lines if line.strip()]
     except (json.JSONDecodeError, KeyError) as e:
-        return False, f"Failed to parse output of `DESCRIBE <dataset_name>;` as JSON: {e}"
+        return VerificationResult.fail(
+            f"Failed to parse output of `DESCRIBE <dataset_name>;` as JSON: {e}"
+        )
 
     if dataset.columns_file_path is not None:
         expected: list[dict[str, Any]] = load_json_to_dict(dataset.columns_file_path)["columns"]
@@ -103,19 +105,18 @@ def verify_describe_dataset_action_clp_presto(
         )
 
     if actual != expected:
-        return (
-            False,
+        return VerificationResult.fail(
             f"Mismatch between dataset column description from `DESCRIBE <dataset_name>;` query:"
-            f" '{actual}' and expected column description: '{expected}'",
+            f" '{actual}' and expected column description: '{expected}'"
         )
 
-    return True, ""
+    return VerificationResult.ok()
 
 
 def verify_select_logs_action_clp_presto(
     select_logs_action: ExternalAction,
     dataset: IntegrationTestDataset,
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """
     Verify that `SELECT * FROM <dataset_name>;` output is accurate w.r.t. grep -r ".*" output for
     dataset logs.
@@ -141,10 +142,9 @@ def verify_select_logs_action_clp_presto(
     expected = grep_action.completed_proc.stdout
 
     if actual != expected:
-        return (
-            False,
+        return VerificationResult.fail(
             f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"
-            f" and expected logs: '{expected}'",
+            f" and expected logs: '{expected}'"
         )
 
-    return True, ""
+    return VerificationResult.ok()

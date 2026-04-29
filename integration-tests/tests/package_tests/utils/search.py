@@ -9,7 +9,7 @@ import pytest
 from clp_py_utils.clp_config import StorageEngine
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset
+from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset, VerificationResult
 from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.utils import (
     get_binary_path,
@@ -136,12 +136,14 @@ def verify_search_action(
     action: ExternalAction,
     search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info("Verifying search.")
     if action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The 'search.sh' subprocess returned a non-zero exit code.", action
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The 'search.sh' subprocess returned a non-zero exit code.", action
+            )
         )
 
     args = action.args
@@ -165,15 +167,18 @@ def verify_search_action(
     formatted_search_result = _format_search_result_for_search_type(
         action.completed_proc.stdout, search_type
     )
-    if formatted_grep_result != formatted_search_result:
-        return False, format_action_failure_msg(
+    if formatted_grep_result == formatted_search_result:
+        return VerificationResult.ok()
+
+    return VerificationResult.fail(
+        format_action_failure_msg(
             f"Search verification failure: mismatch between formatted search result"
-            f" '{formatted_search_result}' and formatted grep result '{formatted_grep_result}'.",
+            f" '{formatted_search_result}' and formatted grep result"
+            f" '{formatted_grep_result}'.",
             action,
             grep_action,
         )
-
-    return True, ""
+    )
 
 
 def _construct_grep_verification_cmd(

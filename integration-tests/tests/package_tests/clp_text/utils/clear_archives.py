@@ -27,13 +27,11 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
     )
-    find_archive_manager_action_verified, failure_message = verify_archive_manager_find_action(
-        find_archive_manager_action, clp_package
-    )
-    if not find_archive_manager_action_verified:
+    find_result = verify_archive_manager_find_action(find_archive_manager_action, clp_package)
+    if not find_result:
         pytest.fail(
             f"When clearing package archives, the call to archive-manager 'find' could not be"
-            f" verified: '{failure_message}' Subprocess log:"
+            f" verified: '{find_result.failure_message}' Subprocess log:"
             f" '{find_archive_manager_action.log_file_path}'"
         )
 
@@ -45,12 +43,10 @@ def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
             archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
             ids_to_del=archive_ids_to_delete,
         )
-        archive_manager_action_verified, failure_message = verify_archive_manager_del_action(
-            del_by_ids_action, clp_package
-        )
-        if not archive_manager_action_verified:
+        del_result = verify_archive_manager_del_action(del_by_ids_action, clp_package)
+        if not del_result:
             pytest.fail(
                 f"When clearing package archives, the call to archive-manager 'del' could not be"
-                f" verified: '{failure_message}' Subprocess log:"
+                f" verified: '{del_result.failure_message}' Subprocess log:"
                 f" '{del_by_ids_action.log_file_path}'"
             )

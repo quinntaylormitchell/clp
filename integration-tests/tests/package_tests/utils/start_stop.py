@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction
+from tests.utils.classes import CmdArgs, ExternalAction, VerificationResult
 from tests.utils.docker_utils import list_running_services_in_compose_project
 from tests.utils.logging_utils import format_action_failure_msg
 
@@ -62,40 +62,48 @@ def _construct_stop_clp_args(clp_package: ClpPackage) -> StartStopArgs:
 
 def verify_start_clp_action(
     start_clp_action: ExternalAction, clp_package: ClpPackage
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info(f"Verifying the startup of the '{clp_package.mode_name}' package.")
     if start_clp_action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The start-clp.sh subprocess returned a non-zero exit code.",
-            start_clp_action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The start-clp.sh subprocess returned a non-zero exit code.",
+                start_clp_action,
+            )
         )
 
-    package_running_validated, failure_message = _validate_clp_package_running(clp_package)
-    if not package_running_validated:
-        return False, format_action_failure_msg(failure_message, start_clp_action)
+    package_running_result = _validate_clp_package_running(clp_package)
+    if not package_running_result:
+        return VerificationResult.fail(
+            format_action_failure_msg(package_running_result.failure_message, start_clp_action)
+        )
 
-    return True, ""
+    return VerificationResult.ok()
 
 
 def verify_stop_clp_action(
     stop_clp_action: ExternalAction, clp_package: ClpPackage
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info(f"Verifying the spindown of the '{clp_package.mode_name}' package.")
     if stop_clp_action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The stop-clp.sh subprocess returned a non-zero exit code.", stop_clp_action
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The stop-clp.sh subprocess returned a non-zero exit code.", stop_clp_action
+            )
         )
 
-    package_not_running_validated, failure_message = _validate_clp_package_not_running(clp_package)
-    if not package_not_running_validated:
-        return False, format_action_failure_msg(failure_message, stop_clp_action)
+    package_not_running_result = _validate_clp_package_not_running(clp_package)
+    if not package_not_running_result:
+        return VerificationResult.fail(
+            format_action_failure_msg(package_not_running_result.failure_message, stop_clp_action)
+        )
 
-    return True, ""
+    return VerificationResult.ok()
 
 
-def _validate_clp_package_running(clp_package: ClpPackage) -> tuple[bool, str]:
+def _validate_clp_package_running(clp_package: ClpPackage) -> VerificationResult:
     """Docstring."""
     # Get list of services currently running in the Compose project.
     instance_id = clp_package.get_clp_instance_id()
@@ -105,7 +113,7 @@ def _validate_clp_package_running(clp_package: ClpPackage) -> tuple[bool, str]:
     # Compare with list of required components.
     required_components = set(clp_package.component_list)
     if required_components == running_services:
-        return True, ""
+        return VerificationResult.ok()
 
     # Construct failure message.
     mode_name = clp_package.mode_name
@@ -121,10 +129,10 @@ def _validate_clp_package_running(clp_package: ClpPackage) -> tuple[bool, str]:
     if unexpected_components:
         fail_msg += f" Unexpected services: {unexpected_components}."
 
-    return False, fail_msg
+    return VerificationResult.fail(fail_msg)
 
 
-def _validate_clp_package_not_running(clp_package: ClpPackage) -> tuple[bool, str]:
+def _validate_clp_package_not_running(clp_package: ClpPackage) -> VerificationResult:
     # Get list of services currently running in the Compose project.
     instance_id = clp_package.get_clp_instance_id()
     project_name = f"clp-package-{instance_id}"
@@ -132,7 +140,7 @@ def _validate_clp_package_not_running(clp_package: ClpPackage) -> tuple[bool, st
 
     # Make sure the set is empty.
     if not running_services:
-        return True, ""
+        return VerificationResult.ok()
 
     # Construct failure message.
     mode_name = clp_package.mode_name
@@ -140,4 +148,4 @@ def _validate_clp_package_not_running(clp_package: ClpPackage) -> tuple[bool, st
         f"'{mode_name}' package stop verification failure: there are components of the package that"
         f" are still running: '{running_services}'"
     )
-    return False, fail_msg
+    return VerificationResult.fail(fail_msg)

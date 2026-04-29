@@ -64,8 +64,8 @@ def test_clp_text_compression_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -83,8 +83,8 @@ def test_clp_text_search_basic_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     search_action = search_clp_package(
         clp_package=clp_package,
@@ -92,10 +92,8 @@ def test_clp_text_search_basic_text_multifile(
         search_type=ClpPackageSearchType.BASIC,
         wildcard_query=text_multifile.metadata.single_match_wildcard_query,
     )
-    verified, failure_message = verify_search_action(
-        search_action, ClpPackageSearchType.BASIC, text_multifile
-    )
-    assert verified, failure_message
+    result = verify_search_action(search_action, ClpPackageSearchType.BASIC, text_multifile)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -113,8 +111,8 @@ def test_clp_text_search_file_path_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     search_action = search_clp_package(
         clp_package=clp_package,
@@ -122,10 +120,8 @@ def test_clp_text_search_file_path_text_multifile(
         search_type=ClpPackageSearchType.FILE_PATH,
         wildcard_query=text_multifile.metadata.single_match_wildcard_query,
     )
-    verified, failure_message = verify_search_action(
-        search_action, ClpPackageSearchType.FILE_PATH, text_multifile
-    )
-    assert verified, failure_message
+    result = verify_search_action(search_action, ClpPackageSearchType.FILE_PATH, text_multifile)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -143,8 +139,8 @@ def test_clp_text_search_ignore_case_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     search_action = search_clp_package(
         clp_package=clp_package,
@@ -152,10 +148,8 @@ def test_clp_text_search_ignore_case_text_multifile(
         search_type=ClpPackageSearchType.IGNORE_CASE,
         wildcard_query=text_multifile.metadata.single_match_wildcard_query,
     )
-    verified, failure_message = verify_search_action(
-        search_action, ClpPackageSearchType.IGNORE_CASE, text_multifile
-    )
-    assert verified, failure_message
+    result = verify_search_action(search_action, ClpPackageSearchType.IGNORE_CASE, text_multifile)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -173,8 +167,8 @@ def test_clp_text_search_count_results_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     search_action = search_clp_package(
         clp_package=clp_package,
@@ -182,10 +176,8 @@ def test_clp_text_search_count_results_text_multifile(
         search_type=ClpPackageSearchType.COUNT_RESULTS,
         wildcard_query=text_multifile.metadata.single_match_wildcard_query,
     )
-    verified, failure_message = verify_search_action(
-        search_action, ClpPackageSearchType.COUNT_RESULTS, text_multifile
-    )
-    assert verified, failure_message
+    result = verify_search_action(search_action, ClpPackageSearchType.COUNT_RESULTS, text_multifile)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -203,8 +195,8 @@ def test_clp_text_search_count_by_time_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     search_action = search_clp_package(
         clp_package=clp_package,
@@ -212,10 +204,8 @@ def test_clp_text_search_count_by_time_text_multifile(
         search_type=ClpPackageSearchType.COUNT_BY_TIME,
         wildcard_query=text_multifile.metadata.single_match_wildcard_query,
     )
-    verified, failure_message = verify_search_action(
-        search_action, ClpPackageSearchType.COUNT_BY_TIME, text_multifile
-    )
-    assert verified, failure_message
+    result = verify_search_action(search_action, ClpPackageSearchType.COUNT_BY_TIME, text_multifile)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -233,8 +223,8 @@ def test_clp_text_search_time_range_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     search_action = search_clp_package(
         clp_package=clp_package,
@@ -242,10 +232,8 @@ def test_clp_text_search_time_range_text_multifile(
         search_type=ClpPackageSearchType.TIME_RANGE,
         wildcard_query=text_multifile.metadata.single_match_wildcard_query,
     )
-    verified, failure_message = verify_search_action(
-        search_action, ClpPackageSearchType.TIME_RANGE, text_multifile
-    )
-    assert verified, failure_message
+    result = verify_search_action(search_action, ClpPackageSearchType.TIME_RANGE, text_multifile)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -264,17 +252,15 @@ def test_clp_text_archive_manager_find_all_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     archive_manager_find_all_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
     )
-    verified, failure_message = verify_archive_manager_find_action(
-        archive_manager_find_all_action, clp_package
-    )
-    assert verified, failure_message
+    result = verify_archive_manager_find_action(archive_manager_find_all_action, clp_package)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -293,8 +279,8 @@ def test_clp_text_archive_manager_find_range_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     archive_manager_find_range_action = archive_manager_clp_package(
         clp_package=clp_package,
@@ -302,10 +288,8 @@ def test_clp_text_archive_manager_find_range_text_multifile(
         begin_ts=text_multifile.metadata.begin_ts,
         end_ts=text_multifile.metadata.end_ts,
     )
-    verified, failure_message = verify_archive_manager_find_action(
-        archive_manager_find_range_action, clp_package
-    )
-    assert verified, failure_message
+    result = verify_archive_manager_find_action(archive_manager_find_range_action, clp_package)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -324,17 +308,15 @@ def test_clp_text_archive_manager_del_by_ids_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     archive_manager_del_by_ids_action = archive_manager_clp_package(
         clp_package=clp_package,
         archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
     )
-    verified, failure_message = verify_archive_manager_del_action(
-        archive_manager_del_by_ids_action, clp_package
-    )
-    assert verified, failure_message
+    result = verify_archive_manager_del_action(archive_manager_del_by_ids_action, clp_package)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 
@@ -353,8 +335,8 @@ def test_clp_text_archive_manager_del_by_filter_text_multifile(
     clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
-    verified, failure_message = verify_compress_action(compress_action, clp_package, text_multifile)
-    assert verified, failure_message
+    result = verify_compress_action(compress_action, clp_package, text_multifile)
+    assert result, result.failure_message
 
     archive_manager_del_by_filter_action = archive_manager_clp_package(
         clp_package=clp_package,
@@ -362,10 +344,8 @@ def test_clp_text_archive_manager_del_by_filter_text_multifile(
         begin_ts=text_multifile.metadata.begin_ts,
         end_ts=text_multifile.metadata.end_ts,
     )
-    verified, failure_message = verify_archive_manager_del_action(
-        archive_manager_del_by_filter_action, clp_package
-    )
-    assert verified, failure_message
+    result = verify_archive_manager_del_action(archive_manager_del_by_filter_action, clp_package)
+    assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
 

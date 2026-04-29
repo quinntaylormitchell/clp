@@ -53,12 +53,10 @@ def presto_cluster(
 
     try:
         start_presto_action = start_presto_cluster(presto_cluster)
-        start_presto_action_verified, failure_message = verify_start_presto_action(
-            start_presto_action
-        )
-        assert start_presto_action_verified, failure_message
+        start_result = verify_start_presto_action(start_presto_action)
+        assert start_result, start_result.failure_message
         yield presto_cluster
     finally:
         stop_presto_action = stop_presto_cluster(presto_cluster)
-        stop_presto_action_verified, failure_message = verify_stop_presto_action(stop_presto_action)
-        assert stop_presto_action_verified, failure_message
+        stop_result = verify_stop_presto_action(stop_presto_action)
+        assert stop_result, stop_result.failure_message

@@ -9,7 +9,7 @@ import pytest
 from strenum import StrEnum
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset
+from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset, VerificationResult
 from tests.utils.logging_utils import format_action_failure_msg
 
 logger = logging.getLogger(__name__)
@@ -112,39 +112,45 @@ def _construct_dataset_manager_args(
 def verify_dataset_manager_list_action_clp_json(
     action: ExternalAction,
     clp_package: ClpPackage,
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info("Verifying dataset-manager 'list'.")
     if action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The 'dataset-manager.sh list' subprocess returned a non-zero exit code.",
-            action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The 'dataset-manager.sh list' subprocess returned a non-zero exit code.",
+                action,
+            )
         )
 
     dataset_list = _extract_dataset_names_from_output(action)
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
     if dataset_list != directories_in_package_archives:
-        return False, format_action_failure_msg(
-            "Dataset-manager 'list' verification failure: mismatch between output dataset list"
-            f" '{dataset_list}' and directories in var/archives"
-            f" '{directories_in_package_archives}'",
-            action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "Dataset-manager 'list' verification failure: mismatch between output dataset list"
+                f" '{dataset_list}' and directories in var/archives"
+                f" '{directories_in_package_archives}'",
+                action,
+            )
         )
 
-    return True, ""
+    return VerificationResult.ok()
 
 
 def verify_dataset_manager_del_action_clp_json(
     action: ExternalAction,
     clp_package: ClpPackage,
-) -> tuple[bool, str]:
+) -> VerificationResult:
     """Docstring."""
     logger.info("Verifying dataset-manager 'del'.")
     if action.completed_proc.returncode != 0:
-        return False, format_action_failure_msg(
-            "The 'dataset-manager.sh del' subprocess returned a non-zero exit code.",
-            action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "The 'dataset-manager.sh del' subprocess returned a non-zero exit code.",
+                action,
+            )
         )
 
     # Get list of all datasets currently in archives.
@@ -152,13 +158,11 @@ def verify_dataset_manager_del_action_clp_json(
         clp_package=clp_package,
         dataset_manager_type=ClpPackageDatasetManagerType.LIST,
     )
-    verified, failure_message = verify_dataset_manager_list_action_clp_json(
-        list_action, clp_package
-    )
-    if not verified:
+    list_result = verify_dataset_manager_list_action_clp_json(list_action, clp_package)
+    if not list_result:
         pytest.fail(
             "During dataset-manager 'del' verification, supporting call to dataset-manager 'list'"
-            f" could not be verified: '{failure_message}' Subprocess log:"
+            f" could not be verified: '{list_result.failure_message}' Subprocess log:"
             f" '{list_action.log_file_path}'"
         )
 
@@ -170,19 +174,23 @@ def verify_dataset_manager_del_action_clp_json(
     del_all_flag = args.del_all
     if del_all_flag:
         if len(current_datasets) > 0:
-            return False, format_action_failure_msg(
-                f"Dataset-manager 'del --all' verification failure: There are datasets still"
-                f" present in the database: '{current_datasets}'.",
-                action,
+            return VerificationResult.fail(
+                format_action_failure_msg(
+                    f"Dataset-manager 'del --all' verification failure: There are datasets still"
+                    f" present in the database: '{current_datasets}'.",
+                    action,
+                )
             )
     elif any(item in current_datasets for item in datasets_specified_for_deletion):
-        return False, format_action_failure_msg(
-            "Dataset-manager 'del' verification failure: Some datasets that were specified for"
-            " deletion are still present in the database.",
-            action,
+        return VerificationResult.fail(
+            format_action_failure_msg(
+                "Dataset-manager 'del' verification failure: Some datasets that were specified for"
+                " deletion are still present in the database.",
+                action,
+            )
         )
 
-    return True, ""
+    return VerificationResult.ok()
 
 
 def _extract_dataset_names_from_output(
