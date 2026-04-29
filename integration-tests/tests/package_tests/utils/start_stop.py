@@ -74,12 +74,12 @@ def verify_start_clp_action(
         )
 
     package_running_result = _validate_clp_package_running(clp_package)
-    if not package_running_result:
-        return VerificationResult.fail(
-            format_action_failure_msg(package_running_result.failure_message, start_clp_action)
-        )
+    if package_running_result:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        format_action_failure_msg(package_running_result.failure_message, start_clp_action)
+    )
 
 
 def verify_stop_clp_action(
@@ -95,12 +95,12 @@ def verify_stop_clp_action(
         )
 
     package_not_running_result = _validate_clp_package_not_running(clp_package)
-    if not package_not_running_result:
-        return VerificationResult.fail(
-            format_action_failure_msg(package_not_running_result.failure_message, stop_clp_action)
-        )
+    if package_not_running_result:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        format_action_failure_msg(package_not_running_result.failure_message, stop_clp_action)
+    )
 
 
 def _validate_clp_package_running(clp_package: ClpPackage) -> VerificationResult:

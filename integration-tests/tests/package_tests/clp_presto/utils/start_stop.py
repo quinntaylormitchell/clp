@@ -67,14 +67,14 @@ def verify_start_presto_action(
         )
 
     cluster_running_result = _validate_presto_cluster_running()
-    if not cluster_running_result:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                cluster_running_result.failure_message, start_presto_cluster_action
-            )
-        )
+    if cluster_running_result:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        format_action_failure_msg(
+            cluster_running_result.failure_message, start_presto_cluster_action
+        )
+    )
 
 
 def verify_stop_presto_action(
@@ -91,14 +91,14 @@ def verify_stop_presto_action(
         )
 
     cluster_not_running_result = _validate_presto_cluster_not_running()
-    if not cluster_not_running_result:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                cluster_not_running_result.failure_message, stop_presto_cluster_action
-            )
-        )
+    if cluster_not_running_result:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        format_action_failure_msg(
+            cluster_not_running_result.failure_message, stop_presto_cluster_action
+        )
+    )
 
 
 def _validate_presto_cluster_running() -> VerificationResult:

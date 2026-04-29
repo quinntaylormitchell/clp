@@ -223,7 +223,7 @@ def verify_archive_manager_find_action(
     directories_in_archive_dir = _extract_archive_ids_from_find_output(find_all_action)
 
     # Compare.
-    if current_archive_id_list != directories_in_archive_dir:
+    if current_archive_id_list == directories_in_archive_dir:
         return VerificationResult.ok()
 
     return VerificationResult.fail(

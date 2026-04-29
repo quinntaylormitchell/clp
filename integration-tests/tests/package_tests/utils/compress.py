@@ -163,6 +163,7 @@ def _verify_compress_action_clp_text(
     clear_directory(path_config.package_decompression_dir)
     if equal:
         return VerificationResult.ok()
+
     return VerificationResult.fail(
         format_action_failure_msg(
             f"Compress verification failure: mismatch between original logs at"

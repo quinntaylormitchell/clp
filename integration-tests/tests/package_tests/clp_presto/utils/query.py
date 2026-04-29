@@ -69,13 +69,13 @@ def verify_show_tables_action_clp_presto(
 
     expected: set[str] = {ds.dataset_name for ds in current_datasets}
 
-    if actual != expected:
-        return VerificationResult.fail(
-            f"Mismatch between set of tables from `SHOW TABLES;` query: '{actual}' and expected"
-            f" set: '{expected}'"
-        )
+    if actual == expected:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        f"Mismatch between set of tables from `SHOW TABLES;` query: '{actual}' and expected set:"
+        f" '{expected}'"
+    )
 
 
 def verify_describe_dataset_action_clp_presto(
@@ -104,13 +104,13 @@ def verify_describe_dataset_action_clp_presto(
             " (should be `columns.json`)."
         )
 
-    if actual != expected:
-        return VerificationResult.fail(
-            f"Mismatch between dataset column description from `DESCRIBE <dataset_name>;` query:"
-            f" '{actual}' and expected column description: '{expected}'"
-        )
+    if actual == expected:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        f"Mismatch between dataset column description from `DESCRIBE <dataset_name>;` query:"
+        f" '{actual}' and expected column description: '{expected}'"
+    )
 
 
 def verify_select_logs_action_clp_presto(
@@ -141,10 +141,10 @@ def verify_select_logs_action_clp_presto(
         )
     expected = grep_action.completed_proc.stdout
 
-    if actual != expected:
-        return VerificationResult.fail(
-            f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"
-            f" and expected logs: '{expected}'"
-        )
+    if actual == expected:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"
+        f" and expected logs: '{expected}'"
+    )

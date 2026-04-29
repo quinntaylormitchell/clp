@@ -126,17 +126,17 @@ def verify_dataset_manager_list_action_clp_json(
     dataset_list = _extract_dataset_names_from_output(action)
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
-    if dataset_list != directories_in_package_archives:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "Dataset-manager 'list' verification failure: mismatch between output dataset list"
-                f" '{dataset_list}' and directories in var/archives"
-                f" '{directories_in_package_archives}'",
-                action,
-            )
-        )
+    if dataset_list == directories_in_package_archives:
+        return VerificationResult.ok()
 
-    return VerificationResult.ok()
+    return VerificationResult.fail(
+        format_action_failure_msg(
+            "Dataset-manager 'list' verification failure: mismatch between output dataset list"
+            f" '{dataset_list}' and directories in var/archives"
+            f" '{directories_in_package_archives}'",
+            action,
+        )
+    )
 
 
 def verify_dataset_manager_del_action_clp_json(

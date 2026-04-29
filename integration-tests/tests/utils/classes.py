@@ -124,7 +124,7 @@ class IntegrationTestDataset:
 
         # TODO: validate columns file properties.
         if self.columns_file_path is not None:
-            validate_dir_exists(self.columns_file_path)
+            validate_file_exists(self.columns_file_path)
 
     @property
     def metadata_file_path(self) -> Path:
