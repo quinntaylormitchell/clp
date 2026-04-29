@@ -70,7 +70,7 @@ def test_clp_presto_json_multifile(
     clear_package_archives_clp_json(clp_package)
     clear_split_filter_file(presto_cluster)
 
-    compress_action, _ = compress_clp_package(clp_package, json_multifile)
+    compress_action = compress_clp_package(clp_package, json_multifile)
     verified, failure_message = verify_compress_action(compress_action, clp_package, json_multifile)
     assert verified, failure_message
 

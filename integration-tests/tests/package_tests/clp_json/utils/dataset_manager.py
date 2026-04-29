@@ -57,7 +57,7 @@ def dataset_manager_clp_json(
     dataset_manager_type: ClpPackageDatasetManagerType,
     datasets_to_del: list[IntegrationTestDataset] | None = None,
     del_all: bool = False,
-) -> tuple[ExternalAction, DatasetManagerArgs]:
+) -> ExternalAction:
     """Docstring."""
     log_msg = f"Performing '{dataset_manager_type.name}' operation with dataset-manager."
     logger.info(log_msg)
@@ -68,7 +68,7 @@ def dataset_manager_clp_json(
         datasets_to_del,
         del_all,
     )
-    return ExternalAction(cmd=args.to_cmd()), args
+    return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
 def _construct_dataset_manager_args(
@@ -110,18 +110,18 @@ def _construct_dataset_manager_args(
 
 
 def verify_dataset_manager_list_action_clp_json(
-    dataset_manager_action: ExternalAction,
+    action: ExternalAction,
     clp_package: ClpPackage,
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info("Verifying dataset-manager 'list'.")
-    if dataset_manager_action.completed_proc.returncode != 0:
+    if action.completed_proc.returncode != 0:
         return False, format_action_failure_msg(
             "The 'dataset-manager.sh list' subprocess returned a non-zero exit code.",
-            dataset_manager_action,
+            action,
         )
 
-    dataset_list = _extract_dataset_names_from_output(dataset_manager_action)
+    dataset_list = _extract_dataset_names_from_output(action)
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
     if dataset_list != directories_in_package_archives:
@@ -129,27 +129,26 @@ def verify_dataset_manager_list_action_clp_json(
             "Dataset-manager 'list' verification failure: mismatch between output dataset list"
             f" '{dataset_list}' and directories in var/archives"
             f" '{directories_in_package_archives}'",
-            dataset_manager_action,
+            action,
         )
 
     return True, ""
 
 
 def verify_dataset_manager_del_action_clp_json(
-    dataset_manager_action: ExternalAction,
-    dataset_manager_args: DatasetManagerArgs,
+    action: ExternalAction,
     clp_package: ClpPackage,
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info("Verifying dataset-manager 'del'.")
-    if dataset_manager_action.completed_proc.returncode != 0:
+    if action.completed_proc.returncode != 0:
         return False, format_action_failure_msg(
             "The 'dataset-manager.sh del' subprocess returned a non-zero exit code.",
-            dataset_manager_action,
+            action,
         )
 
     # Get list of all datasets currently in archives.
-    list_action, _ = dataset_manager_clp_json(
+    list_action = dataset_manager_clp_json(
         clp_package=clp_package,
         dataset_manager_type=ClpPackageDatasetManagerType.LIST,
     )
@@ -164,30 +163,33 @@ def verify_dataset_manager_del_action_clp_json(
         )
 
     current_datasets = _extract_dataset_names_from_output(list_action)
-    datasets_specified_for_deletion = dataset_manager_args.datasets or []
-    del_all_flag = dataset_manager_args.del_all
+
+    args = action.args
+    assert isinstance(args, DatasetManagerArgs)
+    datasets_specified_for_deletion = args.datasets or []
+    del_all_flag = args.del_all
     if del_all_flag:
         if len(current_datasets) > 0:
             return False, format_action_failure_msg(
                 f"Dataset-manager 'del --all' verification failure: There are datasets still"
                 f" present in the database: '{current_datasets}'.",
-                dataset_manager_action,
+                action,
             )
     elif any(item in current_datasets for item in datasets_specified_for_deletion):
         return False, format_action_failure_msg(
             "Dataset-manager 'del' verification failure: Some datasets that were specified for"
             " deletion are still present in the database.",
-            dataset_manager_action,
+            action,
         )
 
     return True, ""
 
 
 def _extract_dataset_names_from_output(
-    dataset_manager_action: ExternalAction,
+    action: ExternalAction,
 ) -> list[str]:
     dataset_list: list[str] = []
-    output = _get_action_output(dataset_manager_action)
+    output = _get_action_output(action)
     output_lines = output.splitlines()
     num_datasets = 0
     for line in output_lines:

@@ -41,12 +41,12 @@ def decompress_clp_package(
     clp_package: ClpPackage,
     extraction_dir: Any,
     paths: list[Path] | None = None,
-) -> tuple[ExternalAction, DecompressArgs]:
+) -> ExternalAction:
     """Docstring."""
     logger.info(f"Decompressing '{clp_package.mode_name}' package.")
 
     args: DecompressArgs = _construct_decompress_args(clp_package, extraction_dir, paths)
-    return ExternalAction(cmd=args.to_cmd()), args
+    return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
 def _construct_decompress_args(

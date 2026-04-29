@@ -28,20 +28,11 @@ class StartStopArgs(CmdArgs):
 
 def start_clp_package(
     clp_package: ClpPackage,
-) -> tuple[ExternalAction, StartStopArgs]:
+) -> ExternalAction:
     """Docstring."""
     logger.info(f"Starting up the '{clp_package.mode_name}' package.")
     args: StartStopArgs = _construct_start_clp_args(clp_package)
-    return ExternalAction(cmd=args.to_cmd()), args
-
-
-def stop_clp_package(
-    clp_package: ClpPackage,
-) -> tuple[ExternalAction, StartStopArgs]:
-    """Docstring."""
-    logger.info(f"Stopping the '{clp_package.mode_name}' package.")
-    args: StartStopArgs = _construct_stop_clp_args(clp_package)
-    return ExternalAction(cmd=args.to_cmd()), args
+    return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
 def _construct_start_clp_args(clp_package: ClpPackage) -> StartStopArgs:
@@ -50,6 +41,15 @@ def _construct_start_clp_args(clp_package: ClpPackage) -> StartStopArgs:
     return StartStopArgs(
         script_path=path_config.start_clp_path, config=clp_package.temp_config_file_path
     )
+
+
+def stop_clp_package(
+    clp_package: ClpPackage,
+) -> ExternalAction:
+    """Docstring."""
+    logger.info(f"Stopping the '{clp_package.mode_name}' package.")
+    args: StartStopArgs = _construct_stop_clp_args(clp_package)
+    return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
 def _construct_stop_clp_args(clp_package: ClpPackage) -> StartStopArgs:

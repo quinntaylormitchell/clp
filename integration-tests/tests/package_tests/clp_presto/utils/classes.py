@@ -1,25 +1,13 @@
 """Classes used in clp-presto integration tests."""
 
-import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generic, TypeVar
-
-from pydantic import BaseModel
 
 from tests.package_tests.utils.classes import ClpPackageTestPathConfig
-from tests.utils.classes import (
-    ExternalAction,
-)
 from tests.utils.utils import (
     validate_dir_exists,
     validate_file_exists,
 )
-
-logger = logging.getLogger(__name__)
-
-
-T = TypeVar("T", bound=BaseModel)
 
 
 @dataclass
@@ -62,11 +50,3 @@ class PrestoCluster:
 
     # The `PrestoClusterTestPathConfig` object for this Presto cluster.
     path_config: PrestoClusterTestPathConfig
-
-
-@dataclass
-class PrestoClusterExternalAction(ExternalAction, Generic[T]):
-    """Docstring for PrestoClusterExternalAction."""
-
-    #: Pydantic object storing semantic info required to construct `cmd` and verify the Action.
-    args: T

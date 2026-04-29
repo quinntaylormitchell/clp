@@ -46,13 +46,13 @@ class CompressS3Args(CmdArgs):
 def compress_s3_clp_package(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
-) -> tuple[ExternalAction, CompressS3Args]:
+) -> ExternalAction:
     """Docstring."""
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset with S3."
     logger.info(log_msg)
 
     args: CompressS3Args = _construct_compress_s3_args(clp_package, dataset)
-    return ExternalAction(cmd=args.to_cmd()), args
+    return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
 def _construct_compress_s3_args(

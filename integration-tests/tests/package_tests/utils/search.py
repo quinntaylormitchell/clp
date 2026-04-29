@@ -87,15 +87,15 @@ def search_clp_package(
     dataset: IntegrationTestDataset,
     search_type: ClpPackageSearchType,
     wildcard_query: str,
-) -> tuple[ExternalAction, SearchArgs]:
+) -> ExternalAction:
     """Docstring."""
     logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
 
-    args: SearchArgs = _construct_search_args(clp_package, dataset, search_type, wildcard_query)
-    return ExternalAction(cmd=args.to_cmd()), args
+    args: SearchArgs = _construct_args(clp_package, dataset, search_type, wildcard_query)
+    return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
-def _construct_search_args(
+def _construct_args(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
     search_type: ClpPackageSearchType,
@@ -133,21 +133,23 @@ def _construct_search_args(
 
 
 def verify_search_action(
-    search_action: ExternalAction,
-    search_args: SearchArgs,
+    action: ExternalAction,
     search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> tuple[bool, str]:
     """Docstring."""
     logger.info("Verifying search.")
-    if search_action.completed_proc.returncode != 0:
+    if action.completed_proc.returncode != 0:
         return False, format_action_failure_msg(
-            "The 'search.sh' subprocess returned a non-zero exit code.", search_action
+            "The 'search.sh' subprocess returned a non-zero exit code.", action
         )
+
+    args = action.args
+    assert isinstance(args, SearchArgs)
 
     # Construct and run grep command.
     grep_action = ExternalAction(
-        cmd=_construct_grep_verification_cmd(search_args, search_type, original_dataset)
+        cmd=_construct_grep_verification_cmd(args, search_type, original_dataset)
     )
 
     if grep_action.completed_proc.returncode != 0:
@@ -161,13 +163,13 @@ def verify_search_action(
         grep_action.completed_proc.stdout, search_type
     )
     formatted_search_result = _format_search_result_for_search_type(
-        search_action.completed_proc.stdout, search_type
+        action.completed_proc.stdout, search_type
     )
     if formatted_grep_result != formatted_search_result:
         return False, format_action_failure_msg(
             f"Search verification failure: mismatch between formatted search result"
             f" '{formatted_search_result}' and formatted grep result '{formatted_grep_result}'.",
-            search_action,
+            action,
             grep_action,
         )
 
@@ -175,16 +177,16 @@ def verify_search_action(
 
 
 def _construct_grep_verification_cmd(
-    search_args: SearchArgs,
+    args: SearchArgs,
     search_type: ClpPackageSearchType,
     original_dataset: IntegrationTestDataset,
 ) -> list[str]:
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
-    path_for_grep = search_args.file_path or original_dataset.logs_path
+    path_for_grep = args.file_path or original_dataset.logs_path
     return [
         get_binary_path("grep"),
         *grep_cmd_options,
-        search_args.wildcard_query,
+        args.wildcard_query,
         str(path_for_grep),
     ]
 

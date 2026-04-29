@@ -146,12 +146,23 @@ class IntegrationTestDataset:
         return None
 
 
+class CmdArgs(BaseModel, ABC):
+    """Abstract base class for all CLP command argument models."""
+
+    @abstractmethod
+    def to_cmd(self) -> list[str]:
+        """:return: list of command arguments constructed from this instance's data members."""
+
+
 @dataclass
 class ExternalAction:
     """Metadata for an external action executed during an integration test."""
 
     #: Command to pass to `subprocess.run()`.
     cmd: list[str]
+
+    #: Optional structured arguments for verification purposes. Not used by `ExternalAction` itself.
+    args: CmdArgs | None = None
 
     #: The completed process returned from `subprocess.run()`.
     completed_proc: subprocess.CompletedProcess[str] = field(init=False)
@@ -235,11 +246,3 @@ class ExternalAction:
             f"Subprocess returned. stdout and stderr written to log file: '{self.log_file_path}'"
         )
         logger.info(log_msg)
-
-
-class CmdArgs(BaseModel, ABC):
-    """Abstract base class for all CLP command argument models."""
-
-    @abstractmethod
-    def to_cmd(self) -> list[str]:
-        """:return: list of command arguments constructed from this instance's data members."""

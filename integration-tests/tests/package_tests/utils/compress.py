@@ -53,13 +53,13 @@ class CompressArgs(CmdArgs):
 def compress_clp_package(
     clp_package: ClpPackage,
     dataset: IntegrationTestDataset,
-) -> tuple[ExternalAction, CompressArgs]:
+) -> ExternalAction:
     """Docstring."""
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
 
     args: CompressArgs = _construct_compress_args(clp_package, dataset)
-    return ExternalAction(cmd=args.to_cmd()), args
+    return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
 def _construct_compress_args(
@@ -140,9 +140,7 @@ def _verify_compress_action_clp_text(
     path_config = clp_package.path_config
     clear_directory(path_config.package_decompression_dir)
 
-    decompress_action, _ = decompress_clp_package(
-        clp_package, path_config.package_decompression_dir
-    )
+    decompress_action = decompress_clp_package(clp_package, path_config.package_decompression_dir)
     if decompress_action.completed_proc.returncode != 0:
         pytest.fail(
             "During compress action verification, internal decompress.sh command returned a"
