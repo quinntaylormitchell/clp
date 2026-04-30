@@ -2,25 +2,19 @@
 
 import json
 import logging
-from typing import Any
 
 import pytest
-from clp_py_utils.clp_config import (
-    PRESTO_COORDINATOR_COMPONENT_NAME,
-)
+from clp_py_utils.clp_config import PRESTO_COORDINATOR_COMPONENT_NAME
+from pydantic import ValidationError
 
-from tests.package_tests.clp_presto.utils.classes import (
-    PrestoCluster,
-)
+from tests.package_tests.clp_presto.utils.classes import PrestoCluster
 from tests.utils.classes import (
+    DatasetColumn,
     ExternalAction,
     IntegrationTestDataset,
     VerificationResult,
 )
-from tests.utils.utils import (
-    get_binary_path,
-    load_json_to_dict,
-)
+from tests.utils.utils import get_binary_path
 
 logger = logging.getLogger(__name__)
 
@@ -88,20 +82,21 @@ def verify_describe_dataset_action_clp_presto(
     """
     logger.info("Verifying `DESCRIBE <dataset_name>;` Presto query.")
 
-    output_lines = describe_dataset_action.completed_proc.stdout.splitlines()
-    try:
-        actual: list[dict[str, Any]] = [json.loads(line) for line in output_lines if line.strip()]
-    except (json.JSONDecodeError, KeyError) as e:
-        return VerificationResult.fail(
-            f"Failed to parse output of `DESCRIBE <dataset_name>;` as JSON: {e}"
-        )
-
-    if dataset.columns_file_path is not None:
-        expected: list[dict[str, Any]] = load_json_to_dict(dataset.columns_file_path)["columns"]
-    else:
+    if dataset.columns is None:
         pytest.fail(
             f"The '{dataset}' dataset doesn't have a file that describes the column structure"
             " (should be `columns.json`)."
+        )
+    expected: list[DatasetColumn] = dataset.columns.columns
+
+    output_lines = describe_dataset_action.completed_proc.stdout.splitlines()
+    try:
+        actual: list[DatasetColumn] = [
+            DatasetColumn.model_validate_json(line) for line in output_lines if line.strip()
+        ]
+    except ValidationError as e:
+        return VerificationResult.fail(
+            f"Failed to parse output of `DESCRIBE <dataset_name>;` as `DatasetColumn`: {e}"
         )
 
     if actual == expected:

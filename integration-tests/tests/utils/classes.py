@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import Self
 
 from tests.conftest import get_test_log_dir
@@ -83,6 +83,26 @@ class IntegrationTestDatasetMetadata(BaseModel):
     columns_file_name: str | None = None
 
 
+class DatasetColumn(BaseModel):
+    """Schema for a single column entry in a dataset `columns.json` file."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str = Field(alias="Column")
+    type: str = Field(alias="Type")
+    extra: str = Field(alias="Extra")
+    comment: str = Field(alias="Comment")
+    precision: int | None = Field(default=None, alias="Precision")
+    scale: int | None = Field(default=None, alias="Scale")
+    length: int | None = Field(default=None, alias="Length")
+
+
+class DatasetColumns(BaseModel):
+    """Schema for a dataset `columns.json` file."""
+
+    columns: list[DatasetColumn]
+
+
 @dataclass
 class IntegrationTestDataset:
     """Path layout and metadata storage for a sample dataset."""
@@ -92,6 +112,9 @@ class IntegrationTestDataset:
 
     #: Pydantic model of metadata describing the dataset.
     metadata: IntegrationTestDatasetMetadata = field(init=False)
+
+    #: Pydantic model of the dataset's optional columns object.
+    columns: DatasetColumns | None = field(init=False)
 
     #: The name of the dataset (for logging purposes).
     dataset_name: str = field(init=False)
@@ -122,9 +145,13 @@ class IntegrationTestDataset:
             file_path_abs = self.logs_path / file_path
             validate_file_exists(file_path_abs)
 
-        # TODO: validate columns file properties.
+        # Load and validate the columns file if it exists.
         if self.columns_file_path is not None:
             validate_file_exists(self.columns_file_path)
+            raw_columns = self.columns_file_path.read_text()
+            self.columns = DatasetColumns.model_validate_json(raw_columns)
+        else:
+            self.columns = None
 
     @property
     def metadata_file_path(self) -> Path:

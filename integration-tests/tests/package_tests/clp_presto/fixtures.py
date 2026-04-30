@@ -9,6 +9,7 @@ from tests.package_tests.clp_presto.utils.classes import (
     PrestoCluster,
     PrestoClusterTestPathConfig,
 )
+from tests.package_tests.clp_presto.utils.split_filters import clear_split_filter_file
 from tests.package_tests.clp_presto.utils.start_stop import (
     start_presto_cluster,
     stop_presto_cluster,
@@ -57,6 +58,7 @@ def presto_cluster(
         assert start_result, start_result.failure_message
         yield presto_cluster
     finally:
+        clear_split_filter_file(presto_cluster)
         stop_presto_action = stop_presto_cluster(presto_cluster)
         stop_result = verify_stop_presto_action(stop_presto_action)
         assert stop_result, stop_result.failure_message
