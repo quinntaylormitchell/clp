@@ -2,6 +2,8 @@
 
 import json
 import logging
+from datetime import datetime, timezone
+from typing import Any
 
 import pytest
 from clp_py_utils.clp_config import PRESTO_COORDINATOR_COMPONENT_NAME
@@ -17,6 +19,9 @@ from tests.utils.classes import (
 from tests.utils.utils import get_binary_path
 
 logger = logging.getLogger(__name__)
+
+
+PRESTO_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 def query_clp_presto(
@@ -53,7 +58,7 @@ def verify_show_tables_action_clp_presto(
     current_datasets: list[IntegrationTestDataset],
 ) -> VerificationResult:
     """Verify that `SHOW TABLES;` output is accurate w.r.t. current datasets."""
-    logger.info("Verifying `SHOW TABLES;` Presto query.")
+    logger.info("Verifying 'SHOW TABLES;' Presto query.")
 
     output_lines = show_tables_action.completed_proc.stdout.splitlines()
     try:
@@ -80,7 +85,7 @@ def verify_describe_dataset_action_clp_presto(
     Verify that `DESCRIBE <dataset_name>;` output is accurate w.r.t. "columns" field from dataset
     metadata.
     """
-    logger.info("Verifying `DESCRIBE <dataset_name>;` Presto query.")
+    logger.info("Verifying 'DESCRIBE <dataset_name>;' Presto query.")
 
     if dataset.columns is None:
         pytest.fail(
@@ -116,9 +121,9 @@ def verify_select_logs_action_clp_presto(
     Verify that `SELECT * FROM <dataset_name>;` output is accurate w.r.t. grep -r ".*" output for
     dataset logs.
     """
-    logger.info("Verifying `SELECT * FROM <dataset_name>;` Presto query.")
+    logger.info("Verifying 'SELECT * FROM <dataset_name>;' Presto query.")
 
-    actual = select_logs_action.completed_proc.stdout
+    actual: list[dict[str, Any]] = _load_str_to_json_list(select_logs_action.completed_proc.stdout)
 
     cmd = [
         get_binary_path("grep"),
@@ -134,12 +139,45 @@ def verify_select_logs_action_clp_presto(
             "During `SELECT * FROM <dataset_name>;` verification, supporting `grep` call returned a"
             f" non-zero exit code. Subprocess log: {grep_action.log_file_path}"
         )
-    expected = grep_action.completed_proc.stdout
+    expected: list[dict[str, Any]] = _format_grep_output(grep_action.completed_proc.stdout)
 
-    if actual == expected:
+    if _as_multiset(actual) == _as_multiset(expected):
         return VerificationResult.ok()
 
     return VerificationResult.fail(
         f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"
         f" and expected logs: '{expected}'"
     )
+
+
+def _load_str_to_json_list(raw_str: str) -> list[dict[str, Any]]:
+    """Load a string containing multiple JSON objects (one per line) into a list of dicts."""
+    try:
+        return [json.loads(line) for line in raw_str.splitlines() if line.strip()]
+    except json.JSONDecodeError as e:
+        pytest.fail(f"Failed to parse string as JSON: {e}")
+
+
+def _format_grep_output(raw_output: str) -> list[dict[str, Any]]:
+    """
+    Formats raw grep output into a list of JSON lines, then normalizes the timestamp field of each
+    log line from POSIX ms to 'YYYY-MM-DD HH:MM:SS.mmm' format to match Presto's `timestamp` column
+    JSON output.
+    """
+    lines: list[dict[str, Any]] = _load_str_to_json_list(raw_output)
+    for line in lines:
+        timestamp_ms = line.get("timestamp")
+        if timestamp_ms is not None:
+            line["timestamp"] = _format_posix_ms(timestamp_ms)
+    return lines
+
+
+def _format_posix_ms(timestamp_ms: int) -> str:
+    """Convert a POSIX ms timestamp to 'YYYY-MM-DD HH:MM:SS.mmm'."""
+    date = datetime.fromtimestamp(timestamp_ms / 1000.0, tz=timezone.utc)
+    return date.strftime(PRESTO_TIMESTAMP_FORMAT)[:-3]
+
+
+def _as_multiset(records: list[dict[str, Any]]) -> list[str]:
+    """Serialize each dict to a canonical JSON string for comparison as a sorted list."""
+    return sorted(json.dumps(r, sort_keys=True) for r in records)
