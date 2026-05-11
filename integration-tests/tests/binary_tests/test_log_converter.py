@@ -7,12 +7,12 @@ import json
 
 import pytest
 
-from tests.utils.classes import IntegrationTestPathConfig, SampleDataset
+from tests.utils.classes import ExternalAction, IntegrationTestPathConfig, SampleDataset
 from tests.utils.config import (
     ClpCorePathConfig,
     ConversionTestPathConfig,
 )
-from tests.utils.subprocess_utils import run_and_log_subprocess
+from tests.utils.logging_utils import format_action_failure_msg
 
 # Matching `LogSerializer::cTimestampKey`.
 LOG_CONVERTER_OUTPUT_TIMESTAMP_KEY = "timestamp"
@@ -60,8 +60,13 @@ def _convert_and_compress(
     src_path = str(test_paths.logs_source_dir)
     conversion_path = str(test_paths.conversion_dir)
     compression_path = str(test_paths.compression_dir)
-    run_and_log_subprocess([log_converter_bin_path, src_path, "--output-dir", conversion_path])
-    run_and_log_subprocess(
+    conversion_action = ExternalAction.from_cmd(
+        [log_converter_bin_path, src_path, "--output-dir", conversion_path]
+    )
+    if conversion_action.completed_proc.returncode != 0:
+        pytest.fail(format_action_failure_msg("`log-converter` failed.", conversion_action))
+
+    compression_action = ExternalAction.from_cmd(
         [
             clp_s_bin_path,
             "c",
@@ -71,12 +76,18 @@ def _convert_and_compress(
             LOG_CONVERTER_OUTPUT_TIMESTAMP_KEY,
         ]
     )
+    if compression_action.completed_proc.returncode != 0:
+        pytest.fail(format_action_failure_msg("`clp-s` compression failed.", compression_action))
 
     if test_paths.num_log_events is None:
         return
 
-    output = run_and_log_subprocess([clp_s_bin_path, "s", compression_path, "timestamp > 0"])
-    lines = output.stdout.splitlines() if output.stdout else []
+    search_action = ExternalAction.from_cmd(
+        [clp_s_bin_path, "s", compression_path, "timestamp > 0"]
+    )
+    if search_action.completed_proc.returncode != 0:
+        pytest.fail(format_action_failure_msg("`clp-s` search failed.", search_action))
+    lines = search_action.completed_proc.stdout.splitlines()
     if len(lines) != test_paths.num_log_events:
         pytest.fail(
             f"Expected {test_paths.num_log_events} log events after conversion, "

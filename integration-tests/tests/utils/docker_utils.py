@@ -1,7 +1,7 @@
 """Provide utility functions related to the use of Docker during integration tests."""
 
-import subprocess
-
+from tests.utils.classes import ExternalAction
+from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.utils import get_binary_path
 
 
@@ -11,6 +11,7 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
 
     :param project_name:
     :return: List of the running services that belong to the specified Docker Compose project.
+    :raise RuntimeError: if `docker compose ps` returns a non-zero exit code.
     """
     docker_bin = get_binary_path("docker")
 
@@ -24,10 +25,17 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
     ]
     # fmt: on
 
-    compose_ps_proc = subprocess.run(compose_ps_cmd, stdout=subprocess.PIPE, text=True, check=True)
+    compose_ps_action = ExternalAction.from_cmd(compose_ps_cmd)
+    if compose_ps_action.completed_proc.returncode != 0:
+        err_msg = format_action_failure_msg(
+            "`docker compose ps` failed with exit code"
+            f" {compose_ps_action.completed_proc.returncode} for project `{project_name}`.",
+            compose_ps_action,
+        )
+        raise RuntimeError(err_msg)
 
     service_names: list[str] = []
-    for line in (compose_ps_proc.stdout or "").splitlines():
+    for line in compose_ps_action.completed_proc.stdout.splitlines():
         service_name_candidate = line.strip()
         if service_name_candidate:
             service_names.append(service_name_candidate)
