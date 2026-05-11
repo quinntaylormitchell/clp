@@ -7,11 +7,9 @@ import json
 
 import pytest
 
-from tests.utils.classes import ExternalAction, IntegrationTestPathConfig, SampleDataset
-from tests.utils.config import (
-    ClpCorePathConfig,
-    ConversionTestPathConfig,
-)
+from tests.binary_tests.classes import ClpBinaryTestPathConfig
+from tests.utils.classes import ExternalAction, SampleDataset
+from tests.utils.config import ConversionTestPathConfig
 from tests.utils.logging_utils import format_action_failure_msg
 
 # Matching `LogSerializer::cTimestampKey`.
@@ -22,16 +20,14 @@ pytestmark = pytest.mark.core
 
 @pytest.mark.clp_s
 def test_log_converter_transform(
-    clp_core_path_config: ClpCorePathConfig,
-    integration_test_path_config: IntegrationTestPathConfig,
+    clp_binary_test_path_config: ClpBinaryTestPathConfig,
     text_singlefile: SampleDataset,
 ) -> None:
     """
     Validate that converted logs from the core binary `log-converter` can be ingested successfully
     by `clp-s`.
 
-    :param clp_core_path_config:
-    :param integration_test_path_config:
+    :param clp_binary_test_path_config:
     :param text_singlefile:
     """
     num_log_events = 0
@@ -43,20 +39,20 @@ def test_log_converter_transform(
         test_name=f"clp-s-{text_singlefile.dataset_name}",
         logs_source_dir=text_singlefile.logs_path,
         num_log_events=num_log_events,
-        integration_test_path_config=integration_test_path_config,
+        integration_test_path_config=clp_binary_test_path_config,
     )
     try:
-        _convert_and_compress(clp_core_path_config, test_paths)
+        _convert_and_compress(clp_binary_test_path_config, test_paths)
     finally:
         test_paths.clear_test_outputs()
 
 
 def _convert_and_compress(
-    clp_core_path_config: ClpCorePathConfig,
+    clp_binary_test_path_config: ClpBinaryTestPathConfig,
     test_paths: ConversionTestPathConfig,
 ) -> None:
-    log_converter_bin_path = str(clp_core_path_config.log_converter_binary_path)
-    clp_s_bin_path = str(clp_core_path_config.clp_s_binary_path)
+    log_converter_bin_path = str(clp_binary_test_path_config.log_converter_binary_path)
+    clp_s_bin_path = str(clp_binary_test_path_config.clp_s_binary_path)
     src_path = str(test_paths.logs_source_dir)
     conversion_path = str(test_paths.conversion_dir)
     compression_path = str(test_paths.compression_dir)

@@ -10,6 +10,7 @@ from tests.utils.utils import resolve_path_env_var
 
 # Make the fixtures defined in `tests/fixtures/` globally available without imports.
 pytest_plugins = [
+    "tests.binary_tests.path_configs",
     "tests.fixtures.sample_datasets",
     "tests.fixtures.path_configs",
     "tests.fixtures.package_instance",

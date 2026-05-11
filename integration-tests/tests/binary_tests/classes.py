@@ -27,6 +27,16 @@ class ClpBinaryTestPathConfig(IntegrationTestPathConfig):
         super().__post_init__()
 
     @property
+    def clg_binary_path(self) -> Path:
+        """:return: The absolute path to the `clg` binary."""
+        return self.clp_core_bins_dir / "clg"
+
+    @property
+    def clo_binary_path(self) -> Path:
+        """:return: The absolute path to the `clo` binary."""
+        return self.clp_core_bins_dir / "clo"
+
+    @property
     def clp_binary_path(self) -> Path:
         """:return: The absolute path to the `clp` binary."""
         return self.clp_core_bins_dir / "clp"
@@ -36,10 +46,30 @@ class ClpBinaryTestPathConfig(IntegrationTestPathConfig):
         """:return: The absolute path to the `clp-s` binary."""
         return self.clp_core_bins_dir / "clp-s"
 
+    @property
+    def indexer_binary_path(self) -> Path:
+        """:return: The absolute path to the `indexer` binary."""
+        return self.clp_core_bins_dir / "indexer"
+
+    @property
+    def log_converter_binary_path(self) -> Path:
+        """:return: The absolute path to the `log-converter` binary."""
+        return self.clp_core_bins_dir / "log-converter"
+
+    @property
+    def reducer_server_binary_path(self) -> Path:
+        """:return: The absolute path to the `reducer-server` binary."""
+        return self.clp_core_bins_dir / "reducer-server"
+
     def _static_paths(self) -> list[Path]:
         """:return: Paths that must exist on disk at construction time."""
         return [
             *super()._static_paths(),
+            self.clg_binary_path,
+            self.clo_binary_path,
             self.clp_binary_path,
             self.clp_s_binary_path,
+            self.indexer_binary_path,
+            self.log_converter_binary_path,
+            self.reducer_server_binary_path,
         ]
