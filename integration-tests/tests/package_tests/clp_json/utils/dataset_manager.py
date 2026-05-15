@@ -9,7 +9,7 @@ import pytest
 from strenum import StrEnum
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset, VerificationResult
+from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset, VerificationResult
 from tests.utils.logging_utils import format_action_failure_msg
 
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class ClpPackageDatasetManagerSubcommand(StrEnum):
 def dataset_manager_clp_json(
     clp_package: ClpPackage,
     dataset_manager_type: ClpPackageDatasetManagerType,
-    datasets_to_del: list[IntegrationTestDataset] | None = None,
+    datasets_to_del: list[SampleDataset] | None = None,
     del_all: bool = False,
 ) -> ExternalAction:
     """Docstring."""
@@ -74,7 +74,7 @@ def dataset_manager_clp_json(
 def _construct_dataset_manager_args(
     clp_package: ClpPackage,
     dataset_manager_type: ClpPackageDatasetManagerType,
-    datasets_to_del: list[IntegrationTestDataset] | None = None,
+    datasets_to_del: list[SampleDataset] | None = None,
     del_all: bool = False,
 ) -> DatasetManagerArgs:
     """Docstring."""

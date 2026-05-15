@@ -15,7 +15,7 @@ from tests.package_tests.clp_json_s3.utils.compress_s3 import (
 )
 from tests.package_tests.clp_json_s3.utils.mode import CLP_JSON_S3_MODE
 from tests.utils.classes import (
-    IntegrationTestDataset,
+    SampleDataset,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def test_clp_json_s3_startup(clp_package: ClpPackage) -> None:
 @pytest.mark.compression_s3
 def test_clp_json_s3_compression_json_s3_multifile(
     clp_package: ClpPackage,
-    json_s3_multifile: IntegrationTestDataset,
+    json_s3_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_s3_compression_json_s3_multifile'")

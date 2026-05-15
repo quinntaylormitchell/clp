@@ -9,7 +9,7 @@ import pytest
 from clp_py_utils.clp_config import StorageEngine
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset, VerificationResult
+from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset, VerificationResult
 from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.utils import (
     get_binary_path,
@@ -84,7 +84,7 @@ class ClpPackageSearchType(Enum):
 
 def search_clp_package(
     clp_package: ClpPackage,
-    dataset: IntegrationTestDataset,
+    dataset: SampleDataset,
     search_type: ClpPackageSearchType,
     wildcard_query: str,
 ) -> ExternalAction:
@@ -97,7 +97,7 @@ def search_clp_package(
 
 def _construct_args(
     clp_package: ClpPackage,
-    dataset: IntegrationTestDataset,
+    dataset: SampleDataset,
     search_type: ClpPackageSearchType,
     wildcard_query: str,
 ) -> SearchArgs:
@@ -135,7 +135,7 @@ def _construct_args(
 def verify_search_action(
     action: ExternalAction,
     search_type: ClpPackageSearchType,
-    original_dataset: IntegrationTestDataset,
+    original_dataset: SampleDataset,
 ) -> VerificationResult:
     """Docstring."""
     logger.info("Verifying search.")
@@ -184,7 +184,7 @@ def verify_search_action(
 def _construct_grep_verification_cmd(
     args: SearchArgs,
     search_type: ClpPackageSearchType,
-    original_dataset: IntegrationTestDataset,
+    original_dataset: SampleDataset,
 ) -> list[str]:
     grep_cmd_options = _get_grep_options_from_search_type(search_type)
     path_for_grep = args.file_path or original_dataset.logs_path

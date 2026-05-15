@@ -31,7 +31,7 @@ from tests.package_tests.utils.compress import (
     verify_compress_action,
 )
 from tests.utils.classes import (
-    IntegrationTestDataset,
+    SampleDataset,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def test_clp_presto_startup(clp_package: ClpPackage, presto_cluster: PrestoClust
 def test_clp_presto_json_multifile(
     clp_package: ClpPackage,
     presto_cluster: PrestoCluster,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_presto_json_multifile'")

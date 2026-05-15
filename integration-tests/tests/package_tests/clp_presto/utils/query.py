@@ -13,7 +13,7 @@ from tests.package_tests.clp_presto.utils.classes import PrestoCluster
 from tests.utils.classes import (
     DatasetColumn,
     ExternalAction,
-    IntegrationTestDataset,
+    SampleDataset,
     VerificationResult,
 )
 from tests.utils.utils import get_binary_path
@@ -55,7 +55,7 @@ def query_clp_presto(
 
 def verify_show_tables_action_clp_presto(
     show_tables_action: ExternalAction,
-    current_datasets: list[IntegrationTestDataset],
+    current_datasets: list[SampleDataset],
 ) -> VerificationResult:
     """Verify that `SHOW TABLES;` output is accurate w.r.t. current datasets."""
     logger.info("Verifying 'SHOW TABLES;' Presto query.")
@@ -79,7 +79,7 @@ def verify_show_tables_action_clp_presto(
 
 def verify_describe_dataset_action_clp_presto(
     describe_dataset_action: ExternalAction,
-    dataset: IntegrationTestDataset,
+    dataset: SampleDataset,
 ) -> VerificationResult:
     """
     Verify that `DESCRIBE <dataset_name>;` output is accurate w.r.t. "columns" field from dataset
@@ -115,7 +115,7 @@ def verify_describe_dataset_action_clp_presto(
 
 def verify_select_logs_action_clp_presto(
     select_logs_action: ExternalAction,
-    dataset: IntegrationTestDataset,
+    dataset: SampleDataset,
 ) -> VerificationResult:
     """
     Verify that `SELECT * FROM <dataset_name>;` output is accurate w.r.t. grep -r ".*" output for

@@ -9,16 +9,14 @@ from tests.package_tests.clp_presto.utils.classes import (
     PrestoCluster,
 )
 from tests.utils.classes import (
-    IntegrationTestDataset,
+    SampleDataset,
 )
 from tests.utils.utils import load_json_to_dict
 
 logger = logging.getLogger(__name__)
 
 
-def add_split_filter_for_dataset(
-    dataset: IntegrationTestDataset, presto_cluster: PrestoCluster
-) -> None:
+def add_split_filter_for_dataset(dataset: SampleDataset, presto_cluster: PrestoCluster) -> None:
     """Add a split filter to the split filter file for the given dataset."""
     log_msg = f"Adding a split filter for the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
@@ -42,7 +40,7 @@ def clear_split_filter_file(presto_cluster: PrestoCluster) -> None:
 
 
 def _construct_split_filter_for_dataset(
-    dataset: IntegrationTestDataset,
+    dataset: SampleDataset,
 ) -> dict[str, Any]:
     """Docstring."""
     timestamp_key = dataset.metadata.timestamp_key

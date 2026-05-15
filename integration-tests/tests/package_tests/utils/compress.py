@@ -8,7 +8,7 @@ from clp_py_utils.clp_config import StorageEngine
 
 from tests.package_tests.classes import ClpPackage
 from tests.package_tests.utils.decompress import decompress_clp_package
-from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset, VerificationResult
+from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset, VerificationResult
 from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.utils import (
     clear_directory,
@@ -52,7 +52,7 @@ class CompressArgs(CmdArgs):
 
 def compress_clp_package(
     clp_package: ClpPackage,
-    dataset: IntegrationTestDataset,
+    dataset: SampleDataset,
 ) -> ExternalAction:
     """Docstring."""
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset."
@@ -62,9 +62,7 @@ def compress_clp_package(
     return ExternalAction(cmd=args.to_cmd(), args=args)
 
 
-def _construct_compress_args(
-    clp_package: ClpPackage, dataset: IntegrationTestDataset
-) -> CompressArgs:
+def _construct_compress_args(clp_package: ClpPackage, dataset: SampleDataset) -> CompressArgs:
     """Docstring."""
     path_config = clp_package.path_config
     args = CompressArgs(
@@ -84,7 +82,7 @@ def _construct_compress_args(
 def verify_compress_action(
     compress_action: ExternalAction,
     clp_package: ClpPackage,
-    original_dataset: IntegrationTestDataset,
+    original_dataset: SampleDataset,
 ) -> VerificationResult:
     """Docstring."""
     logger.info(f"Verifying {clp_package.mode_name} package compression.")
@@ -130,7 +128,7 @@ def _verify_compress_action_clp_json(
 def _verify_compress_action_clp_text(
     compress_action: ExternalAction,
     clp_package: ClpPackage,
-    original_dataset: IntegrationTestDataset,
+    original_dataset: SampleDataset,
 ) -> VerificationResult:
     """Docstring."""
     logger.info(f"Verifying {clp_package.mode_name} package compression.")

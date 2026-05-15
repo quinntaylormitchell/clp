@@ -27,7 +27,7 @@ from tests.package_tests.utils.search import (
     verify_search_action,
 )
 from tests.utils.classes import (
-    IntegrationTestDataset,
+    SampleDataset,
 )
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def test_clp_text_startup(clp_package: ClpPackage) -> None:
 @pytest.mark.compression
 def test_clp_text_compression_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_compression_text_multifile'")
@@ -75,7 +75,7 @@ def test_clp_text_compression_text_multifile(
 @pytest.mark.search
 def test_clp_text_search_basic_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_search_basic_text_multifile'")
@@ -103,7 +103,7 @@ def test_clp_text_search_basic_text_multifile(
 @pytest.mark.search
 def test_clp_text_search_file_path_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_search_file_path_text_multifile'")
@@ -131,7 +131,7 @@ def test_clp_text_search_file_path_text_multifile(
 @pytest.mark.search
 def test_clp_text_search_ignore_case_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_search_ignore_case_text_multifile'")
@@ -159,7 +159,7 @@ def test_clp_text_search_ignore_case_text_multifile(
 @pytest.mark.search
 def test_clp_text_search_count_results_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_search_count_results_text_multifile'")
@@ -187,7 +187,7 @@ def test_clp_text_search_count_results_text_multifile(
 @pytest.mark.search
 def test_clp_text_search_count_by_time_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_search_count_by_time_text_multifile'")
@@ -215,7 +215,7 @@ def test_clp_text_search_count_by_time_text_multifile(
 @pytest.mark.search
 def test_clp_text_search_time_range_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_search_time_range_text_multifile'")
@@ -244,7 +244,7 @@ def test_clp_text_search_time_range_text_multifile(
 @pytest.mark.archive_manager
 def test_clp_text_archive_manager_find_all_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_archive_manager_find_all_text_multifile'")
@@ -271,7 +271,7 @@ def test_clp_text_archive_manager_find_all_text_multifile(
 @pytest.mark.archive_manager
 def test_clp_text_archive_manager_find_range_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_archive_manager_find_range_text_multifile'")
@@ -300,7 +300,7 @@ def test_clp_text_archive_manager_find_range_text_multifile(
 @pytest.mark.archive_manager
 def test_clp_text_archive_manager_del_by_ids_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_archive_manager_del_by_ids_text_multifile'")
@@ -327,7 +327,7 @@ def test_clp_text_archive_manager_del_by_ids_text_multifile(
 @pytest.mark.archive_manager
 def test_clp_text_archive_manager_del_by_filter_text_multifile(
     clp_package: ClpPackage,
-    text_multifile: IntegrationTestDataset,
+    text_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_text_archive_manager_del_by_filter_text_multifile'")

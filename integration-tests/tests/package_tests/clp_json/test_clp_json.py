@@ -33,7 +33,7 @@ from tests.package_tests.utils.search import (
     verify_search_action,
 )
 from tests.utils.classes import (
-    IntegrationTestDataset,
+    SampleDataset,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def test_clp_json_startup(clp_package: ClpPackage) -> None:
 @pytest.mark.compression
 def test_clp_json_compression_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_compression_json_multifile'")
@@ -81,7 +81,7 @@ def test_clp_json_compression_json_multifile(
 @pytest.mark.search
 def test_clp_json_search_basic_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_search_basic_json_multifile'")
@@ -109,7 +109,7 @@ def test_clp_json_search_basic_json_multifile(
 @pytest.mark.search
 def test_clp_json_search_ignore_case_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_search_ignore_case_json_multifile'")
@@ -137,7 +137,7 @@ def test_clp_json_search_ignore_case_json_multifile(
 @pytest.mark.search
 def test_clp_json_search_count_results_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_search_count_results_json_multifile'")
@@ -165,7 +165,7 @@ def test_clp_json_search_count_results_json_multifile(
 @pytest.mark.search
 def test_clp_json_search_count_by_time_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_search_count_by_time_json_multifile'")
@@ -193,7 +193,7 @@ def test_clp_json_search_count_by_time_json_multifile(
 @pytest.mark.search
 def test_clp_json_search_time_range_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_search_time_range_json_multifile'")
@@ -222,7 +222,7 @@ def test_clp_json_search_time_range_json_multifile(
 @pytest.mark.dataset_manager
 def test_clp_json_dataset_manager_list_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_dataset_manager_list_json_multifile'")
@@ -249,7 +249,7 @@ def test_clp_json_dataset_manager_list_json_multifile(
 @pytest.mark.dataset_manager
 def test_clp_json_dataset_manager_del_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_dataset_manager_del_json_multifile'")
@@ -279,7 +279,7 @@ def test_clp_json_dataset_manager_del_json_multifile(
 @pytest.mark.archive_manager
 def test_clp_json_archive_manager_find_all_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_archive_manager_find_all_json_multifile'")
@@ -309,7 +309,7 @@ def test_clp_json_archive_manager_find_all_json_multifile(
 @pytest.mark.archive_manager
 def test_clp_json_archive_manager_find_range_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_archive_manager_find_range_json_multifile'")
@@ -341,7 +341,7 @@ def test_clp_json_archive_manager_find_range_json_multifile(
 @pytest.mark.archive_manager
 def test_clp_json_archive_manager_del_by_ids_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_archive_manager_del_by_ids_json_multifile'")
@@ -371,7 +371,7 @@ def test_clp_json_archive_manager_del_by_ids_json_multifile(
 @pytest.mark.archive_manager
 def test_clp_json_archive_manager_del_by_filter_json_multifile(
     clp_package: ClpPackage,
-    json_multifile: IntegrationTestDataset,
+    json_multifile: SampleDataset,
 ) -> None:
     """Docstring."""
     logger.info("Starting test: 'test_clp_json_archive_manager_del_by_filter_json_multifile'")

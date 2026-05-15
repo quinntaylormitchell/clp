@@ -9,7 +9,7 @@ import pytest
 from strenum import StrEnum
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, IntegrationTestDataset, VerificationResult
+from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset, VerificationResult
 from tests.utils.logging_utils import format_action_failure_msg
 from tests.utils.utils import get_rand_subdirectory_name
 
@@ -81,7 +81,7 @@ class ClpPackageArchiveManagerDelSubcommand(StrEnum):
 def archive_manager_clp_package(  # noqa: PLR0913
     clp_package: ClpPackage,
     archive_manager_type: ClpPackageArchiveManagerType,
-    dataset: IntegrationTestDataset | None = None,
+    dataset: SampleDataset | None = None,
     begin_ts: int | None = None,
     end_ts: int | None = None,
     ids_to_del: list[str] | None = None,
@@ -104,7 +104,7 @@ def archive_manager_clp_package(  # noqa: PLR0913
 def _construct_archive_manager_args(  # noqa: PLR0913
     clp_package: ClpPackage,
     archive_manager_type: ClpPackageArchiveManagerType,
-    dataset: IntegrationTestDataset | None,
+    dataset: SampleDataset | None,
     begin_ts: int | None = None,
     end_ts: int | None = None,
     ids_to_del: list[str] | None = None,
@@ -155,7 +155,7 @@ def _construct_archive_manager_args(  # noqa: PLR0913
 def verify_archive_manager_find_action(
     action: ExternalAction,
     clp_package: ClpPackage,
-    dataset: IntegrationTestDataset | None = None,
+    dataset: SampleDataset | None = None,
 ) -> VerificationResult:
     """Docstring."""
     logger.info("Verifying archive-manager 'find'.")
@@ -240,7 +240,7 @@ def verify_archive_manager_find_action(
 def verify_archive_manager_del_action(
     action: ExternalAction,
     clp_package: ClpPackage,
-    dataset: IntegrationTestDataset | None = None,
+    dataset: SampleDataset | None = None,
 ) -> VerificationResult:
     """Docstring."""
     logger.info("Verifying archive-manager 'del'.")
