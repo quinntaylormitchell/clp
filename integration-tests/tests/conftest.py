@@ -10,10 +10,10 @@ from tests.utils.utils import resolve_path_env_var
 
 # Define all fixtures globally so they are available without imports.
 pytest_plugins = [
-    "tests.fixtures.datasets",
-    "tests.fixtures.path_configs",
     "tests.binary_tests.integration_test_logs",
     "tests.binary_tests.clp_binary_path_configs",
+    "tests.fixtures.sample_datasets",
+    "tests.fixtures.path_configs",
     "tests.package_tests.fixtures",
     "tests.package_tests.clp_presto.fixtures",
 ]
