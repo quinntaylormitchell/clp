@@ -6,6 +6,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.package_tests.clp_presto.utils.classes import (
+    PrestoAction,
     PrestoCluster,
     PrestoClusterTestPathConfig,
 )
@@ -16,7 +17,6 @@ from tests.package_tests.clp_presto.utils.start_stop import (
     verify_start_presto_action,
     verify_stop_presto_action,
 )
-from tests.utils.classes import ExternalAction
 from tests.utils.utils import resolve_path_env_var
 
 logger = logging.getLogger(__name__)
@@ -42,12 +42,9 @@ def presto_cluster(
         str(presto_cluster_test_path_config.set_up_config_path),
         str(presto_cluster_test_path_config.clp_package_dir),
     ]
-    setup_presto_action = ExternalAction(cmd=setup_presto_cmd)
-    if setup_presto_action.completed_proc.returncode != 0:
-        pytest.fail(
-            "During Presto cluster setup, supporting call to set-up-config.sh returned a non-zero"
-            f" exit code. Subprocess log: '{setup_presto_action.log_file_path}'"
-        )
+    setup_presto_action = PrestoAction.from_cmd(setup_presto_cmd)
+    setup_result = setup_presto_action.verify_returncode()
+    assert setup_result, setup_result.failure_message
 
     # Construct `PrestoCluster` object.
     presto_cluster = PrestoCluster(path_config=presto_cluster_test_path_config)

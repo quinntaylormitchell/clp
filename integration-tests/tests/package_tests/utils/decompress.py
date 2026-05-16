@@ -7,7 +7,7 @@ from typing import Any
 from clp_package_utils.general import EXTRACT_FILE_CMD
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction
+from tests.utils.classes import ClpAction, CmdArgs
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +41,12 @@ def decompress_clp_package(
     clp_package: ClpPackage,
     extraction_dir: Any,
     paths: list[Path] | None = None,
-) -> ExternalAction:
+) -> ClpAction:
     """Docstring."""
     logger.info(f"Decompressing '{clp_package.mode_name}' package.")
 
     args: DecompressArgs = _construct_decompress_args(clp_package, extraction_dir, paths)
-    return ExternalAction(cmd=args.to_cmd(), args=args)
+    return ClpAction.from_args(args)
 
 
 def _construct_decompress_args(

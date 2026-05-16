@@ -71,8 +71,8 @@ def test_clp_presto_json_multifile(
     clear_split_filter_file(presto_cluster)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
-    result = verify_compress_action(compress_action, clp_package, json_multifile)
-    assert result, result.failure_message
+    compress_result = verify_compress_action(compress_action, clp_package, json_multifile)
+    assert compress_result, compress_result.failure_message
 
     add_split_filter_for_dataset(json_multifile, presto_cluster)
 
@@ -80,22 +80,24 @@ def test_clp_presto_json_multifile(
         presto_cluster=presto_cluster,
         query="SHOW TABLES;",
     )
-    result = verify_show_tables_action_clp_presto(show_tables_action, [json_multifile])
-    assert result, result.failure_message
+    show_tables_result = verify_show_tables_action_clp_presto(show_tables_action, [json_multifile])
+    assert show_tables_result, show_tables_result.failure_message
 
     describe_dataset_action = query_clp_presto(
         presto_cluster=presto_cluster,
         query=f"DESCRIBE {json_multifile.dataset_name};",
     )
-    result = verify_describe_dataset_action_clp_presto(describe_dataset_action, json_multifile)
-    assert result, result.failure_message
+    describe_dataset_result = verify_describe_dataset_action_clp_presto(
+        describe_dataset_action, json_multifile
+    )
+    assert describe_dataset_result, describe_dataset_result.failure_message
 
     select_logs_action = query_clp_presto(
         presto_cluster=presto_cluster,
         query=f"SELECT * FROM {json_multifile.dataset_name};",
     )
-    result = verify_select_logs_action_clp_presto(select_logs_action, json_multifile)
-    assert result, result.failure_message
+    select_logs_result = verify_select_logs_action_clp_presto(select_logs_action, json_multifile)
+    assert select_logs_result, select_logs_result.failure_message
 
     clear_split_filter_file(presto_cluster)
     clear_package_archives_clp_json(clp_package)

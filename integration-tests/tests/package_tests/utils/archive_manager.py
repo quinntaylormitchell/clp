@@ -9,8 +9,7 @@ import pytest
 from strenum import StrEnum
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset, VerificationResult
-from tests.utils.logging_utils import format_action_failure_msg
+from tests.utils.classes import ClpAction, ClpVerificationResult, CmdArgs, SampleDataset
 from tests.utils.utils import get_rand_subdirectory_name
 
 logger = logging.getLogger(__name__)
@@ -85,7 +84,7 @@ def archive_manager_clp_package(  # noqa: PLR0913
     begin_ts: int | None = None,
     end_ts: int | None = None,
     ids_to_del: list[str] | None = None,
-) -> ExternalAction:
+) -> ClpAction:
     """Docstring."""
     log_msg = f"Performing '{archive_manager_type.name}' operation with archive-manager."
     logger.info(log_msg)
@@ -98,7 +97,7 @@ def archive_manager_clp_package(  # noqa: PLR0913
         end_ts,
         ids_to_del,
     )
-    return ExternalAction(cmd=args.to_cmd(), args=args)
+    return ClpAction.from_args(args)
 
 
 def _construct_archive_manager_args(  # noqa: PLR0913
@@ -153,19 +152,15 @@ def _construct_archive_manager_args(  # noqa: PLR0913
 
 
 def verify_archive_manager_find_action(
-    action: ExternalAction,
+    action: ClpAction,
     clp_package: ClpPackage,
     dataset: SampleDataset | None = None,
-) -> VerificationResult:
+) -> ClpVerificationResult:
     """Docstring."""
     logger.info("Verifying archive-manager 'find'.")
-    if action.completed_proc.returncode != 0:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "The 'archive-manager.sh find' subprocess returned a non-zero exit code.",
-                action,
-            )
-        )
+    returncode_result = action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     args = action.args
     assert isinstance(args, ArchiveManagerArgs)
@@ -182,11 +177,12 @@ def verify_archive_manager_find_action(
             begin_ts=0,
             end_ts=begin_ts,
         )
-        if find_before_action.completed_proc.returncode != 0:
-            pytest.fail(
-                "During archive-manager 'find' verification, supporting call to archive-manager"
-                " 'find' returned a non-zero exit code. Subprocess log:"
-                f" '{find_before_action.log_file_path}'"
+        find_before_result = find_before_action.verify_returncode()
+        if not find_before_result:
+            return ClpVerificationResult.fail(
+                action,
+                "Supporting 'find' call failed during archive-manager 'find' verification.",
+                supporting_action=find_before_action,
             )
         current_archive_id_list.extend(_extract_archive_ids_from_find_output(find_before_action))
 
@@ -201,11 +197,12 @@ def verify_archive_manager_find_action(
             dataset=dataset,
             begin_ts=end_ts,
         )
-        if find_after_action.completed_proc.returncode != 0:
-            pytest.fail(
-                "During archive-manager 'find' verification, supporting call to archive-manager"
-                " 'find' returned a non-zero exit code. Subprocess log:"
-                f" '{find_after_action.log_file_path}'"
+        find_after_result = find_after_action.verify_returncode()
+        if not find_after_result:
+            return ClpVerificationResult.fail(
+                action,
+                "Supporting 'find' call failed during archive-manager 'find' verification.",
+                supporting_action=find_after_action,
             )
         current_archive_id_list.extend(_extract_archive_ids_from_find_output(find_after_action))
 
@@ -215,42 +212,38 @@ def verify_archive_manager_find_action(
         archive_manager_type=ClpPackageArchiveManagerType.FIND,
         dataset=dataset,
     )
-    if find_all_action.completed_proc.returncode != 0:
-        pytest.fail(
-            "During archive-manager 'find' verification, supporting call to archive-manager 'find'"
-            f" returned a non-zero exit code. Subprocess log: '{find_all_action.log_file_path}'"
+    find_all_result = find_all_action.verify_returncode()
+    if not find_all_result:
+        return ClpVerificationResult.fail(
+            action,
+            "Supporting 'find' call failed during archive-manager 'find' verification.",
+            supporting_action=find_all_action,
         )
     directories_in_archive_dir = _extract_archive_ids_from_find_output(find_all_action)
 
     # Compare.
     if current_archive_id_list == directories_in_archive_dir:
-        return VerificationResult.ok()
+        return ClpVerificationResult.ok()
 
-    return VerificationResult.fail(
-        format_action_failure_msg(
-            "Archive-manager 'find' verification failure: mismatch between current archive ID list"
-            f" '{current_archive_id_list}' and list of directories present in var/archives"
-            f" directory '{directories_in_archive_dir}'",
-            action,
-            find_all_action,
-        )
+    return ClpVerificationResult.fail(
+        action,
+        "Archive-manager 'find' verification failure: mismatch between current archive ID list"
+        f" '{current_archive_id_list}' and list of directories present in var/archives"
+        f" directory '{directories_in_archive_dir}'."
+        f" See supporting 'find' subprocess log at: '{find_all_action.log_file_path}'.",
     )
 
 
 def verify_archive_manager_del_action(
-    action: ExternalAction,
+    action: ClpAction,
     clp_package: ClpPackage,
     dataset: SampleDataset | None = None,
-) -> VerificationResult:
+) -> ClpVerificationResult:
     """Docstring."""
     logger.info("Verifying archive-manager 'del'.")
-    if action.completed_proc.returncode != 0:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "The 'archive-manager.sh del' subprocess returned a non-zero exit code.",
-                action,
-            )
-        )
+    returncode_result = action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     args = action.args
     assert isinstance(args, ArchiveManagerArgs)
@@ -263,21 +256,20 @@ def verify_archive_manager_del_action(
             )
             find_result = verify_archive_manager_find_action(find_all_action, clp_package, dataset)
             if not find_result:
-                pytest.fail(
-                    "During archive-manager 'del' verification, supporting call to archive-manager"
-                    f" 'find' could not be verified: '{find_result.failure_message}' Subprocess"
-                    f" log: '{find_all_action.log_file_path}'"
+                return ClpVerificationResult.fail(
+                    action,
+                    "Supporting call to archive-manager 'find' could not be verified during"
+                    f" archive-manager 'del' verification: '{find_result.failure_message}'",
+                    supporting_action=find_all_action,
                 )
 
             current_ids = _extract_archive_ids_from_find_output(find_all_action)
             if args.ids and any(item in current_ids for item in args.ids):
-                return VerificationResult.fail(
-                    format_action_failure_msg(
-                        "Archive-manager 'del by-ids' verification failure: Some archives that were"
-                        " specified for deletion are still present in the metadata database.",
-                        action,
-                        find_all_action,
-                    )
+                return ClpVerificationResult.fail(
+                    action,
+                    "Archive-manager 'del by-ids' verification failure: Some archives that were"
+                    " specified for deletion are still present in the metadata database."
+                    f" See supporting 'find' subprocess log at: '{find_all_action.log_file_path}'.",
                 )
         case ClpPackageArchiveManagerDelSubcommand.BY_FILTER_COMMAND:
             begin_ts = args.begin_ts
@@ -291,20 +283,20 @@ def verify_archive_manager_del_action(
             )
             find_result = verify_archive_manager_find_action(find_action, clp_package, dataset)
             if not find_result:
-                pytest.fail(
-                    "During archive-manager 'del' verification, supporting call to archive-manager"
-                    f" 'find' could not be verified. Subprocess log: '{find_action.log_file_path}'"
+                return ClpVerificationResult.fail(
+                    action,
+                    "Supporting call to archive-manager 'find' could not be verified during"
+                    f" archive-manager 'del' verification: '{find_result.failure_message}'",
+                    supporting_action=find_action,
                 )
 
             current_ids = _extract_archive_ids_from_find_output(find_action)
             if len(current_ids) > 0:
-                return VerificationResult.fail(
-                    format_action_failure_msg(
-                        "Archive-manager 'del by-filter' verification failure: Some archives that"
-                        " should have been deleted were not deleted.",
-                        action,
-                        find_action,
-                    )
+                return ClpVerificationResult.fail(
+                    action,
+                    "Archive-manager 'del by-filter' verification failure: Some archives that"
+                    " should have been deleted were not deleted."
+                    f" See supporting 'find' subprocess log at: '{find_action.log_file_path}'.",
                 )
         case _:
             pytest.fail(
@@ -312,14 +304,14 @@ def verify_archive_manager_del_action(
                 " neither."
             )
 
-    return VerificationResult.ok()
+    return ClpVerificationResult.ok()
 
 
 def _extract_archive_ids_from_find_output(
-    action: ExternalAction,
+    action: ClpAction,
 ) -> list[str]:
     output_archive_id_list: list[str] = []
-    output_lines = _get_action_output(action).splitlines()
+    output_lines = action.get_output().splitlines()
 
     num_archive_ids = 0
     filtered_lines = []
@@ -342,11 +334,6 @@ def _extract_archive_ids_from_find_output(
             output_archive_id_list.append(match.group(0))
 
     return sorted(output_archive_id_list)
-
-
-def _get_action_output(action: ExternalAction) -> str:
-    """Return the combined stdout + stderr from a completed action."""
-    return action.completed_proc.stdout + action.completed_proc.stderr
 
 
 def _get_subcommand(archive_manager_type: ClpPackageArchiveManagerType) -> str:

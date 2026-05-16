@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset
+from tests.utils.classes import ClpAction, CmdArgs, SampleDataset
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +46,13 @@ class CompressS3Args(CmdArgs):
 def compress_s3_clp_package(
     clp_package: ClpPackage,
     dataset: SampleDataset,
-) -> ExternalAction:
+) -> ClpAction:
     """Docstring."""
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset with S3."
     logger.info(log_msg)
 
     args: CompressS3Args = _construct_compress_s3_args(clp_package, dataset)
-    return ExternalAction(cmd=args.to_cmd(), args=args)
+    return ClpAction.from_args(args)
 
 
 def _construct_compress_s3_args(clp_package: ClpPackage, dataset: SampleDataset) -> CompressS3Args:

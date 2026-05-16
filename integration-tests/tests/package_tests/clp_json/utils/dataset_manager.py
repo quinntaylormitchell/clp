@@ -9,8 +9,7 @@ import pytest
 from strenum import StrEnum
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset, VerificationResult
-from tests.utils.logging_utils import format_action_failure_msg
+from tests.utils.classes import ClpAction, ClpVerificationResult, CmdArgs, SampleDataset
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def dataset_manager_clp_json(
     dataset_manager_type: ClpPackageDatasetManagerType,
     datasets_to_del: list[SampleDataset] | None = None,
     del_all: bool = False,
-) -> ExternalAction:
+) -> ClpAction:
     """Docstring."""
     log_msg = f"Performing '{dataset_manager_type.name}' operation with dataset-manager."
     logger.info(log_msg)
@@ -68,7 +67,7 @@ def dataset_manager_clp_json(
         datasets_to_del,
         del_all,
     )
-    return ExternalAction(cmd=args.to_cmd(), args=args)
+    return ClpAction.from_args(args)
 
 
 def _construct_dataset_manager_args(
@@ -110,48 +109,40 @@ def _construct_dataset_manager_args(
 
 
 def verify_dataset_manager_list_action_clp_json(
-    action: ExternalAction,
+    action: ClpAction,
     clp_package: ClpPackage,
-) -> VerificationResult:
+) -> ClpVerificationResult:
     """Docstring."""
     logger.info("Verifying dataset-manager 'list'.")
-    if action.completed_proc.returncode != 0:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "The 'dataset-manager.sh list' subprocess returned a non-zero exit code.",
-                action,
-            )
-        )
+    returncode_result = action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     dataset_list = _extract_dataset_names_from_output(action)
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
     if dataset_list == directories_in_package_archives:
-        return VerificationResult.ok()
+        return ClpVerificationResult.ok()
 
-    return VerificationResult.fail(
-        format_action_failure_msg(
+    return ClpVerificationResult.fail(
+        action=action,
+        reason=(
             "Dataset-manager 'list' verification failure: mismatch between output dataset list"
             f" '{dataset_list}' and directories in var/archives"
-            f" '{directories_in_package_archives}'",
-            action,
-        )
+            f" '{directories_in_package_archives}'"
+        ),
     )
 
 
 def verify_dataset_manager_del_action_clp_json(
-    action: ExternalAction,
+    action: ClpAction,
     clp_package: ClpPackage,
-) -> VerificationResult:
+) -> ClpVerificationResult:
     """Docstring."""
     logger.info("Verifying dataset-manager 'del'.")
-    if action.completed_proc.returncode != 0:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "The 'dataset-manager.sh del' subprocess returned a non-zero exit code.",
-                action,
-            )
-        )
+    returncode_result = action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     # Get list of all datasets currently in archives.
     list_action = dataset_manager_clp_json(
@@ -160,44 +151,48 @@ def verify_dataset_manager_del_action_clp_json(
     )
     list_result = verify_dataset_manager_list_action_clp_json(list_action, clp_package)
     if not list_result:
-        pytest.fail(
-            "During dataset-manager 'del' verification, supporting call to dataset-manager 'list'"
-            f" could not be verified: '{list_result.failure_message}' Subprocess log:"
-            f" '{list_action.log_file_path}'"
+        return ClpVerificationResult.fail(
+            action=action,
+            reason=(
+                "Supporting call to dataset-manager 'list' failed during dataset-manager 'del'"
+                " verification"
+            ),
+            supporting_action=list_action,
         )
 
     current_datasets = _extract_dataset_names_from_output(list_action)
 
     args = action.args
     assert isinstance(args, DatasetManagerArgs)
+
     datasets_specified_for_deletion = args.datasets or []
     del_all_flag = args.del_all
-    if del_all_flag:
-        if len(current_datasets) > 0:
-            return VerificationResult.fail(
-                format_action_failure_msg(
-                    f"Dataset-manager 'del --all' verification failure: There are datasets still"
-                    f" present in the database: '{current_datasets}'.",
-                    action,
-                )
-            )
-    elif any(item in current_datasets for item in datasets_specified_for_deletion):
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "Dataset-manager 'del' verification failure: Some datasets that were specified for"
-                " deletion are still present in the database.",
-                action,
-            )
+    if del_all_flag and len(current_datasets) > 0:
+        return ClpVerificationResult.fail(
+            action=action,
+            reason=(
+                f"Dataset-manager 'del --all' verification failure: There are datasets still"
+                f" present in the database: '{current_datasets}'."
+            ),
         )
 
-    return VerificationResult.ok()
+    if any(item in current_datasets for item in datasets_specified_for_deletion):
+        return ClpVerificationResult.fail(
+            action=action,
+            reason=(
+                "Dataset-manager 'del' verification failure: Some datasets that were specified for"
+                " deletion are still present in the database."
+            ),
+        )
+
+    return ClpVerificationResult.ok()
 
 
 def _extract_dataset_names_from_output(
-    action: ExternalAction,
+    action: ClpAction,
 ) -> list[str]:
     dataset_list: list[str] = []
-    output = _get_action_output(action)
+    output = action.get_output()
     output_lines = output.splitlines()
     num_datasets = 0
     for line in output_lines:
@@ -216,11 +211,6 @@ def _extract_dataset_names_from_output(
             dataset_list.append(match.group(1))
 
     return sorted(dataset_list)
-
-
-def _get_action_output(action: ExternalAction) -> str:
-    """Return the combined stdout + stderr from a completed action."""
-    return action.completed_proc.stdout + action.completed_proc.stderr
 
 
 def _get_names_of_directories_in_package_archives(clp_package: ClpPackage) -> list[str]:

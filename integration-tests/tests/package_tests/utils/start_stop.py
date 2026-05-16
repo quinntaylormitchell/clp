@@ -4,9 +4,8 @@ import logging
 from pathlib import Path
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, VerificationResult
+from tests.utils.classes import ClpAction, ClpVerificationResult, CmdArgs
 from tests.utils.docker_utils import list_running_services_in_compose_project
-from tests.utils.logging_utils import format_action_failure_msg
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +27,11 @@ class StartStopArgs(CmdArgs):
 
 def start_clp_package(
     clp_package: ClpPackage,
-) -> ExternalAction:
+) -> ClpAction:
     """Docstring."""
     logger.info(f"Starting up the '{clp_package.mode_name}' package.")
     args: StartStopArgs = _construct_start_clp_args(clp_package)
-    return ExternalAction(cmd=args.to_cmd(), args=args)
+    return ClpAction.from_args(args)
 
 
 def _construct_start_clp_args(clp_package: ClpPackage) -> StartStopArgs:
@@ -45,11 +44,11 @@ def _construct_start_clp_args(clp_package: ClpPackage) -> StartStopArgs:
 
 def stop_clp_package(
     clp_package: ClpPackage,
-) -> ExternalAction:
+) -> ClpAction:
     """Docstring."""
     logger.info(f"Stopping the '{clp_package.mode_name}' package.")
     args: StartStopArgs = _construct_stop_clp_args(clp_package)
-    return ExternalAction(cmd=args.to_cmd(), args=args)
+    return ClpAction.from_args(args)
 
 
 def _construct_stop_clp_args(clp_package: ClpPackage) -> StartStopArgs:
@@ -61,50 +60,39 @@ def _construct_stop_clp_args(clp_package: ClpPackage) -> StartStopArgs:
 
 
 def verify_start_clp_action(
-    start_clp_action: ExternalAction, clp_package: ClpPackage
-) -> VerificationResult:
+    start_clp_action: ClpAction, clp_package: ClpPackage
+) -> ClpVerificationResult:
     """Docstring."""
     logger.info(f"Verifying the startup of the '{clp_package.mode_name}' package.")
-    if start_clp_action.completed_proc.returncode != 0:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "The start-clp.sh subprocess returned a non-zero exit code.",
-                start_clp_action,
-            )
-        )
+    returncode_result = start_clp_action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
-    package_running_result = _validate_clp_package_running(clp_package)
-    if package_running_result:
-        return VerificationResult.ok()
+    package_running_err = _validate_clp_package_running(clp_package)
+    if package_running_err is None:
+        return ClpVerificationResult.ok()
 
-    return VerificationResult.fail(
-        format_action_failure_msg(package_running_result.failure_message, start_clp_action)
-    )
+    return ClpVerificationResult.fail(start_clp_action, package_running_err)
 
 
 def verify_stop_clp_action(
-    stop_clp_action: ExternalAction, clp_package: ClpPackage
-) -> VerificationResult:
+    stop_clp_action: ClpAction, clp_package: ClpPackage
+) -> ClpVerificationResult:
     """Docstring."""
     logger.info(f"Verifying the spindown of the '{clp_package.mode_name}' package.")
-    if stop_clp_action.completed_proc.returncode != 0:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "The stop-clp.sh subprocess returned a non-zero exit code.", stop_clp_action
-            )
-        )
+    returncode_result = stop_clp_action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
-    package_not_running_result = _validate_clp_package_not_running(clp_package)
-    if package_not_running_result:
-        return VerificationResult.ok()
+    package_not_running_err = _validate_clp_package_not_running(clp_package)
+    if package_not_running_err is None:
+        return ClpVerificationResult.ok()
 
-    return VerificationResult.fail(
-        format_action_failure_msg(package_not_running_result.failure_message, stop_clp_action)
-    )
+    return ClpVerificationResult.fail(stop_clp_action, package_not_running_err)
 
 
-def _validate_clp_package_running(clp_package: ClpPackage) -> VerificationResult:
-    """Docstring."""
+def _validate_clp_package_running(clp_package: ClpPackage) -> str | None:
+    """:return: `None` on success; otherwise a string describing the failure."""
     # Get list of services currently running in the Compose project.
     instance_id = clp_package.get_clp_instance_id()
     project_name = f"clp-package-{instance_id}"
@@ -113,7 +101,7 @@ def _validate_clp_package_running(clp_package: ClpPackage) -> VerificationResult
     # Compare with list of required components.
     required_components = set(clp_package.component_list)
     if required_components == running_services:
-        return VerificationResult.ok()
+        return None
 
     # Construct failure message.
     mode_name = clp_package.mode_name
@@ -129,10 +117,11 @@ def _validate_clp_package_running(clp_package: ClpPackage) -> VerificationResult
     if unexpected_components:
         fail_msg += f" Unexpected services: {unexpected_components}."
 
-    return VerificationResult.fail(fail_msg)
+    return fail_msg
 
 
-def _validate_clp_package_not_running(clp_package: ClpPackage) -> VerificationResult:
+def _validate_clp_package_not_running(clp_package: ClpPackage) -> str | None:
+    """:return: `None` on success; otherwise a string describing the failure."""
     # Get list of services currently running in the Compose project.
     instance_id = clp_package.get_clp_instance_id()
     project_name = f"clp-package-{instance_id}"
@@ -140,12 +129,11 @@ def _validate_clp_package_not_running(clp_package: ClpPackage) -> VerificationRe
 
     # Make sure the set is empty.
     if not running_services:
-        return VerificationResult.ok()
+        return None
 
     # Construct failure message.
     mode_name = clp_package.mode_name
-    fail_msg = (
+    return (
         f"'{mode_name}' package stop verification failure: there are components of the package that"
         f" are still running: '{running_services}'"
     )
-    return VerificationResult.fail(fail_msg)

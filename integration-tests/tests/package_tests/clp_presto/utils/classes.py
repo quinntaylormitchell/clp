@@ -1,13 +1,22 @@
 """Classes used in clp-presto integration tests."""
 
+from __future__ import annotations
+
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+import pytest
+from typing_extensions import Self
+
 from tests.package_tests.classes import ClpPackageTestPathConfig
+from tests.utils.classes import CmdArgs, ExternalAction
 from tests.utils.utils import (
     validate_dir_exists,
     validate_file_exists,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -50,3 +59,112 @@ class PrestoCluster:
 
     # The `PrestoClusterTestPathConfig` object for this Presto cluster.
     path_config: PrestoClusterTestPathConfig
+
+
+@dataclass
+class PrestoAction(ExternalAction):
+    """
+    External action for a Presto-related subprocess (e.g., `docker compose` against the Presto
+    deployment, or `presto-cli` queries). The testing system does not assume that Presto behaves
+    correctly, and so `verify_returncode()` returns a `PrestoVerificationResult` object which should
+    be processed at the callsite. Instances should be constructed via `from_args` or `from_cmd`.
+    """
+
+    #: Optional structured arguments. Not used by `PrestoAction` itself; available for verification.
+    args: CmdArgs | None = None
+
+    @classmethod
+    def from_cmd(cls, cmd: list[str]) -> Self:
+        """:return: A `PrestoAction` for the given raw `cmd`, with no associated `args`."""
+        return cls(cmd=cmd)
+
+    @classmethod
+    def from_args(cls, args: CmdArgs) -> Self:
+        """:return: A `PrestoAction` whose `cmd` is derived from `args.to_cmd()`."""
+        return cls(cmd=args.to_cmd(), args=args)
+
+    def __post_init__(self) -> None:
+        """
+        Validate `args`/`cmd` agreement when both are provided during construction. Then execute the
+        action.
+        """
+        if self.args is not None and self.cmd != self.args.to_cmd():
+            pytest.fail(
+                "Cannot create `PrestoAction` object: `cmd` does not match `args.to_cmd()`."
+            )
+        super().__post_init__()
+
+    def format_failure_msg(
+        self,
+        reason: str,
+        supporting_action: PrestoAction | None = None,
+    ) -> str:
+        """
+        Format a failure message that includes `reason` and the path to this action's log file.
+        When this action's verification has failed as a direct result of some other `PrestoAction`,
+        this other action should be passed into `supporting_action` so that the path to its log file
+        can be included in the failure message.
+
+        :param reason: A description of the failure.
+        :param supporting_action: A previous action that caused this failure.
+        :return: The formatted failure message.
+        """
+        msg = f"{reason} See subprocess log at: '{self.log_file_path}'."
+        if supporting_action is not None:
+            supporting_exe = Path(supporting_action.cmd[0]).name
+            msg += (
+                f" See supporting subprocess ({supporting_exe}) log at:"
+                f" '{supporting_action.log_file_path}'."
+            )
+        return msg
+
+    def verify_returncode(
+        self,
+        good_returncodes: tuple[int, ...] = (0,),
+    ) -> PrestoVerificationResult:
+        """
+        :param good_returncodes:
+        :return: A successful `PrestoVerificationResult` if `completed_proc.returncode` is in
+            `good_returncodes`; otherwise a failed `PrestoVerificationResult` with a message
+            describing the bad return code.
+        """
+        if self.completed_proc.returncode in good_returncodes:
+            return PrestoVerificationResult.ok()
+
+        reason = (
+            f"The '{Path(self.cmd[0]).name}' subprocess returned a bad return code"
+            f" ({self.completed_proc.returncode})."
+        )
+        return PrestoVerificationResult.fail(self, reason)
+
+
+@dataclass(frozen=True)
+class PrestoVerificationResult:
+    """Outcome returned from functions that verify Presto functionality."""
+
+    #: Whether or not the verification was successful.
+    success: bool
+
+    #: Message describing the failure, if the verification failed.
+    failure_message: str = ""
+
+    def __bool__(self) -> bool:
+        """Makes class truthy."""
+        return self.success
+
+    @classmethod
+    def ok(cls) -> Self:
+        """:return: A successful `PrestoVerificationResult`."""
+        return cls(success=True)
+
+    @classmethod
+    def fail(
+        cls,
+        action: PrestoAction,
+        reason: str,
+        supporting_action: PrestoAction | None = None,
+    ) -> Self:
+        """:return: A failed `PrestoVerificationResult` carrying `failure_message`."""
+        failure_message = action.format_failure_msg(reason, supporting_action=supporting_action)
+        logger.warning(failure_message)
+        return cls(success=False, failure_message=failure_message)

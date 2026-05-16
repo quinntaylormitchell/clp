@@ -9,12 +9,15 @@ import pytest
 from clp_py_utils.clp_config import PRESTO_COORDINATOR_COMPONENT_NAME
 from pydantic import ValidationError
 
-from tests.package_tests.clp_presto.utils.classes import PrestoCluster
+from tests.package_tests.clp_presto.utils.classes import (
+    PrestoAction,
+    PrestoCluster,
+    PrestoVerificationResult,
+)
 from tests.utils.classes import (
     DatasetColumn,
-    ExternalAction,
+    NonClpAction,
     SampleDataset,
-    VerificationResult,
 )
 from tests.utils.utils import get_binary_path
 
@@ -27,7 +30,7 @@ PRESTO_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 def query_clp_presto(
     presto_cluster: PrestoCluster,
     query: str,
-) -> ExternalAction:
+) -> PrestoAction:
     """Docstring."""
     logger.info(f"Running Presto query: '{query}'")
 
@@ -50,42 +53,54 @@ def query_clp_presto(
         query,
     ]
 
-    return ExternalAction(cmd=cmd)
+    return PrestoAction.from_cmd(cmd)
 
 
 def verify_show_tables_action_clp_presto(
-    show_tables_action: ExternalAction,
+    show_tables_action: PrestoAction,
     current_datasets: list[SampleDataset],
-) -> VerificationResult:
+) -> PrestoVerificationResult:
     """Verify that `SHOW TABLES;` output is accurate w.r.t. current datasets."""
     logger.info("Verifying 'SHOW TABLES;' Presto query.")
+
+    returncode_result = show_tables_action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     output_lines = show_tables_action.completed_proc.stdout.splitlines()
     try:
         actual: set[str] = {json.loads(line)["Table"] for line in output_lines if line.strip()}
     except (json.JSONDecodeError, KeyError) as e:
-        return VerificationResult.fail(f"Failed to parse output of `SHOW TABLES;` as JSON: {e}")
+        return PrestoVerificationResult.fail(
+            show_tables_action,
+            f"Failed to parse output of `SHOW TABLES;` as JSON: {e}",
+        )
 
     expected: set[str] = {ds.dataset_name for ds in current_datasets}
 
     if actual == expected:
-        return VerificationResult.ok()
+        return PrestoVerificationResult.ok()
 
-    return VerificationResult.fail(
+    return PrestoVerificationResult.fail(
+        show_tables_action,
         f"Mismatch between set of tables from `SHOW TABLES;` query: '{actual}' and expected set:"
-        f" '{expected}'"
+        f" '{expected}'",
     )
 
 
 def verify_describe_dataset_action_clp_presto(
-    describe_dataset_action: ExternalAction,
+    describe_dataset_action: PrestoAction,
     dataset: SampleDataset,
-) -> VerificationResult:
+) -> PrestoVerificationResult:
     """
     Verify that `DESCRIBE <dataset_name>;` output is accurate w.r.t. "columns" field from dataset
     metadata.
     """
     logger.info("Verifying 'DESCRIBE <dataset_name>;' Presto query.")
+
+    returncode_result = describe_dataset_action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     if dataset.columns is None:
         pytest.fail(
@@ -100,28 +115,34 @@ def verify_describe_dataset_action_clp_presto(
             DatasetColumn.model_validate_json(line) for line in output_lines if line.strip()
         ]
     except ValidationError as e:
-        return VerificationResult.fail(
-            f"Failed to parse output of `DESCRIBE <dataset_name>;` as `DatasetColumn`: {e}"
+        return PrestoVerificationResult.fail(
+            describe_dataset_action,
+            f"Failed to parse output of `DESCRIBE <dataset_name>;` as `DatasetColumn`: {e}",
         )
 
     if actual == expected:
-        return VerificationResult.ok()
+        return PrestoVerificationResult.ok()
 
-    return VerificationResult.fail(
+    return PrestoVerificationResult.fail(
+        describe_dataset_action,
         f"Mismatch between dataset column description from `DESCRIBE <dataset_name>;` query:"
-        f" '{actual}' and expected column description: '{expected}'"
+        f" '{actual}' and expected column description: '{expected}'",
     )
 
 
 def verify_select_logs_action_clp_presto(
-    select_logs_action: ExternalAction,
+    select_logs_action: PrestoAction,
     dataset: SampleDataset,
-) -> VerificationResult:
+) -> PrestoVerificationResult:
     """
     Verify that `SELECT * FROM <dataset_name>;` output is accurate w.r.t. grep -r ".*" output for
     dataset logs.
     """
     logger.info("Verifying 'SELECT * FROM <dataset_name>;' Presto query.")
+
+    returncode_result = select_logs_action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     actual: list[dict[str, Any]] = _load_str_to_json_list(select_logs_action.completed_proc.stdout)
 
@@ -133,20 +154,17 @@ def verify_select_logs_action_clp_presto(
         ".*",
         str(dataset.logs_path),
     ]
-    grep_action = ExternalAction(cmd)
-    if grep_action.completed_proc.returncode != 0:
-        pytest.fail(
-            "During `SELECT * FROM <dataset_name>;` verification, supporting `grep` call returned a"
-            f" non-zero exit code. Subprocess log: {grep_action.log_file_path}"
-        )
+    grep_action = NonClpAction(cmd=cmd)
+    grep_action.check_returncode(related_action=select_logs_action)
     expected: list[dict[str, Any]] = _format_grep_output(grep_action.completed_proc.stdout)
 
     if _as_multiset(actual) == _as_multiset(expected):
-        return VerificationResult.ok()
+        return PrestoVerificationResult.ok()
 
-    return VerificationResult.fail(
+    return PrestoVerificationResult.fail(
+        select_logs_action,
         f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"
-        f" and expected logs: '{expected}'"
+        f" and expected logs: '{expected}'",
     )
 
 

@@ -5,13 +5,12 @@ compression and decompression.
 
 import pytest
 
-from tests.utils.classes import IntegrationTestPathConfig, SampleDataset
-from tests.utils.config import (
-    ClpCorePathConfig,
+from tests.binary_tests.classes import (
+    ClpBinaryTestPathConfig,
     CompressionTestPathConfig,
 )
-from tests.utils.subprocess_utils import run_and_log_subprocess
-from tests.utils.utils import (
+from tests.utils.classes import ClpAction, SampleDataset
+from tests.utils.fs_validation import (
     is_dir_tree_content_equal,
     is_json_file_structurally_equal,
 )
@@ -21,26 +20,24 @@ pytestmark = pytest.mark.core
 
 @pytest.mark.clp
 def test_clp_identity_transform(
-    clp_core_path_config: ClpCorePathConfig,
-    integration_test_path_config: IntegrationTestPathConfig,
+    clp_binary_test_path_config: ClpBinaryTestPathConfig,
     text_multifile: SampleDataset,
 ) -> None:
     """
     Validate that compression and decompression by the core binary `clp` run successfully and are
     lossless.
 
-    :param clp_core_path_config:
-    :param integration_test_path_config:
+    :param clp_binary_test_path_config:
     :param text_multifile:
     """
     test_paths = CompressionTestPathConfig(
         test_name=f"clp-{text_multifile.dataset_name}",
         logs_source_dir=text_multifile.logs_path,
-        integration_test_path_config=integration_test_path_config,
+        integration_test_path_config=clp_binary_test_path_config,
     )
     test_paths.clear_test_outputs()
 
-    bin_path = str(clp_core_path_config.clp_binary_path)
+    bin_path = str(clp_binary_test_path_config.clp_binary_path)
     src_path = str(test_paths.logs_source_dir)
     compression_path = str(test_paths.compression_dir)
     decompression_path = str(test_paths.decompression_dir)
@@ -54,10 +51,16 @@ def test_clp_identity_transform(
         src_path,
     ]
     # fmt: on
-    run_and_log_subprocess(compression_cmd)
+    compression_action = ClpAction.from_cmd(compression_cmd)
+    compression_result = compression_action.verify_returncode()
+    if not compression_result:
+        pytest.fail(compression_result.failure_message)
 
     decompression_cmd = [bin_path, "x", compression_path, decompression_path]
-    run_and_log_subprocess(decompression_cmd)
+    decompression_action = ClpAction.from_cmd(decompression_cmd)
+    decompression_result = decompression_action.verify_returncode()
+    if not decompression_result:
+        pytest.fail(decompression_result.failure_message)
 
     input_path = test_paths.logs_source_dir
     output_path = test_paths.decompression_dir
@@ -71,16 +74,14 @@ def test_clp_identity_transform(
 
 @pytest.mark.clp_s
 def test_clp_s_identity_transform(
-    clp_core_path_config: ClpCorePathConfig,
-    integration_test_path_config: IntegrationTestPathConfig,
+    clp_binary_test_path_config: ClpBinaryTestPathConfig,
     json_multifile: SampleDataset,
 ) -> None:
     """
     Validate that compression and decompression by the core binary `clp-s` run successfully and are
     lossless.
 
-    :param clp_core_path_config:
-    :param integration_test_path_config:
+    :param clp_binary_test_path_config:
     :param json_multifile:
     """
     dataset_name = json_multifile.dataset_name
@@ -88,9 +89,9 @@ def test_clp_s_identity_transform(
     test_paths = CompressionTestPathConfig(
         test_name=f"clp-s-{dataset_name}",
         logs_source_dir=json_multifile.logs_path,
-        integration_test_path_config=integration_test_path_config,
+        integration_test_path_config=clp_binary_test_path_config,
     )
-    _clp_s_compress_and_decompress(clp_core_path_config, test_paths)
+    _clp_s_compress_and_decompress(clp_binary_test_path_config, test_paths)
 
     # Recompress the decompressed output that's consolidated into a single json file, and decompress
     # it again to verify consistency. The compression input of the second iteration points to the
@@ -101,9 +102,9 @@ def test_clp_s_identity_transform(
     consolidated_json_test_paths = CompressionTestPathConfig(
         test_name=f"clp-s-{dataset_name}-consolidated-json",
         logs_source_dir=test_paths.decompression_dir,
-        integration_test_path_config=integration_test_path_config,
+        integration_test_path_config=clp_binary_test_path_config,
     )
-    _clp_s_compress_and_decompress(clp_core_path_config, consolidated_json_test_paths)
+    _clp_s_compress_and_decompress(clp_binary_test_path_config, consolidated_json_test_paths)
 
     _consolidated_json_file_name = "original"
     input_path = consolidated_json_test_paths.logs_source_dir / _consolidated_json_file_name
@@ -117,13 +118,20 @@ def test_clp_s_identity_transform(
 
 
 def _clp_s_compress_and_decompress(
-    clp_core_path_config: ClpCorePathConfig,
+    clp_binary_test_path_config: ClpBinaryTestPathConfig,
     test_paths: CompressionTestPathConfig,
 ) -> None:
     test_paths.clear_test_outputs()
-    bin_path = str(clp_core_path_config.clp_s_binary_path)
+    bin_path = str(clp_binary_test_path_config.clp_s_binary_path)
     src_path = str(test_paths.logs_source_dir)
     compression_path = str(test_paths.compression_dir)
     decompression_path = str(test_paths.decompression_dir)
-    run_and_log_subprocess([bin_path, "c", compression_path, src_path])
-    run_and_log_subprocess([bin_path, "x", compression_path, decompression_path])
+    compression_action = ClpAction.from_cmd([bin_path, "c", compression_path, src_path])
+    compression_result = compression_action.verify_returncode()
+    if not compression_result:
+        pytest.fail(compression_result.failure_message)
+
+    decompression_action = ClpAction.from_cmd([bin_path, "x", compression_path, decompression_path])
+    decompression_result = decompression_action.verify_returncode()
+    if not decompression_result:
+        pytest.fail(decompression_result.failure_message)

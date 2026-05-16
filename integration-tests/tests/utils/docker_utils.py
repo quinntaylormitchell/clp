@@ -2,9 +2,7 @@
 
 import re
 
-import pytest
-
-from tests.utils.classes import ExternalAction
+from tests.utils.classes import NonClpAction
 from tests.utils.utils import get_binary_path
 
 
@@ -14,6 +12,7 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
 
     :param project_name:
     :return: List of the running services that belong to the specified Docker Compose project.
+    :raise RuntimeError: if `docker compose ps` returns a non-zero exit code.
     """
     compose_ps_cmd = [
         get_binary_path("docker"),
@@ -24,18 +23,11 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
         "--format",
         "{{.Service}}",
     ]
-    compose_ps_action = ExternalAction(cmd=compose_ps_cmd)
-
-    if compose_ps_action.completed_proc.returncode != 0:
-        pytest.fail(
-            "When getting running services in docker compose project, supporting call to docker"
-            f" returned a non-zero exit code. Subprocess log: '{compose_ps_action.log_file_path}'"
-        )
-
-    compose_ps_output = compose_ps_action.completed_proc.stdout
+    compose_ps_action = NonClpAction(cmd=compose_ps_cmd)
+    compose_ps_action.check_returncode()
 
     service_names: list[str] = []
-    for line in (compose_ps_output or "").splitlines():
+    for line in compose_ps_action.completed_proc.stdout.splitlines():
         service_name_candidate = line.strip()
         if service_name_candidate:
             service_names.append(service_name_candidate)
@@ -49,6 +41,7 @@ def list_running_containers_with_prefix(prefix: str) -> list[str]:
 
     :param prefix:
     :return: List of running container names that match the pattern.
+    :raise RuntimeError: if `docker ps` returns a non-zero exit code.
     """
     docker_ps_cmd = [
         get_binary_path("docker"),
@@ -58,17 +51,11 @@ def list_running_containers_with_prefix(prefix: str) -> list[str]:
         "--filter",
         f"name={prefix}",
     ]
-    docker_ps_action = ExternalAction(cmd=docker_ps_cmd)
-    docker_ps_proc = docker_ps_action.completed_proc
-    if docker_ps_proc.returncode != 0:
-        pytest.fail(
-            "When getting containers with prefix in docker compose project, supporting call to"
-            " docker returned a non-zero exit code. Subprocess log:"
-            f" '{docker_ps_action.log_file_path}'"
-        )
+    docker_ps_action = NonClpAction(cmd=docker_ps_cmd)
+    docker_ps_action.check_returncode()
 
     matches: list[str] = []
-    for line in (docker_ps_proc.stdout or "").splitlines():
+    for line in docker_ps_action.completed_proc.stdout.splitlines():
         name_candidate = line.strip()
         if re.fullmatch(re.escape(prefix) + r"\d+", name_candidate):
             matches.append(name_candidate)

@@ -9,8 +9,13 @@ import pytest
 from clp_py_utils.clp_config import StorageEngine
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import CmdArgs, ExternalAction, SampleDataset, VerificationResult
-from tests.utils.logging_utils import format_action_failure_msg
+from tests.utils.classes import (
+    ClpAction,
+    ClpVerificationResult,
+    CmdArgs,
+    NonClpAction,
+    SampleDataset,
+)
 from tests.utils.utils import (
     get_binary_path,
 )
@@ -87,12 +92,12 @@ def search_clp_package(
     dataset: SampleDataset,
     search_type: ClpPackageSearchType,
     wildcard_query: str,
-) -> ExternalAction:
+) -> ClpAction:
     """Docstring."""
     logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
 
     args: SearchArgs = _construct_args(clp_package, dataset, search_type, wildcard_query)
-    return ExternalAction(cmd=args.to_cmd(), args=args)
+    return ClpAction.from_args(args)
 
 
 def _construct_args(
@@ -133,32 +138,24 @@ def _construct_args(
 
 
 def verify_search_action(
-    action: ExternalAction,
+    action: ClpAction,
     search_type: ClpPackageSearchType,
     original_dataset: SampleDataset,
-) -> VerificationResult:
+) -> ClpVerificationResult:
     """Docstring."""
     logger.info("Verifying search.")
-    if action.completed_proc.returncode != 0:
-        return VerificationResult.fail(
-            format_action_failure_msg(
-                "The 'search.sh' subprocess returned a non-zero exit code.", action
-            )
-        )
+    returncode_result = action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
 
     args = action.args
     assert isinstance(args, SearchArgs)
 
     # Construct and run grep command.
-    grep_action = ExternalAction(
+    grep_action = NonClpAction(
         cmd=_construct_grep_verification_cmd(args, search_type, original_dataset)
     )
-
-    if grep_action.completed_proc.returncode != 0:
-        pytest.fail(
-            "During search action verification, internal grep command returned a non-zero exit"
-            f" code. Subprocess log: {grep_action.log_file_path}"
-        )
+    grep_action.check_returncode(related_action=action)
 
     # Compare grep result with search result.
     formatted_grep_result = _format_grep_result_for_search_type(
@@ -168,16 +165,13 @@ def verify_search_action(
         action.completed_proc.stdout, search_type
     )
     if formatted_grep_result == formatted_search_result:
-        return VerificationResult.ok()
+        return ClpVerificationResult.ok()
 
-    return VerificationResult.fail(
-        format_action_failure_msg(
-            f"Search verification failure: mismatch between formatted search result"
-            f" '{formatted_search_result}' and formatted grep result"
-            f" '{formatted_grep_result}'.",
-            action,
-            grep_action,
-        )
+    return ClpVerificationResult.fail(
+        action,
+        f"Search verification failure: mismatch between formatted search result"
+        f" '{formatted_search_result}' and formatted grep result '{formatted_grep_result}'."
+        f" See supporting grep subprocess log at: '{grep_action.log_file_path}'.",
     )
 
 
