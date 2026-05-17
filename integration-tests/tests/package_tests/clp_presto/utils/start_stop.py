@@ -64,9 +64,9 @@ def verify_start_presto_action(
 
     cluster_running_err = _validate_presto_cluster_running()
     if cluster_running_err is None:
-        return PrestoVerificationResult.ok()
+        return start_presto_cluster_action.pass_verification()
 
-    return PrestoVerificationResult.fail(start_presto_cluster_action, cluster_running_err)
+    return start_presto_cluster_action.fail_verification(cluster_running_err)
 
 
 def verify_stop_presto_action(
@@ -80,9 +80,9 @@ def verify_stop_presto_action(
 
     cluster_not_running_err = _validate_presto_cluster_not_running()
     if cluster_not_running_err is None:
-        return PrestoVerificationResult.ok()
+        return stop_presto_cluster_action.pass_verification()
 
-    return PrestoVerificationResult.fail(stop_presto_cluster_action, cluster_not_running_err)
+    return stop_presto_cluster_action.fail_verification(cluster_not_running_err)
 
 
 def _validate_presto_cluster_running() -> str | None:

@@ -111,7 +111,7 @@ def _verify_compress_action_clp_json(
         return returncode_result
 
     # TODO: Waiting for PR 1299 (clp-json decompression) to be merged.
-    return ClpVerificationResult.ok()
+    return compress_action.pass_verification()
 
 
 def _verify_compress_action_clp_text(
@@ -132,8 +132,7 @@ def _verify_compress_action_clp_text(
     decompress_action = decompress_clp_package(clp_package, path_config.package_decompression_dir)
     decompress_result = decompress_action.verify_returncode()
     if not decompress_result:
-        return ClpVerificationResult.fail(
-            compress_action,
+        return compress_action.fail_verification(
             "Supporting decompress action failed during compress verification.",
             supporting_action=decompress_action,
         )
@@ -147,10 +146,9 @@ def _verify_compress_action_clp_text(
     equal = is_dir_tree_content_equal(original_logs_path, decompressed_logs_path)
     clear_directory(path_config.package_decompression_dir)
     if equal:
-        return ClpVerificationResult.ok()
+        return compress_action.pass_verification()
 
-    return ClpVerificationResult.fail(
-        compress_action,
+    return compress_action.fail_verification(
         f"Compress verification failure: mismatch between original logs at"
         f" '{original_logs_path}' and decompressed logs at '{decompressed_logs_path}'.",
     )

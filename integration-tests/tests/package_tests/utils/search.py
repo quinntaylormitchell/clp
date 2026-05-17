@@ -155,7 +155,7 @@ def verify_search_action(
     grep_action = NonClpAction(
         cmd=_construct_grep_verification_cmd(args, search_type, original_dataset)
     )
-    grep_action.check_returncode(related_action=action)
+    grep_action.check_returncode(dependent_action=action)
 
     # Compare grep result with search result.
     formatted_grep_result = _format_grep_result_for_search_type(
@@ -165,13 +165,12 @@ def verify_search_action(
         action.completed_proc.stdout, search_type
     )
     if formatted_grep_result == formatted_search_result:
-        return ClpVerificationResult.ok()
+        return action.pass_verification()
 
-    return ClpVerificationResult.fail(
-        action,
+    return action.fail_verification(
         f"Search verification failure: mismatch between formatted search result"
-        f" '{formatted_search_result}' and formatted grep result '{formatted_grep_result}'."
-        f" See supporting grep subprocess log at: '{grep_action.log_file_path}'.",
+        f" '{formatted_search_result}' and formatted grep result '{formatted_grep_result}'.",
+        supporting_action=grep_action,
     )
 
 

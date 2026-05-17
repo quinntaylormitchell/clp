@@ -94,30 +94,6 @@ class PrestoAction(ExternalAction):
             )
         super().__post_init__()
 
-    def format_failure_msg(
-        self,
-        reason: str,
-        supporting_action: PrestoAction | None = None,
-    ) -> str:
-        """
-        Format a failure message that includes `reason` and the path to this action's log file.
-        When this action's verification has failed as a direct result of some other `PrestoAction`,
-        this other action should be passed into `supporting_action` so that the path to its log file
-        can be included in the failure message.
-
-        :param reason: A description of the failure.
-        :param supporting_action: A previous action that caused this failure.
-        :return: The formatted failure message.
-        """
-        msg = f"{reason} See subprocess log at: '{self.log_file_path}'."
-        if supporting_action is not None:
-            supporting_exe = Path(supporting_action.cmd[0]).name
-            msg += (
-                f" See supporting subprocess ({supporting_exe}) log at:"
-                f" '{supporting_action.log_file_path}'."
-            )
-        return msg
-
     def verify_returncode(
         self,
         good_returncodes: tuple[int, ...] = (0,),
@@ -129,13 +105,50 @@ class PrestoAction(ExternalAction):
             describing the bad return code.
         """
         if self.completed_proc.returncode in good_returncodes:
-            return PrestoVerificationResult.ok()
+            return self.pass_verification()
 
         reason = (
             f"The '{Path(self.cmd[0]).name}' subprocess returned a bad return code"
             f" ({self.completed_proc.returncode})."
         )
-        return PrestoVerificationResult.fail(self, reason)
+        return self.fail_verification(reason)
+
+    def pass_verification(self) -> PrestoVerificationResult:
+        """:return: A successful `PrestoVerificationResult`."""
+        return PrestoVerificationResult(success=True)
+
+    def fail_verification(
+        self,
+        reason: str,
+        supporting_action: PrestoAction | None = None,
+    ) -> PrestoVerificationResult:
+        """
+        Build a failed `PrestoVerificationResult` for this action and log a warning. When this
+        action's verification has failed as a direct result of some other `PrestoAction`, that
+        action should be passed into `supporting_action` so that the path to its log file is
+        included in the failure message.
+
+        :param reason: A description of the failure.
+        :param supporting_action: A previous action that caused this failure.
+        :return: A failed `PrestoVerificationResult` carrying the formatted `failure_message`.
+        """
+        failure_message = self._format_failure_msg(reason, supporting_action=supporting_action)
+        logger.warning(failure_message)
+        return PrestoVerificationResult(success=False, failure_message=failure_message)
+
+    def _format_failure_msg(
+        self,
+        reason: str,
+        supporting_action: PrestoAction | None = None,
+    ) -> str:
+        msg = f"{reason} See subprocess log at: '{self.log_file_path}'."
+        if supporting_action is not None:
+            supporting_exe = Path(supporting_action.cmd[0]).name
+            msg += (
+                f" See supporting subprocess ({supporting_exe}) log at:"
+                f" '{supporting_action.log_file_path}'."
+            )
+        return msg
 
 
 @dataclass(frozen=True)
@@ -151,20 +164,3 @@ class PrestoVerificationResult:
     def __bool__(self) -> bool:
         """Makes class truthy."""
         return self.success
-
-    @classmethod
-    def ok(cls) -> Self:
-        """:return: A successful `PrestoVerificationResult`."""
-        return cls(success=True)
-
-    @classmethod
-    def fail(
-        cls,
-        action: PrestoAction,
-        reason: str,
-        supporting_action: PrestoAction | None = None,
-    ) -> Self:
-        """:return: A failed `PrestoVerificationResult` carrying `failure_message`."""
-        failure_message = action.format_failure_msg(reason, supporting_action=supporting_action)
-        logger.warning(failure_message)
-        return cls(success=False, failure_message=failure_message)

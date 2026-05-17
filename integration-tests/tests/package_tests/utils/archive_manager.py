@@ -179,8 +179,7 @@ def verify_archive_manager_find_action(
         )
         find_before_result = find_before_action.verify_returncode()
         if not find_before_result:
-            return ClpVerificationResult.fail(
-                action,
+            return action.fail_verification(
                 "Supporting 'find' call failed during archive-manager 'find' verification.",
                 supporting_action=find_before_action,
             )
@@ -199,8 +198,7 @@ def verify_archive_manager_find_action(
         )
         find_after_result = find_after_action.verify_returncode()
         if not find_after_result:
-            return ClpVerificationResult.fail(
-                action,
+            return action.fail_verification(
                 "Supporting 'find' call failed during archive-manager 'find' verification.",
                 supporting_action=find_after_action,
             )
@@ -214,8 +212,7 @@ def verify_archive_manager_find_action(
     )
     find_all_result = find_all_action.verify_returncode()
     if not find_all_result:
-        return ClpVerificationResult.fail(
-            action,
+        return action.fail_verification(
             "Supporting 'find' call failed during archive-manager 'find' verification.",
             supporting_action=find_all_action,
         )
@@ -223,14 +220,13 @@ def verify_archive_manager_find_action(
 
     # Compare.
     if current_archive_id_list == directories_in_archive_dir:
-        return ClpVerificationResult.ok()
+        return action.pass_verification()
 
-    return ClpVerificationResult.fail(
-        action,
+    return action.fail_verification(
         "Archive-manager 'find' verification failure: mismatch between current archive ID list"
         f" '{current_archive_id_list}' and list of directories present in var/archives"
-        f" directory '{directories_in_archive_dir}'."
-        f" See supporting 'find' subprocess log at: '{find_all_action.log_file_path}'.",
+        f" directory '{directories_in_archive_dir}'.",
+        supporting_action=find_all_action,
     )
 
 
@@ -256,8 +252,7 @@ def verify_archive_manager_del_action(
             )
             find_result = verify_archive_manager_find_action(find_all_action, clp_package, dataset)
             if not find_result:
-                return ClpVerificationResult.fail(
-                    action,
+                return action.fail_verification(
                     "Supporting call to archive-manager 'find' could not be verified during"
                     f" archive-manager 'del' verification: '{find_result.failure_message}'",
                     supporting_action=find_all_action,
@@ -265,11 +260,10 @@ def verify_archive_manager_del_action(
 
             current_ids = _extract_archive_ids_from_find_output(find_all_action)
             if args.ids and any(item in current_ids for item in args.ids):
-                return ClpVerificationResult.fail(
-                    action,
+                return action.fail_verification(
                     "Archive-manager 'del by-ids' verification failure: Some archives that were"
-                    " specified for deletion are still present in the metadata database."
-                    f" See supporting 'find' subprocess log at: '{find_all_action.log_file_path}'.",
+                    " specified for deletion are still present in the metadata database.",
+                    supporting_action=find_all_action,
                 )
         case ClpPackageArchiveManagerDelSubcommand.BY_FILTER_COMMAND:
             begin_ts = args.begin_ts
@@ -283,8 +277,7 @@ def verify_archive_manager_del_action(
             )
             find_result = verify_archive_manager_find_action(find_action, clp_package, dataset)
             if not find_result:
-                return ClpVerificationResult.fail(
-                    action,
+                return action.fail_verification(
                     "Supporting call to archive-manager 'find' could not be verified during"
                     f" archive-manager 'del' verification: '{find_result.failure_message}'",
                     supporting_action=find_action,
@@ -292,11 +285,10 @@ def verify_archive_manager_del_action(
 
             current_ids = _extract_archive_ids_from_find_output(find_action)
             if len(current_ids) > 0:
-                return ClpVerificationResult.fail(
-                    action,
+                return action.fail_verification(
                     "Archive-manager 'del by-filter' verification failure: Some archives that"
-                    " should have been deleted were not deleted."
-                    f" See supporting 'find' subprocess log at: '{find_action.log_file_path}'.",
+                    " should have been deleted were not deleted.",
+                    supporting_action=find_action,
                 )
         case _:
             pytest.fail(
@@ -304,7 +296,7 @@ def verify_archive_manager_del_action(
                 " neither."
             )
 
-    return ClpVerificationResult.ok()
+    return action.pass_verification()
 
 
 def _extract_archive_ids_from_find_output(

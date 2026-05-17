@@ -122,10 +122,9 @@ def verify_dataset_manager_list_action_clp_json(
     directories_in_package_archives = _get_names_of_directories_in_package_archives(clp_package)
 
     if dataset_list == directories_in_package_archives:
-        return ClpVerificationResult.ok()
+        return action.pass_verification()
 
-    return ClpVerificationResult.fail(
-        action=action,
+    return action.fail_verification(
         reason=(
             "Dataset-manager 'list' verification failure: mismatch between output dataset list"
             f" '{dataset_list}' and directories in var/archives"
@@ -151,8 +150,7 @@ def verify_dataset_manager_del_action_clp_json(
     )
     list_result = verify_dataset_manager_list_action_clp_json(list_action, clp_package)
     if not list_result:
-        return ClpVerificationResult.fail(
-            action=action,
+        return action.fail_verification(
             reason=(
                 "Supporting call to dataset-manager 'list' failed during dataset-manager 'del'"
                 " verification"
@@ -168,8 +166,7 @@ def verify_dataset_manager_del_action_clp_json(
     datasets_specified_for_deletion = args.datasets or []
     del_all_flag = args.del_all
     if del_all_flag and len(current_datasets) > 0:
-        return ClpVerificationResult.fail(
-            action=action,
+        return action.fail_verification(
             reason=(
                 f"Dataset-manager 'del --all' verification failure: There are datasets still"
                 f" present in the database: '{current_datasets}'."
@@ -177,15 +174,14 @@ def verify_dataset_manager_del_action_clp_json(
         )
 
     if any(item in current_datasets for item in datasets_specified_for_deletion):
-        return ClpVerificationResult.fail(
-            action=action,
+        return action.fail_verification(
             reason=(
                 "Dataset-manager 'del' verification failure: Some datasets that were specified for"
                 " deletion are still present in the database."
             ),
         )
 
-    return ClpVerificationResult.ok()
+    return action.pass_verification()
 
 
 def _extract_dataset_names_from_output(

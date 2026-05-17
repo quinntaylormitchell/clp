@@ -71,18 +71,16 @@ def verify_show_tables_action_clp_presto(
     try:
         actual: set[str] = {json.loads(line)["Table"] for line in output_lines if line.strip()}
     except (json.JSONDecodeError, KeyError) as e:
-        return PrestoVerificationResult.fail(
-            show_tables_action,
+        return show_tables_action.fail_verification(
             f"Failed to parse output of `SHOW TABLES;` as JSON: {e}",
         )
 
     expected: set[str] = {ds.dataset_name for ds in current_datasets}
 
     if actual == expected:
-        return PrestoVerificationResult.ok()
+        return show_tables_action.pass_verification()
 
-    return PrestoVerificationResult.fail(
-        show_tables_action,
+    return show_tables_action.fail_verification(
         f"Mismatch between set of tables from `SHOW TABLES;` query: '{actual}' and expected set:"
         f" '{expected}'",
     )
@@ -115,16 +113,14 @@ def verify_describe_dataset_action_clp_presto(
             DatasetColumn.model_validate_json(line) for line in output_lines if line.strip()
         ]
     except ValidationError as e:
-        return PrestoVerificationResult.fail(
-            describe_dataset_action,
+        return describe_dataset_action.fail_verification(
             f"Failed to parse output of `DESCRIBE <dataset_name>;` as `DatasetColumn`: {e}",
         )
 
     if actual == expected:
-        return PrestoVerificationResult.ok()
+        return describe_dataset_action.pass_verification()
 
-    return PrestoVerificationResult.fail(
-        describe_dataset_action,
+    return describe_dataset_action.fail_verification(
         f"Mismatch between dataset column description from `DESCRIBE <dataset_name>;` query:"
         f" '{actual}' and expected column description: '{expected}'",
     )
@@ -155,14 +151,13 @@ def verify_select_logs_action_clp_presto(
         str(dataset.logs_path),
     ]
     grep_action = NonClpAction(cmd=cmd)
-    grep_action.check_returncode(related_action=select_logs_action)
+    grep_action.check_returncode(dependent_action=select_logs_action)
     expected: list[dict[str, Any]] = _format_grep_output(grep_action.completed_proc.stdout)
 
     if _as_multiset(actual) == _as_multiset(expected):
-        return PrestoVerificationResult.ok()
+        return select_logs_action.pass_verification()
 
-    return PrestoVerificationResult.fail(
-        select_logs_action,
+    return select_logs_action.fail_verification(
         f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"
         f" and expected logs: '{expected}'",
     )

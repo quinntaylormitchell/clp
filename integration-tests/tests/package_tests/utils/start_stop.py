@@ -70,9 +70,9 @@ def verify_start_clp_action(
 
     package_running_err = _validate_clp_package_running(clp_package)
     if package_running_err is None:
-        return ClpVerificationResult.ok()
+        return start_clp_action.pass_verification()
 
-    return ClpVerificationResult.fail(start_clp_action, package_running_err)
+    return start_clp_action.fail_verification(package_running_err)
 
 
 def verify_stop_clp_action(
@@ -86,9 +86,9 @@ def verify_stop_clp_action(
 
     package_not_running_err = _validate_clp_package_not_running(clp_package)
     if package_not_running_err is None:
-        return ClpVerificationResult.ok()
+        return stop_clp_action.pass_verification()
 
-    return ClpVerificationResult.fail(stop_clp_action, package_not_running_err)
+    return stop_clp_action.fail_verification(package_not_running_err)
 
 
 def _validate_clp_package_running(clp_package: ClpPackage) -> str | None:
