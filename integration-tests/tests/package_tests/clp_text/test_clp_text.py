@@ -12,9 +12,12 @@ from tests.package_tests.clp_text.utils.clear_archives import (
 )
 from tests.package_tests.clp_text.utils.mode import CLP_TEXT_MODE
 from tests.package_tests.utils.archive_manager import (
-    archive_manager_clp_package,
-    ClpPackageArchiveManagerType,
-    verify_archive_manager_del_action,
+    archive_manager_del_by_filter,
+    archive_manager_del_by_ids,
+    archive_manager_find,
+    extract_archive_ids_from_find_output,
+    verify_archive_manager_del_by_filter_action,
+    verify_archive_manager_del_by_ids_action,
     verify_archive_manager_find_action,
 )
 from tests.package_tests.utils.compress import (
@@ -255,10 +258,7 @@ def test_clp_text_archive_manager_find_all_text_multifile(
     result = verify_compress_action(compress_action, clp_package, text_multifile)
     assert result, result.failure_message
 
-    archive_manager_find_all_action = archive_manager_clp_package(
-        clp_package=clp_package,
-        archive_manager_type=ClpPackageArchiveManagerType.FIND,
-    )
+    archive_manager_find_all_action = archive_manager_find(clp_package=clp_package)
     result = verify_archive_manager_find_action(archive_manager_find_all_action, clp_package)
     assert result, result.failure_message
 
@@ -282,9 +282,8 @@ def test_clp_text_archive_manager_find_range_text_multifile(
     result = verify_compress_action(compress_action, clp_package, text_multifile)
     assert result, result.failure_message
 
-    archive_manager_find_range_action = archive_manager_clp_package(
+    archive_manager_find_range_action = archive_manager_find(
         clp_package=clp_package,
-        archive_manager_type=ClpPackageArchiveManagerType.FIND,
         begin_ts=text_multifile.metadata.begin_ts,
         end_ts=text_multifile.metadata.end_ts,
     )
@@ -311,11 +310,18 @@ def test_clp_text_archive_manager_del_by_ids_text_multifile(
     result = verify_compress_action(compress_action, clp_package, text_multifile)
     assert result, result.failure_message
 
-    archive_manager_del_by_ids_action = archive_manager_clp_package(
+    find_action = archive_manager_find(clp_package=clp_package)
+    find_result = verify_archive_manager_find_action(find_action, clp_package)
+    assert find_result, find_result.failure_message
+    archive_ids = extract_archive_ids_from_find_output(find_action)
+
+    archive_manager_del_by_ids_action = archive_manager_del_by_ids(
         clp_package=clp_package,
-        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
+        ids=archive_ids,
     )
-    result = verify_archive_manager_del_action(archive_manager_del_by_ids_action, clp_package)
+    result = verify_archive_manager_del_by_ids_action(
+        archive_manager_del_by_ids_action, clp_package
+    )
     assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)
@@ -338,13 +344,14 @@ def test_clp_text_archive_manager_del_by_filter_text_multifile(
     result = verify_compress_action(compress_action, clp_package, text_multifile)
     assert result, result.failure_message
 
-    archive_manager_del_by_filter_action = archive_manager_clp_package(
+    archive_manager_del_by_filter_action = archive_manager_del_by_filter(
         clp_package=clp_package,
-        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_FILTER,
         begin_ts=text_multifile.metadata.begin_ts,
         end_ts=text_multifile.metadata.end_ts,
     )
-    result = verify_archive_manager_del_action(archive_manager_del_by_filter_action, clp_package)
+    result = verify_archive_manager_del_by_filter_action(
+        archive_manager_del_by_filter_action, clp_package
+    )
     assert result, result.failure_message
 
     clear_package_archives_clp_text(clp_package)

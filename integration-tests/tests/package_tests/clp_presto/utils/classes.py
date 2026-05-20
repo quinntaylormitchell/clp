@@ -96,15 +96,15 @@ class PrestoAction(ExternalAction):
 
     def verify_returncode(
         self,
-        good_returncodes: tuple[int, ...] = (0,),
+        success_returncodes: tuple[int, ...] = (0,),
     ) -> PrestoVerificationResult:
         """
-        :param good_returncodes:
+        :param success_returncodes:
         :return: A successful `PrestoVerificationResult` if `completed_proc.returncode` is in
-            `good_returncodes`; otherwise a failed `PrestoVerificationResult` with a message
+            `success_returncodes`; otherwise a failed `PrestoVerificationResult` with a message
             describing the bad return code.
         """
-        if self.completed_proc.returncode in good_returncodes:
+        if self.completed_proc.returncode in success_returncodes:
             return self.pass_verification()
 
         reason = (

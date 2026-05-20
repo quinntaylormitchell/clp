@@ -11,16 +11,19 @@ from tests.package_tests.clp_json.utils.clear_archives import (
     clear_package_archives_clp_json,
 )
 from tests.package_tests.clp_json.utils.dataset_manager import (
-    ClpPackageDatasetManagerType,
-    dataset_manager_clp_json,
+    dataset_manager_del,
+    dataset_manager_list,
     verify_dataset_manager_del_action_clp_json,
     verify_dataset_manager_list_action_clp_json,
 )
 from tests.package_tests.clp_json.utils.mode import CLP_JSON_MODE
 from tests.package_tests.utils.archive_manager import (
-    archive_manager_clp_package,
-    ClpPackageArchiveManagerType,
-    verify_archive_manager_del_action,
+    archive_manager_del_by_filter,
+    archive_manager_del_by_ids,
+    archive_manager_find,
+    extract_archive_ids_from_find_output,
+    verify_archive_manager_del_by_filter_action,
+    verify_archive_manager_del_by_ids_action,
     verify_archive_manager_find_action,
 )
 from tests.package_tests.utils.compress import (
@@ -233,11 +236,10 @@ def test_clp_json_dataset_manager_list_json_multifile(
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
 
-    dataset_manager_list_action = dataset_manager_clp_json(
-        clp_package=clp_package,
-        dataset_manager_type=ClpPackageDatasetManagerType.LIST,
+    dataset_manager_list_action = dataset_manager_list(clp_package=clp_package)
+    result = verify_dataset_manager_list_action_clp_json(
+        dataset_manager_list_action, [json_multifile.dataset_name]
     )
-    result = verify_dataset_manager_list_action_clp_json(dataset_manager_list_action, clp_package)
     assert result, result.failure_message
 
     clear_package_archives_clp_json(clp_package)
@@ -260,12 +262,9 @@ def test_clp_json_dataset_manager_del_json_multifile(
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
 
-    dataset_manager_del_action = dataset_manager_clp_json(
+    dataset_manager_del_action = dataset_manager_del(
         clp_package=clp_package,
-        dataset_manager_type=ClpPackageDatasetManagerType.DEL,
-        datasets_to_del=[
-            json_multifile,
-        ],
+        datasets_to_del=[json_multifile],
     )
     result = verify_dataset_manager_del_action_clp_json(dataset_manager_del_action, clp_package)
     assert result, result.failure_message
@@ -290,10 +289,9 @@ def test_clp_json_archive_manager_find_all_json_multifile(
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
 
-    archive_manager_find_all_action = archive_manager_clp_package(
+    archive_manager_find_all_action = archive_manager_find(
         clp_package=clp_package,
         dataset=json_multifile,
-        archive_manager_type=ClpPackageArchiveManagerType.FIND,
     )
     result = verify_archive_manager_find_action(
         archive_manager_find_all_action, clp_package, json_multifile
@@ -320,10 +318,9 @@ def test_clp_json_archive_manager_find_range_json_multifile(
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
 
-    archive_manager_find_range_action = archive_manager_clp_package(
+    archive_manager_find_range_action = archive_manager_find(
         clp_package=clp_package,
         dataset=json_multifile,
-        archive_manager_type=ClpPackageArchiveManagerType.FIND,
         begin_ts=json_multifile.metadata.begin_ts,
         end_ts=json_multifile.metadata.end_ts,
     )
@@ -352,12 +349,17 @@ def test_clp_json_archive_manager_del_by_ids_json_multifile(
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
 
-    archive_manager_del_by_ids_action = archive_manager_clp_package(
+    find_action = archive_manager_find(clp_package=clp_package, dataset=json_multifile)
+    find_result = verify_archive_manager_find_action(find_action, clp_package, json_multifile)
+    assert find_result, find_result.failure_message
+    archive_ids = extract_archive_ids_from_find_output(find_action)
+
+    archive_manager_del_by_ids_action = archive_manager_del_by_ids(
         clp_package=clp_package,
+        ids=archive_ids,
         dataset=json_multifile,
-        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_IDS,
     )
-    result = verify_archive_manager_del_action(
+    result = verify_archive_manager_del_by_ids_action(
         archive_manager_del_by_ids_action, clp_package, json_multifile
     )
     assert result, result.failure_message
@@ -382,14 +384,13 @@ def test_clp_json_archive_manager_del_by_filter_json_multifile(
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
 
-    archive_manager_del_by_filter_action = archive_manager_clp_package(
+    archive_manager_del_by_filter_action = archive_manager_del_by_filter(
         clp_package=clp_package,
         dataset=json_multifile,
-        archive_manager_type=ClpPackageArchiveManagerType.DEL_BY_FILTER,
         begin_ts=json_multifile.metadata.begin_ts,
         end_ts=json_multifile.metadata.end_ts,
     )
-    result = verify_archive_manager_del_action(
+    result = verify_archive_manager_del_by_filter_action(
         archive_manager_del_by_filter_action, clp_package, json_multifile
     )
     assert result, result.failure_message

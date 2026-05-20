@@ -1,4 +1,4 @@
-"""Utilities that start/stop the CLP package."""
+"""Utilities that start and stop the CLP package."""
 
 import logging
 from pathlib import Path
@@ -11,13 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class StartStopArgs(CmdArgs):
-    """Docstring."""
+    """Command argument model for starting and stopping the CLP package."""
 
     script_path: Path
     config: Path
 
     def to_cmd(self) -> list[str]:
-        """Docstring."""
+        """Convert the model attributes to a command list."""
         return [
             str(self.script_path),
             "--config",
@@ -28,42 +28,49 @@ class StartStopArgs(CmdArgs):
 def start_clp_package(
     clp_package: ClpPackage,
 ) -> ClpAction:
-    """Docstring."""
-    logger.info(f"Starting up the '{clp_package.mode_name}' package.")
-    args: StartStopArgs = _construct_start_clp_args(clp_package)
-    return ClpAction.from_args(args)
+    """
+    Starts the CLP package.
 
-
-def _construct_start_clp_args(clp_package: ClpPackage) -> StartStopArgs:
-    """Docstring."""
-    path_config = clp_package.path_config
-    return StartStopArgs(
-        script_path=path_config.start_clp_path, config=clp_package.temp_config_file_path
+    :param clp_package:
+    :return: The `ClpAction` instance that starts the package.
+    """
+    logger.info("Starting up the '%s' package.", clp_package.mode_name)
+    args = StartStopArgs(
+        script_path=clp_package.path_config.start_clp_path,
+        config=clp_package.temp_config_file_path,
     )
+    return ClpAction.from_args(args)
 
 
 def stop_clp_package(
     clp_package: ClpPackage,
 ) -> ClpAction:
-    """Docstring."""
-    logger.info(f"Stopping the '{clp_package.mode_name}' package.")
-    args: StartStopArgs = _construct_stop_clp_args(clp_package)
-    return ClpAction.from_args(args)
+    """
+    Stops the CLP package.
 
-
-def _construct_stop_clp_args(clp_package: ClpPackage) -> StartStopArgs:
-    """Docstring."""
-    path_config = clp_package.path_config
-    return StartStopArgs(
-        script_path=path_config.stop_clp_path, config=clp_package.temp_config_file_path
+    :param clp_package:
+    :return: The `ClpAction` instance that stops the package.
+    """
+    logger.info("Stopping the '%s' package.", clp_package.mode_name)
+    args = StartStopArgs(
+        script_path=clp_package.path_config.stop_clp_path,
+        config=clp_package.temp_config_file_path,
     )
+    return ClpAction.from_args(args)
 
 
 def verify_start_clp_action(
     start_clp_action: ClpAction, clp_package: ClpPackage
 ) -> ClpVerificationResult:
-    """Docstring."""
-    logger.info(f"Verifying the startup of the '{clp_package.mode_name}' package.")
+    """
+    Verify the startup of the CLP package.
+
+    :param start_clp_action:
+    :param clp_package:
+    :return: A `ClpVerificationResult` indicating the success or failure of the verification.
+    """
+    logger.info("Verifying the startup of the '%s' package.", clp_package.mode_name)
+
     returncode_result = start_clp_action.verify_returncode()
     if not returncode_result:
         return returncode_result
@@ -78,8 +85,14 @@ def verify_start_clp_action(
 def verify_stop_clp_action(
     stop_clp_action: ClpAction, clp_package: ClpPackage
 ) -> ClpVerificationResult:
-    """Docstring."""
-    logger.info(f"Verifying the spindown of the '{clp_package.mode_name}' package.")
+    """
+    Verify the spindown of the CLP package.
+
+    :param stop_clp_action:
+    :param clp_package:
+    :return: A `ClpVerificationResult` indicating the success or failure of the verification.
+    """
+    logger.info("Verifying the spindown of the '%s' package.", clp_package.mode_name)
     returncode_result = stop_clp_action.verify_returncode()
     if not returncode_result:
         return returncode_result

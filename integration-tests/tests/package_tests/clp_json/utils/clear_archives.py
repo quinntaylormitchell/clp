@@ -8,8 +8,7 @@ from tests.package_tests.classes import (
     ClpPackage,
 )
 from tests.package_tests.clp_json.utils.dataset_manager import (
-    ClpPackageDatasetManagerType,
-    dataset_manager_clp_json,
+    dataset_manager_del,
     verify_dataset_manager_del_action_clp_json,
 )
 
@@ -21,9 +20,8 @@ def clear_package_archives_clp_json(
 ) -> None:
     """Docstring."""
     logger.info(f"Clearing the {clp_package.mode_name} archives.")
-    del_action = dataset_manager_clp_json(
+    del_action = dataset_manager_del(
         clp_package=clp_package,
-        dataset_manager_type=ClpPackageDatasetManagerType.DEL,
         del_all=True,
     )
     del_result = verify_dataset_manager_del_action_clp_json(del_action, clp_package)

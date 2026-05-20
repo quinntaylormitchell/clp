@@ -7,6 +7,7 @@ import pytest
 
 from tests.package_tests.classes import (
     ClpPackage,
+    ClpPackageModeConfig,
     ClpPackageTestPathConfig,
 )
 from tests.package_tests.utils.start_stop import (
@@ -15,6 +16,7 @@ from tests.package_tests.utils.start_stop import (
     verify_start_clp_action,
     verify_stop_clp_action,
 )
+from tests.utils.classes import ClpAction  # noqa: TC001
 from tests.utils.port_utils import assign_ports_from_base
 from tests.utils.utils import resolve_path_env_var, write_dict_to_yaml
 
@@ -36,15 +38,23 @@ def clp_package(
     request: pytest.FixtureRequest,
     clp_package_test_path_config: ClpPackageTestPathConfig,
 ) -> Iterator[ClpPackage]:
-    """Docstring for clp_package fixture."""
-    mode_config = request.param
-    path_config = clp_package_test_path_config
+    """
+    Creates and maintains a module-level `ClpPackage` for a specific CLP mode, starts the package
+    instance, and stops it during teardown. For efficiency, group all tests for a given mode in the
+    same module.
+
+    :param request: Provides `ClpPackageModeConfig` via `request.param`.
+    :param clp_package_test_path_config:
+    :return: An iterator that yields the running `ClpPackage` for the specified mode.
+    :raise ValueError: if the CLP base port's value is invalid.
+    """
+    mode_config: ClpPackageModeConfig = request.param
     mode_name = mode_config.mode_name
     clp_config = mode_config.clp_config
     component_list = mode_config.component_list
 
     # Assign ports to the `ClpConfig` pydantic object.
-    logger.info(f"Assigning ports to the '{mode_name}' package.")
+    logger.info("Assigning ports to the '%s' package.", mode_name)
     base_port_string = request.config.getoption("--base-port")
     try:
         base_port = int(base_port_string)
@@ -53,26 +63,28 @@ def clp_package(
         raise ValueError(err_msg) from err
     assign_ports_from_base(base_port, clp_config)
 
-    # Write the temporary config file.
-    logger.info(f"Writing the temporary config file for the '{mode_name}' package.")
-    temp_config_file_path = path_config.temp_config_dir / f"clp-config-{mode_name}.yaml"
-    write_dict_to_yaml(clp_config.dump_to_primitive_dict(), temp_config_file_path)
-
     # Construct `ClpPackage` object.
     clp_package = ClpPackage(
-        path_config=path_config,
+        path_config=clp_package_test_path_config,
         mode_name=mode_name,
         clp_config=clp_config,
         component_list=component_list,
     )
 
+    # Write the temporary config file.
+    logger.info("Writing the temporary config file for the '%s' package.", mode_name)
+    write_dict_to_yaml(
+        clp_config.dump_to_primitive_dict(),  # type: ignore[no-untyped-call]
+        clp_package.temp_config_file_path,
+    )
+
     try:
-        start_clp_action = start_clp_package(clp_package)
+        start_clp_action: ClpAction = start_clp_package(clp_package)
         start_result = verify_start_clp_action(start_clp_action, clp_package)
         assert start_result, start_result.failure_message
         yield clp_package
     finally:
-        stop_clp_action = stop_clp_package(clp_package)
+        stop_clp_action: ClpAction = stop_clp_package(clp_package)
         stop_result = verify_stop_clp_action(stop_clp_action, clp_package)
         assert stop_result, stop_result.failure_message
 

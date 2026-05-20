@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class DecompressArgs(CmdArgs):
-    """Docstring."""
+    """Command argument model for decompressing with the CLP package."""
 
     script_path: Path
     config: Path
@@ -21,7 +21,7 @@ class DecompressArgs(CmdArgs):
     paths: list[Path] | None = None
 
     def to_cmd(self) -> list[str]:
-        """Docstring."""
+        """Converts the model attributes to a command list."""
         cmd: list[str] = [
             str(self.script_path),
             "--config",
@@ -42,27 +42,22 @@ def decompress_clp_package(
     extraction_dir: Any,
     paths: list[Path] | None = None,
 ) -> ClpAction:
-    """Docstring."""
+    """
+    Decompresses the specified CLP package archives. Note that decompression can only be used in
+    conjunction with compression.
+
+    :param clp_package:
+    :param extraction_dir:
+    :param paths:
+    :return: The `ClpAction` instance that runs the decompression.
+    """
     logger.info(f"Decompressing '{clp_package.mode_name}' package.")
 
-    args: DecompressArgs = _construct_decompress_args(clp_package, extraction_dir, paths)
-    return ClpAction.from_args(args)
-
-
-def _construct_decompress_args(
-    clp_package: ClpPackage,
-    extraction_dir: Any,
-    paths: list[Path] | None = None,
-) -> DecompressArgs:
-    """Docstring."""
     path_config = clp_package.path_config
-    args = DecompressArgs(
+    args: DecompressArgs = DecompressArgs(
         script_path=path_config.decompress_path,
         config=clp_package.temp_config_file_path,
         extraction_dir=extraction_dir,
+        paths=paths,
     )
-
-    if paths:
-        args.paths = paths
-
-    return args
+    return ClpAction.from_args(args)

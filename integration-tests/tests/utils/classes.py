@@ -90,6 +90,7 @@ class SampleDatasetMetadata(BaseModel):
     logs_subdir: str
     file_names: list[str]
     single_match_wildcard_query: str
+    single_match_file: str
     columns_file_name: str | None = None
 
 
@@ -155,6 +156,13 @@ class SampleDataset:
             file_path_abs = self.logs_path / file_path
             validate_file_exists(file_path_abs)
 
+        if self.metadata.single_match_file not in self.metadata.file_names:
+            err_msg = (
+                f"`single_match_file` '{self.metadata.single_match_file}' is not listed in"
+                " `file_names`."
+            )
+            raise ValueError(err_msg)
+
         # Load and validate the columns file if it exists.
         if self.columns_file_path is not None:
             validate_file_exists(self.columns_file_path)
@@ -186,8 +194,8 @@ class SampleDataset:
 
 class CmdArgs(BaseModel, ABC):
     """
-    Abstract base class for all CLP command argument models. Derived classes define typed
-    command-line options, and `to_cmd()` converts the options into a list of subprocess arguments.
+    Abstract base class for all CLP command argument models. Subclasses define typed command-line
+    options, and `to_cmd()` converts the options into a list of subprocess arguments.
     """
 
     @abstractmethod
@@ -310,19 +318,19 @@ class NonClpAction(ExternalAction):
 
     def check_returncode(
         self,
-        good_returncodes: tuple[int, ...] = (0,),
+        success_returncodes: tuple[int, ...] = (0,),
         dependent_action: ExternalAction | None = None,
     ) -> None:
         """
-        :param good_returncodes:
+        :param success_returncodes:
         :param dependent_action: Another action whose verification depends on this action. Its log
             path is included in the failure message to aid debugging.
-        :raise RuntimeError: if `completed_proc.returncode` is not in `good_returncodes`.
+        :raise RuntimeError: if `completed_proc.returncode` is not in `success_returncodes`.
         """
-        if self.completed_proc.returncode in good_returncodes:
+        if self.completed_proc.returncode in success_returncodes:
             return
         reason = (
-            f"The '{Path(self.cmd[0]).name}' subprocess returned a bad return code"
+            f"The '{Path(self.cmd[0]).name}' subprocess returned a returncode indicative of failure"
             f" ({self.completed_proc.returncode})."
         )
         err_msg = self._format_failure_msg(reason, dependent_action=dependent_action)
@@ -389,19 +397,19 @@ class ClpAction(ExternalAction):
 
     def verify_returncode(
         self,
-        good_returncodes: tuple[int, ...] = (0,),
+        success_returncodes: tuple[int, ...] = (0,),
     ) -> ClpVerificationResult:
         """
-        :param good_returncodes:
+        :param success_returncodes:
         :return: A successful `ClpVerificationResult` if `completed_proc.returncode` is in
-            `good_returncodes`; otherwise a failed `ClpVerificationResult` with a message describing
-            the bad return code.
+            `success_returncodes`; otherwise a failed `ClpVerificationResult` with a message
+            describing the failing return code.
         """
-        if self.completed_proc.returncode in good_returncodes:
+        if self.completed_proc.returncode in success_returncodes:
             return self.pass_verification()
 
         reason = (
-            f"The '{Path(self.cmd[0]).name}' subprocess returned a bad return code"
+            f"The '{Path(self.cmd[0]).name}' subprocess returned a returncode indicative of failure"
             f" ({self.completed_proc.returncode})."
         )
         return self.fail_verification(reason)
@@ -465,5 +473,5 @@ class ClpVerificationResult:
     failure_message: str = ""
 
     def __bool__(self) -> bool:
-        """Makes class truthy."""
+        """:return: Whether the verification succeeded."""
         return self.success

@@ -27,7 +27,7 @@ DEFAULT_COUNT_BY_TIME_INTERVAL = 10
 
 
 class SearchArgs(CmdArgs):
-    """Docstring."""
+    """Command argument model for searching with the CLP package."""
 
     script_path: Path
     config: Path
@@ -42,7 +42,7 @@ class SearchArgs(CmdArgs):
     end_ts: int | None = None
 
     def to_cmd(self) -> list[str]:
-        """Docstring."""
+        """Converts the model attributes to a command list."""
         cmd: list[str] = [
             str(self.script_path),
             "--config",
@@ -77,7 +77,7 @@ class SearchArgs(CmdArgs):
 
 
 class ClpPackageSearchType(Enum):
-    """An enumeration of the types of search we can perform with the CLP package."""
+    """Possible search types."""
 
     BASIC = auto()
     FILE_PATH = auto()
@@ -93,11 +93,23 @@ def search_clp_package(
     search_type: ClpPackageSearchType,
     wildcard_query: str,
 ) -> ClpAction:
-    """Docstring."""
-    logger.info(f"Performing '{search_type.name}' search on the '{dataset.dataset_name}' dataset.")
+    """
+    Performs the specified search on the dataset using the CLP package.
+
+    :param clp_package:
+    :param dataset:
+    :param search_type:
+    :param wildcard_query:
+    :return: The `ClpAction` instance that runs the search.
+    """
+    logger.info(
+        "Performing '%s' search on the '%s' dataset.",
+        search_type.name,
+        dataset.dataset_name,
+    )
 
     args: SearchArgs = _construct_args(clp_package, dataset, search_type, wildcard_query)
-    return ClpAction.from_args(args)
+    return ClpAction(cmd=args.to_cmd(), args=args)
 
 
 def _construct_args(
@@ -106,7 +118,7 @@ def _construct_args(
     search_type: ClpPackageSearchType,
     wildcard_query: str,
 ) -> SearchArgs:
-    """Docstring."""
+    """Construct the `SearchArgs` object for the specified search on the dataset."""
     path_config = clp_package.path_config
     args = SearchArgs(
         script_path=path_config.search_path,
@@ -121,7 +133,7 @@ def _construct_args(
         case ClpPackageSearchType.BASIC:
             pass
         case ClpPackageSearchType.FILE_PATH:
-            args.file_path = dataset.logs_path / dataset.metadata.file_names[0]
+            args.file_path = dataset.logs_path / dataset.metadata.single_match_file
         case ClpPackageSearchType.IGNORE_CASE:
             args.ignore_case = True
         case ClpPackageSearchType.COUNT_RESULTS:
@@ -142,8 +154,20 @@ def verify_search_action(
     search_type: ClpPackageSearchType,
     original_dataset: SampleDataset,
 ) -> ClpVerificationResult:
-    """Docstring."""
-    logger.info("Verifying search.")
+    """
+    Verifies the search action.
+
+    :param action:
+    :param search_type:
+    :param original_dataset:
+    :return: A `ClpVerificationResult` indicating the success or failure of the verification.
+    """
+    logger.info(
+        "Verifying '%s' search on the '%s' dataset.",
+        search_type.name,
+        original_dataset.dataset_name,
+    )
+
     returncode_result = action.verify_returncode()
     if not returncode_result:
         return returncode_result
