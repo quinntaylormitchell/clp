@@ -13,6 +13,7 @@ def list_running_services_in_compose_project(project_name: str) -> list[str]:
     :param project_name:
     :return: List of the running services that belong to the specified Docker Compose project.
     :raise RuntimeError: if `docker compose ps` returns a non-zero exit code.
+    :raise RuntimeError: if `docker compose ps` returns a non-zero exit code.
     """
     compose_ps_cmd = [
         get_binary_path("docker"),
