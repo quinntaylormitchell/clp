@@ -7,9 +7,6 @@ import pytest
 from tests.package_tests.classes import (
     ClpPackage,
 )
-from tests.package_tests.clp_text.utils.clear_archives import (
-    clear_package_archives_clp_text,
-)
 from tests.package_tests.clp_text.utils.mode import CLP_TEXT_MODE
 from tests.package_tests.utils.archive_manager import (
     archive_manager_del_by_filter,
@@ -61,6 +58,7 @@ def test_clp_text_startup(clp_package: ClpPackage) -> None:
 
 
 @pytest.mark.compression
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_compression_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -73,18 +71,15 @@ def test_clp_text_compression_text_multifile(
     """
     logger.info("Starting test: 'test_clp_text_compression_text_multifile'")
 
-    clear_package_archives_clp_text(clp_package)
-
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
     assert result, result.failure_message
-
-    clear_package_archives_clp_text(clp_package)
 
     logger.info("Test complete: 'test_clp_text_compression_text_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_search_basic_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -97,8 +92,6 @@ def test_clp_text_search_basic_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_search_basic_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -113,12 +106,11 @@ def test_clp_text_search_basic_text_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.BASIC, text_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_search_basic_text_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_search_file_path_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -131,8 +123,6 @@ def test_clp_text_search_file_path_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_search_file_path_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -147,12 +137,11 @@ def test_clp_text_search_file_path_text_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.FILE_PATH, text_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_search_file_path_text_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_search_ignore_case_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -165,8 +154,6 @@ def test_clp_text_search_ignore_case_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_search_ignore_case_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -181,12 +168,11 @@ def test_clp_text_search_ignore_case_text_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.IGNORE_CASE, text_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_search_ignore_case_text_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_search_count_results_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -199,8 +185,6 @@ def test_clp_text_search_count_results_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_search_count_results_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -215,12 +199,11 @@ def test_clp_text_search_count_results_text_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.COUNT_RESULTS, text_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_search_count_results_text_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_search_count_by_time_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -233,8 +216,6 @@ def test_clp_text_search_count_by_time_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_search_count_by_time_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -249,12 +230,11 @@ def test_clp_text_search_count_by_time_text_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.COUNT_BY_TIME, text_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_search_count_by_time_text_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_search_time_range_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -267,8 +247,6 @@ def test_clp_text_search_time_range_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_search_time_range_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -283,13 +261,12 @@ def test_clp_text_search_time_range_text_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.TIME_RANGE, text_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_search_time_range_text_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_archive_manager_find_all_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -303,8 +280,6 @@ def test_clp_text_archive_manager_find_all_text_multifile(
     """
     logger.info("Starting test: 'test_clp_text_archive_manager_find_all_text_multifile'")
 
-    clear_package_archives_clp_text(clp_package)
-
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
     assert result, result.failure_message
@@ -313,13 +288,12 @@ def test_clp_text_archive_manager_find_all_text_multifile(
     result = verify_archive_manager_find_action(archive_manager_find_all_action, clp_package)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_archive_manager_find_all_text_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_archive_manager_find_range_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -333,8 +307,6 @@ def test_clp_text_archive_manager_find_range_text_multifile(
     """
     logger.info("Starting test: 'test_clp_text_archive_manager_find_range_text_multifile'")
 
-    clear_package_archives_clp_text(clp_package)
-
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
     assert result, result.failure_message
@@ -347,13 +319,12 @@ def test_clp_text_archive_manager_find_range_text_multifile(
     result = verify_archive_manager_find_action(archive_manager_find_range_action, clp_package)
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_archive_manager_find_range_text_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_archive_manager_del_by_ids_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -366,8 +337,6 @@ def test_clp_text_archive_manager_del_by_ids_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_archive_manager_del_by_ids_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -387,13 +356,12 @@ def test_clp_text_archive_manager_del_by_ids_text_multifile(
     )
     assert result, result.failure_message
 
-    clear_package_archives_clp_text(clp_package)
-
     logger.info("Test complete: 'test_clp_text_archive_manager_del_by_ids_text_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_text_archive_manager_del_by_filter_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
@@ -406,8 +374,6 @@ def test_clp_text_archive_manager_del_by_filter_text_multifile(
     :param text_multifile:
     """
     logger.info("Starting test: 'test_clp_text_archive_manager_del_by_filter_text_multifile'")
-
-    clear_package_archives_clp_text(clp_package)
 
     compress_action = compress_clp_package(clp_package, text_multifile)
     result = verify_compress_action(compress_action, clp_package, text_multifile)
@@ -422,7 +388,5 @@ def test_clp_text_archive_manager_del_by_filter_text_multifile(
         archive_manager_del_by_filter_action, clp_package
     )
     assert result, result.failure_message
-
-    clear_package_archives_clp_text(clp_package)
 
     logger.info("Test complete: 'test_clp_text_archive_manager_del_by_filter_text_multifile'")

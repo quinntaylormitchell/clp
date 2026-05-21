@@ -15,10 +15,11 @@ from tests.package_tests.utils.modes import (
     CLP_GARBAGE_COLLECTOR_COMPONENT,
     CLP_QUERY_COMPONENTS,
     CLP_REDUCER_COMPONENT,
+    ClpMode,
 )
 
 CLP_TEXT_MODE = ClpPackageModeConfig(
-    mode_name="clp-text",
+    mode_name=ClpMode.TEXT,
     clp_config=ClpConfig(
         package=Package(
             storage_engine=StorageEngine.CLP,

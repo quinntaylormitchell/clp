@@ -7,9 +7,6 @@ import pytest
 from tests.package_tests.classes import (
     ClpPackage,
 )
-from tests.package_tests.clp_json.utils.clear_archives import (
-    clear_package_archives_clp_json,
-)
 from tests.package_tests.clp_json.utils.dataset_manager import (
     dataset_manager_del,
     dataset_manager_list,
@@ -67,6 +64,7 @@ def test_clp_json_startup(clp_package: ClpPackage) -> None:
 
 
 @pytest.mark.compression
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_compression_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -79,18 +77,15 @@ def test_clp_json_compression_json_multifile(
     """
     logger.info("Starting test: 'test_clp_json_compression_json_multifile'")
 
-    clear_package_archives_clp_json(clp_package)
-
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
-
-    clear_package_archives_clp_json(clp_package)
 
     logger.info("Test complete: 'test_clp_json_compression_json_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_search_basic_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -103,8 +98,6 @@ def test_clp_json_search_basic_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_search_basic_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -119,12 +112,11 @@ def test_clp_json_search_basic_json_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.BASIC, json_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_search_basic_json_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_search_ignore_case_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -137,8 +129,6 @@ def test_clp_json_search_ignore_case_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_search_ignore_case_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -153,12 +143,11 @@ def test_clp_json_search_ignore_case_json_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.IGNORE_CASE, json_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_search_ignore_case_json_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_search_count_results_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -171,8 +160,6 @@ def test_clp_json_search_count_results_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_search_count_results_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -187,12 +174,11 @@ def test_clp_json_search_count_results_json_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.COUNT_RESULTS, json_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_search_count_results_json_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_search_count_by_time_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -205,8 +191,6 @@ def test_clp_json_search_count_by_time_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_search_count_by_time_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -221,12 +205,11 @@ def test_clp_json_search_count_by_time_json_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.COUNT_BY_TIME, json_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_search_count_by_time_json_multifile'")
 
 
 @pytest.mark.search
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_search_time_range_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -239,8 +222,6 @@ def test_clp_json_search_time_range_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_search_time_range_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -255,13 +236,12 @@ def test_clp_json_search_time_range_json_multifile(
     result = verify_search_action(search_action, ClpPackageSearchType.TIME_RANGE, json_multifile)
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_search_time_range_json_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.dataset_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_dataset_manager_list_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -274,8 +254,6 @@ def test_clp_json_dataset_manager_list_json_multifile(
     """
     logger.info("Starting test: 'test_clp_json_dataset_manager_list_json_multifile'")
 
-    clear_package_archives_clp_json(clp_package)
-
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
@@ -286,13 +264,12 @@ def test_clp_json_dataset_manager_list_json_multifile(
     )
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_dataset_manager_list_json_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.dataset_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_dataset_manager_del_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -305,8 +282,6 @@ def test_clp_json_dataset_manager_del_json_multifile(
     """
     logger.info("Starting test: 'test_clp_json_dataset_manager_del_json_multifile'")
 
-    clear_package_archives_clp_json(clp_package)
-
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
     assert result, result.failure_message
@@ -318,13 +293,12 @@ def test_clp_json_dataset_manager_del_json_multifile(
     result = verify_dataset_manager_del_action_clp_json(dataset_manager_del_action, clp_package)
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_dataset_manager_del_json_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_archive_manager_find_all_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -337,8 +311,6 @@ def test_clp_json_archive_manager_find_all_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_archive_manager_find_all_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -353,13 +325,12 @@ def test_clp_json_archive_manager_find_all_json_multifile(
     )
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_archive_manager_find_all_json_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_archive_manager_find_range_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -372,8 +343,6 @@ def test_clp_json_archive_manager_find_range_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_archive_manager_find_range_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -390,13 +359,12 @@ def test_clp_json_archive_manager_find_range_json_multifile(
     )
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_archive_manager_find_range_json_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_archive_manager_del_by_ids_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -409,8 +377,6 @@ def test_clp_json_archive_manager_del_by_ids_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_archive_manager_del_by_ids_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -431,13 +397,12 @@ def test_clp_json_archive_manager_del_by_ids_json_multifile(
     )
     assert result, result.failure_message
 
-    clear_package_archives_clp_json(clp_package)
-
     logger.info("Test complete: 'test_clp_json_archive_manager_del_by_ids_json_multifile'")
 
 
 @pytest.mark.admin_tools
 @pytest.mark.archive_manager
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_archive_manager_del_by_filter_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
@@ -450,8 +415,6 @@ def test_clp_json_archive_manager_del_by_filter_json_multifile(
     :param json_multifile:
     """
     logger.info("Starting test: 'test_clp_json_archive_manager_del_by_filter_json_multifile'")
-
-    clear_package_archives_clp_json(clp_package)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
     result = verify_compress_action(compress_action, clp_package, json_multifile)
@@ -467,7 +430,5 @@ def test_clp_json_archive_manager_del_by_filter_json_multifile(
         archive_manager_del_by_filter_action, clp_package, json_multifile
     )
     assert result, result.failure_message
-
-    clear_package_archives_clp_json(clp_package)
 
     logger.info("Test complete: 'test_clp_json_archive_manager_del_by_filter_json_multifile'")

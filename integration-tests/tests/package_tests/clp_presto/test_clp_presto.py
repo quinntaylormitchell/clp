@@ -7,9 +7,6 @@ import pytest
 from tests.package_tests.classes import (
     ClpPackage,
 )
-from tests.package_tests.clp_json.utils.clear_archives import (
-    clear_package_archives_clp_json,
-)
 from tests.package_tests.clp_presto.utils.classes import (
     PrestoCluster,
 )
@@ -65,6 +62,7 @@ def test_clp_presto_startup(clp_package: ClpPackage, presto_cluster: PrestoClust
 
 @pytest.mark.compression
 @pytest.mark.presto_query
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_presto_json_multifile(
     clp_package: ClpPackage,
     presto_cluster: PrestoCluster,
@@ -80,7 +78,6 @@ def test_clp_presto_json_multifile(
     """
     logger.info("Starting test: 'test_clp_presto_json_multifile'")
 
-    clear_package_archives_clp_json(clp_package)
     clear_split_filter_file(presto_cluster)
 
     compress_action = compress_clp_package(clp_package, json_multifile)
@@ -113,6 +110,5 @@ def test_clp_presto_json_multifile(
     assert select_logs_result, select_logs_result.failure_message
 
     clear_split_filter_file(presto_cluster)
-    clear_package_archives_clp_json(clp_package)
 
     logger.info("Test complete: 'test_clp_presto_json_multifile'")

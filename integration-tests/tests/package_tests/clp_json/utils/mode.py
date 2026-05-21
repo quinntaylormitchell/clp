@@ -16,10 +16,11 @@ from tests.package_tests.utils.modes import (
     CLP_GARBAGE_COLLECTOR_COMPONENT,
     CLP_QUERY_COMPONENTS,
     CLP_REDUCER_COMPONENT,
+    ClpMode,
 )
 
 CLP_JSON_MODE = ClpPackageModeConfig(
-    mode_name="clp-json",
+    mode_name=ClpMode.JSON,
     clp_config=ClpConfig(
         package=Package(
             storage_engine=StorageEngine.CLP_S,

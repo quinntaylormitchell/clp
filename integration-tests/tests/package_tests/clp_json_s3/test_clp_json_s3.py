@@ -7,9 +7,6 @@ import pytest
 from tests.package_tests.classes import (
     ClpPackage,
 )
-from tests.package_tests.clp_json.utils.clear_archives import (
-    clear_package_archives_clp_json,
-)
 from tests.package_tests.clp_json_s3.utils.compress_s3 import (
     compress_s3_clp_package,
 )
@@ -49,6 +46,7 @@ def test_clp_json_s3_startup(clp_package: ClpPackage) -> None:
 
 
 @pytest.mark.compression_s3
+@pytest.mark.usefixtures("clear_package_archives")
 def test_clp_json_s3_compression_json_s3_multifile(
     clp_package: ClpPackage,
     json_s3_multifile: SampleDataset,
@@ -61,10 +59,6 @@ def test_clp_json_s3_compression_json_s3_multifile(
     """
     logger.info("Starting test: 'test_clp_json_s3_compression_json_s3_multifile'")
 
-    clear_package_archives_clp_json(clp_package)
-
     compress_s3_clp_package(clp_package, json_s3_multifile)
-
-    clear_package_archives_clp_json(clp_package)
 
     logger.info("Test complete: 'test_clp_json_s3_compression_json_s3_multifile'")

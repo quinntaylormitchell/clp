@@ -28,6 +28,7 @@ from tests.package_tests.utils.modes import (
     CLP_LOG_INGESTOR_COMPONENT,
     CLP_QUERY_COMPONENTS,
     CLP_REDUCER_COMPONENT,
+    ClpMode,
 )
 from tests.utils.utils import load_yaml_to_dict
 
@@ -53,7 +54,7 @@ def _get_s3_credentials_from_quinn_file(cred_file_path: Path) -> S3Credentials:
 
 
 CLP_JSON_S3_MODE = ClpPackageModeConfig(
-    mode_name="clp-json-s3",
+    mode_name=ClpMode.JSON_S3,
     clp_config=ClpConfig(
         package=Package(
             storage_engine=StorageEngine.CLP_S,

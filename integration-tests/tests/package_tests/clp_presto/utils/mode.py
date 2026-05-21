@@ -17,12 +17,13 @@ from tests.package_tests.classes import (
 from tests.package_tests.utils.modes import (
     CLP_API_SERVER_COMPONENT,
     CLP_BASE_COMPONENTS,
+    ClpMode,
 )
 
 logger = logging.getLogger(__name__)
 
 CLP_PRESTO_MODE = ClpPackageModeConfig(
-    mode_name="clp-presto",
+    mode_name=ClpMode.PRESTO,
     clp_config=ClpConfig(
         package=Package(
             storage_engine=StorageEngine.CLP_S,

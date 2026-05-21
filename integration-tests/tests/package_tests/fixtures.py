@@ -10,6 +10,9 @@ from tests.package_tests.classes import (
     ClpPackageModeConfig,
     ClpPackageTestPathConfig,
 )
+from tests.package_tests.clp_json.utils.clear_archives import clear_package_archives_clp_json
+from tests.package_tests.clp_text.utils.clear_archives import clear_package_archives_clp_text
+from tests.package_tests.utils.modes import ClpMode
 from tests.package_tests.utils.port_assignment import assign_ports_from_base
 from tests.package_tests.utils.start_stop import (
     start_clp_package,
@@ -89,3 +92,24 @@ def clp_package(
         assert stop_result, stop_result.failure_message
 
         clp_package.temp_config_file_path.unlink(missing_ok=True)
+
+
+@pytest.fixture
+def clear_package_archives(clp_package: ClpPackage) -> Iterator[None]:
+    """
+    Clears all archives from the `clp_package` at the beginning and end of each test that uses the
+    fixture. Archives are cleared using a method appropriate to the type of CLP package being used.
+
+    :param clp_package:
+    """
+    match clp_package.mode_name:
+        case ClpMode.JSON | ClpMode.JSON_S3 | ClpMode.PRESTO:
+            clear = clear_package_archives_clp_json
+        case ClpMode.TEXT:
+            clear = clear_package_archives_clp_text
+        case _:
+            pytest.fail(f"Unrecognized CLP package mode name: '{clp_package.mode_name}'")
+
+    clear(clp_package)
+    yield
+    clear(clp_package)

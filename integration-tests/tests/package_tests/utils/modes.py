@@ -16,6 +16,7 @@ from clp_py_utils.clp_config import (
     RESULTS_CACHE_COMPONENT_NAME,
     WEBUI_COMPONENT_NAME,
 )
+from strenum import StrEnum
 
 
 # TODO: This will eventually be replaced by a formalized mapping between component and service.
@@ -27,6 +28,15 @@ def _to_docker_compose_service_name(name: str) -> str:
     :return: Service name with underscores replaced by hyphens
     """
     return name.replace("_", "-")
+
+
+class ClpMode(StrEnum):
+    """Names of CLP operating modes."""
+
+    JSON = "clp-json"
+    JSON_S3 = "clp-json-s3"
+    PRESTO = "clp-presto"
+    TEXT = "clp-text"
 
 
 # Names of components that may comprise a given package mode.
