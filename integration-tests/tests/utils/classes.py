@@ -32,7 +32,7 @@ class IntegrationTestPathConfig:
     integration_tests_project_root: Path
 
     def __post_init__(self) -> None:
-        """Create and validate directories."""
+        """Creates and validates directories."""
         # Validate that init directories exist.
         validate_dir_exists(self.clp_build_dir)
         validate_dir_exists(self.integration_tests_project_root)
@@ -131,7 +131,7 @@ class SampleDataset:
     dataset_name: str = field(init=False)
 
     def __post_init__(self) -> None:
-        """Validate data members and load metadata."""
+        """Validates data members and loads metadata."""
         validate_dir_exists(self.dataset_root_dir)
 
         # Load metadata.
@@ -221,7 +221,7 @@ class ExternalAction:
     log_file_path: Path = field(init=False)
 
     def __post_init__(self) -> None:
-        """Execute the external action and log output."""
+        """Executes the external action and logs output."""
         if type(self) is ExternalAction:
             err_msg = "`ExternalAction` cannot be instantiated directly."
             raise TypeError(err_msg)
@@ -343,7 +343,7 @@ class NonClpAction(ExternalAction):
         dependent_action: ExternalAction | None = None,
     ) -> str:
         """
-        Format a failure message that includes `reason` and the path to this action's log file.
+        Formats a failure message that includes `reason` and the path to this action's log file.
         When this action was being used to verify another action, `dependent_action` should be
         passed in so that the path to its log file is also included in the failure message.
 
@@ -386,8 +386,8 @@ class ClpAction(ExternalAction):
 
     def __post_init__(self) -> None:
         """
-        Validate `args`/`cmd` agreement when both are provided during construction. Then execute the
-        action.
+        Validates `args`/`cmd` agreement when both are provided during construction. Then executes
+        the action.
         """
         if self.args is not None and self.cmd != self.args.to_cmd():
             err_msg = "Cannot create `ClpAction` object: `cmd` does not match `args.to_cmd()`."
@@ -424,10 +424,10 @@ class ClpAction(ExternalAction):
         supporting_action: ExternalAction | None = None,
     ) -> ClpVerificationResult:
         """
-        Build a failed `ClpVerificationResult` for this action and log a warning. When this action's
-        verification has failed as a direct result of some other `ExternalAction`, that action
-        should be passed into `supporting_action` so that the path to its log file is included in
-        the failure message.
+        Builds a failed `ClpVerificationResult` for this action and logs a warning. When this
+        action's verification has failed as a direct result of some other `ExternalAction`, that
+        action should be passed into `supporting_action` so that the path to its log file is
+        included in the failure message.
 
         :param reason: A description of the failure.
         :param supporting_action: A previous action that caused this failure.
@@ -443,7 +443,7 @@ class ClpAction(ExternalAction):
         supporting_action: ExternalAction | None = None,
     ) -> str:
         """
-        Format a failure message that includes `reason` and the path to this action's log file.
+        Formats a failure message that includes `reason` and the path to this action's log file.
         When this action's verification has failed as a direct result of another action,
         `supporting_action` should be passed in so that the path to its log file is also included in
         the failure message.

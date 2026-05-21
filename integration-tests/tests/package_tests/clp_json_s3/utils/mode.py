@@ -1,4 +1,4 @@
-"""Docstring."""
+"""`ClpPackageModeConfig` for the clp-json-s3 package mode."""
 
 import logging
 import uuid

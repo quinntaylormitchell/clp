@@ -25,7 +25,7 @@ class ClpPackageTestPathConfig(IntegrationTestPathConfig):
     clp_package_dir: Path
 
     def __post_init__(self) -> None:
-        """Create and validate directories."""
+        """Creates and validates directories."""
         # Validate that init directory exists.
         validate_dir_exists(self.clp_package_dir)
 
@@ -143,7 +143,7 @@ class ClpPackage:
     component_list: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        """Validate data members."""
+        """Validates data members."""
         # Validate the `clp_config` pydantic object. This object is not validated elsewhere.
         log_msg = f"Validating the ClpConfig pydantic object for the '{self.mode_name}' package."
         logger.info(log_msg)

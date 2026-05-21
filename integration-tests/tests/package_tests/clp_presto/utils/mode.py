@@ -1,4 +1,4 @@
-"""Docstring."""
+"""`ClpPackageModeConfig` for the clp-presto package mode."""
 
 import logging
 

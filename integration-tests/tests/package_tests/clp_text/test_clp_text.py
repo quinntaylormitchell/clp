@@ -48,7 +48,11 @@ pytestmark = [
 
 @pytest.mark.startup
 def test_clp_text_startup(clp_package: ClpPackage) -> None:
-    """Docstring."""
+    """
+    Verifies that the clp-text package starts up successfully.
+
+    :param clp_package:
+    """
     logger.info("Starting test: 'test_clp_text_startup'")
 
     assert clp_package
@@ -61,7 +65,12 @@ def test_clp_text_compression_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the clp-text package can compress the `text_multifile` dataset.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_compression_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -80,7 +89,13 @@ def test_clp_text_search_basic_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a basic search on the compressed `text_multifile` dataset returns the expected
+    results.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_search_basic_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -108,7 +123,13 @@ def test_clp_text_search_file_path_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a file-path-filtered search on the compressed `text_multifile` dataset returns the
+    expected results.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_search_file_path_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -136,7 +157,13 @@ def test_clp_text_search_ignore_case_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a case-insensitive search on the compressed `text_multifile` dataset returns the
+    expected results.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_search_ignore_case_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -164,7 +191,13 @@ def test_clp_text_search_count_results_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a count-results search on the compressed `text_multifile` dataset returns the
+    expected count.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_search_count_results_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -192,7 +225,13 @@ def test_clp_text_search_count_by_time_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a count-by-time search on the compressed `text_multifile` dataset returns the
+    expected aggregation.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_search_count_by_time_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -220,7 +259,13 @@ def test_clp_text_search_time_range_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a time-range search on the compressed `text_multifile` dataset returns the
+    expected results.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_search_time_range_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -249,7 +294,13 @@ def test_clp_text_archive_manager_find_all_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `find` action lists all archives produced by compressing the
+    `text_multifile` dataset.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_archive_manager_find_all_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -273,7 +324,13 @@ def test_clp_text_archive_manager_find_range_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `find` action with a time-range filter lists the expected
+    archives produced by compressing the `text_multifile` dataset.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_archive_manager_find_range_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -301,7 +358,13 @@ def test_clp_text_archive_manager_del_by_ids_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `del` action removes archives identified by ID for the
+    compressed `text_multifile` dataset.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_archive_manager_del_by_ids_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)
@@ -335,7 +398,13 @@ def test_clp_text_archive_manager_del_by_filter_text_multifile(
     clp_package: ClpPackage,
     text_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `del` action with a time-range filter removes the expected
+    archives for the compressed `text_multifile` dataset.
+
+    :param clp_package:
+    :param text_multifile:
+    """
     logger.info("Starting test: 'test_clp_text_archive_manager_del_by_filter_text_multifile'")
 
     clear_package_archives_clp_text(clp_package)

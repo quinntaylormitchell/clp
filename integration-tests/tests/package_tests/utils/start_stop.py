@@ -17,7 +17,7 @@ class StartStopArgs(CmdArgs):
     config: Path
 
     def to_cmd(self) -> list[str]:
-        """Convert the model attributes to a command list."""
+        """Converts the model attributes to a command list."""
         return [
             str(self.script_path),
             "--config",
@@ -63,7 +63,7 @@ def verify_start_clp_action(
     start_clp_action: ClpAction, clp_package: ClpPackage
 ) -> ClpVerificationResult:
     """
-    Verify the startup of the CLP package.
+    Verifies the startup of the CLP package.
 
     :param start_clp_action:
     :param clp_package:
@@ -86,7 +86,7 @@ def verify_stop_clp_action(
     stop_clp_action: ClpAction, clp_package: ClpPackage
 ) -> ClpVerificationResult:
     """
-    Verify the spindown of the CLP package.
+    Verifies the spindown of the CLP package.
 
     :param stop_clp_action:
     :param clp_package:

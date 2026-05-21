@@ -42,7 +42,7 @@ class PortAssignment:
 
 def assign_ports_from_base(base_port: int, clp_config: ClpConfig) -> None:
     """
-    Assign ports to all components in `clp_config` that require them, starting from `base_port`.
+    Assigns ports to all components in `clp_config` that require them, starting from `base_port`.
     Ports are assigned sequentially, with each component receiving the number of ports it requires.
 
     :param base_port:
@@ -67,7 +67,7 @@ def assign_ports_from_base(base_port: int, clp_config: ClpConfig) -> None:
 
 def _check_ports_available(host: str, port_range: range) -> None:
     """
-    Check that all ports in the given range are available for binding.
+    Checks that all ports in the given range are available for binding.
 
     :param host:
     :param port_range:
@@ -85,7 +85,7 @@ def _check_ports_available(host: str, port_range: range) -> None:
 
 def _discover_port_assignments(clp_config: ClpConfig) -> list[PortAssignment]:
     """
-    Discover which components in `clp_config` require port assignments.
+    Discovers which components in `clp_config` require port assignments.
 
     :param clp_config:
     :return: A list of PortAssignment objects describing what ports each component needs.
@@ -122,7 +122,7 @@ def _discover_port_assignments(clp_config: ClpConfig) -> list[PortAssignment]:
 
 def _format_port_range(port_range: range) -> str:
     """
-    Format a port range as a human-readable string.
+    Formats a port range as a human-readable string.
 
     :param port_range:
     :return: A string like "'1024' to '65535' inclusive".
@@ -134,7 +134,7 @@ def _format_port_range(port_range: range) -> str:
 
 def _is_port_free(port: int, host: str) -> bool:
     """
-    Check whether a TCP port is available for binding.
+    Checks whether a TCP port is available for binding.
 
     :param port:
     :param host:

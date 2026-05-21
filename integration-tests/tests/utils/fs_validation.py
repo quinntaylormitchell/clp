@@ -36,7 +36,7 @@ def is_json_file_structurally_equal(json_fp1: Path, json_fp2: Path) -> bool:
 
 def _sort_json_keys_and_rows(json_fp: Path) -> IO[str]:
     """
-    Normalize a JSON file to a stable, deterministically ordered form for comparison.
+    Normalizes a JSON file to a stable, deterministically ordered form for comparison.
 
     :param json_fp:
     :return: A named temporary file (delete on close) that contains the sorted JSON content.

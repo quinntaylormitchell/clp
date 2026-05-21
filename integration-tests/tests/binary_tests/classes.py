@@ -69,7 +69,7 @@ class CompressionTestPathConfig:
     decompression_dir: Path = field(init=False, repr=True)
 
     def __post_init__(self, integration_test_path_config: IntegrationTestPathConfig) -> None:
-        """Initialize and set required directory paths for compression tests."""
+        """Initializes and sets required directory paths for compression tests."""
         test_name = self.test_name.strip()
         if 0 == len(test_name):
             err_msg = "`test_name` cannot be empty."
@@ -84,7 +84,7 @@ class CompressionTestPathConfig:
         )
 
     def clear_test_outputs(self) -> None:
-        """Remove any existing output directories created by this compression test."""
+        """Removes any existing output directories created by this compression test."""
         remove_path(self.compression_dir)
         remove_path(self.decompression_dir)
 
@@ -106,7 +106,7 @@ class ConversionTestPathConfig:
     num_log_events: int | None = None
 
     def __post_init__(self, integration_test_path_config: IntegrationTestPathConfig) -> None:
-        """Initialize and set required directory paths for conversion tests."""
+        """Initializes and sets required directory paths for conversion tests."""
         test_name = self.test_name.strip()
         if 0 == len(test_name):
             err_msg = "`test_name` cannot be empty."
@@ -119,6 +119,6 @@ class ConversionTestPathConfig:
         object.__setattr__(self, "compression_dir", test_cache_dir / f"{test_name}-archives")
 
     def clear_test_outputs(self) -> None:
-        """Remove any existing output directories created by this conversion test."""
+        """Removes any existing output directories created by this conversion test."""
         remove_path(self.conversion_dir)
         remove_path(self.compression_dir)

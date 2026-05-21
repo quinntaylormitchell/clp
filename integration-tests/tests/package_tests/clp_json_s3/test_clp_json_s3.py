@@ -36,7 +36,11 @@ pytestmark = [
 
 @pytest.mark.startup
 def test_clp_json_s3_startup(clp_package: ClpPackage) -> None:
-    """Docstring."""
+    """
+    Verifies that the clp-json-s3 package starts up successfully.
+
+    :param clp_package:
+    """
     logger.info("Starting test: 'test_clp_json_s3_startup'")
 
     assert clp_package
@@ -49,7 +53,12 @@ def test_clp_json_s3_compression_json_s3_multifile(
     clp_package: ClpPackage,
     json_s3_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the clp-json-s3 package can compress the `json_s3_multifile` dataset from S3.
+
+    :param clp_package:
+    :param json_s3_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_s3_compression_json_s3_multifile'")
 
     clear_package_archives_clp_json(clp_package)

@@ -24,7 +24,7 @@ def test_clp_identity_transform(
     text_multifile: SampleDataset,
 ) -> None:
     """
-    Validate that compression and decompression by the core binary `clp` run successfully and are
+    Validates that compression and decompression by the core binary `clp` run successfully and are
     lossless.
 
     :param clp_binary_test_path_config:
@@ -76,7 +76,7 @@ def test_clp_s_identity_transform(
     json_multifile: SampleDataset,
 ) -> None:
     """
-    Validate that compression and decompression by the core binary `clp-s` run successfully and are
+    Validates that compression and decompression by the core binary `clp-s` run successfully and are
     lossless.
 
     :param clp_binary_test_path_config:

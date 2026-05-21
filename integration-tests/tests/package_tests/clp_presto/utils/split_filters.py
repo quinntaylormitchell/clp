@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_split_filter_for_dataset(dataset: SampleDataset, presto_cluster: PrestoCluster) -> None:
-    """Add a split filter to the split filter file for the given dataset."""
+    """Adds a split filter to the split filter file for the given dataset."""
     log_msg = f"Adding a split filter for the '{dataset.dataset_name}' dataset."
     logger.info(log_msg)
 
@@ -30,7 +30,11 @@ def add_split_filter_for_dataset(dataset: SampleDataset, presto_cluster: PrestoC
 
 
 def clear_split_filter_file(presto_cluster: PrestoCluster) -> None:
-    """Docstring."""
+    """
+    Resets the Presto cluster's split filter file to an empty JSON object.
+
+    :param presto_cluster:
+    """
     log_msg = "Clearing split-filter.json of all filters."
     logger.info(log_msg)
 
@@ -42,7 +46,11 @@ def clear_split_filter_file(presto_cluster: PrestoCluster) -> None:
 def _construct_split_filter_for_dataset(
     dataset: SampleDataset,
 ) -> dict[str, Any]:
-    """Docstring."""
+    """
+    :param dataset:
+    :return: A split-filter entry that maps `dataset`'s timestamp column to the begin/end timestamp
+        range bounds expected by Presto.
+    """
     timestamp_key = dataset.metadata.timestamp_key
     return {
         f"clp.default.{dataset.dataset_name}": [
@@ -62,7 +70,7 @@ def _construct_split_filter_for_dataset(
 
 def _write_split_filters_json(split_filters: dict[str, Any], split_filter_file_path: Path) -> None:
     """
-    Write JSON split filters with pretty formatting and a trailing newline.
+    Writes JSON split filters with pretty formatting and a trailing newline.
 
     Empty dictionaries are written with opening and closing braces on separate lines.
     """

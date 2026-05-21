@@ -37,7 +37,10 @@ def presto_cluster_test_path_config() -> PrestoClusterTestPathConfig:
 def presto_cluster(
     presto_cluster_test_path_config: PrestoClusterTestPathConfig,
 ) -> Iterator[PrestoCluster]:
-    """Docstring for presto_cluster fixture."""
+    """
+    Module-scoped fixture that sets up, starts, and yields a `PrestoCluster`, then clears its split
+    filter file and tears it down on exit.
+    """
     setup_presto_cmd: list[str] = [
         str(presto_cluster_test_path_config.set_up_config_path),
         str(presto_cluster_test_path_config.clp_package_dir),

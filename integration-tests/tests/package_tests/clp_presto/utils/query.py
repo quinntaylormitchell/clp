@@ -31,7 +31,13 @@ def query_clp_presto(
     presto_cluster: PrestoCluster,
     query: str,
 ) -> PrestoAction:
-    """Docstring."""
+    """
+    Runs `query` against `presto_cluster`'s coordinator via `presto-cli`, requesting JSON output.
+
+    :param presto_cluster:
+    :param query: The SQL query to execute.
+    :return: A `PrestoAction` for the `presto-cli` subprocess.
+    """
     logger.info("Running Presto query: '%s'", query)
 
     docker_compose_file_path = presto_cluster.path_config.docker_compose_file_path
@@ -60,7 +66,7 @@ def verify_show_tables_action_clp_presto(
     show_tables_action: PrestoAction,
     current_datasets: list[SampleDataset],
 ) -> PrestoVerificationResult:
-    """Verify that `SHOW TABLES;` output is accurate w.r.t. current datasets."""
+    """Verifies that `SHOW TABLES;` output is accurate w.r.t. current datasets."""
     logger.info("Verifying 'SHOW TABLES;' Presto query.")
 
     returncode_result = show_tables_action.verify_returncode()
@@ -91,7 +97,7 @@ def verify_describe_dataset_action_clp_presto(
     dataset: SampleDataset,
 ) -> PrestoVerificationResult:
     """
-    Verify that `DESCRIBE <dataset_name>;` output is accurate w.r.t. "columns" field from dataset
+    Verifies that `DESCRIBE <dataset_name>;` output is accurate w.r.t. "columns" field from dataset
     metadata.
     """
     logger.info("Verifying 'DESCRIBE <dataset_name>;' Presto query.")
@@ -131,7 +137,7 @@ def verify_select_logs_action_clp_presto(
     dataset: SampleDataset,
 ) -> PrestoVerificationResult:
     """
-    Verify that `SELECT * FROM <dataset_name>;` output is accurate w.r.t. grep -r ".*" output for
+    Verifies that `SELECT * FROM <dataset_name>;` output is accurate w.r.t. grep -r ".*" output for
     dataset logs.
     """
     logger.info("Verifying 'SELECT * FROM <dataset_name>;' Presto query.")
@@ -164,7 +170,7 @@ def verify_select_logs_action_clp_presto(
 
 
 def _load_str_to_json_list(raw_str: str) -> list[dict[str, Any]]:
-    """Load a string containing multiple JSON objects (one per line) into a list of dicts."""
+    """Loads a string containing multiple JSON objects (one per line) into a list of dicts."""
     try:
         return [json.loads(line) for line in raw_str.splitlines() if line.strip()]
     except json.JSONDecodeError as e:
@@ -186,11 +192,11 @@ def _format_grep_output(raw_output: str) -> list[dict[str, Any]]:
 
 
 def _format_posix_ms(timestamp_ms: int) -> str:
-    """Convert a POSIX ms timestamp to 'YYYY-MM-DD HH:MM:SS.mmm'."""
+    """Converts a POSIX ms timestamp to 'YYYY-MM-DD HH:MM:SS.mmm'."""
     date = datetime.fromtimestamp(timestamp_ms / 1000.0, tz=timezone.utc)
     return date.strftime(PRESTO_TIMESTAMP_FORMAT)[:-3]
 
 
 def _as_multiset(records: list[dict[str, Any]]) -> list[str]:
-    """Serialize each dict to a canonical JSON string for comparison as a sorted list."""
+    """Serializes each dict to a canonical JSON string for comparison as a sorted list."""
     return sorted(json.dumps(r, sort_keys=True) for r in records)

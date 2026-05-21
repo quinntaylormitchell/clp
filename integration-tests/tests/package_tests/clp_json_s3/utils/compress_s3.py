@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class CompressS3Args(CmdArgs):
-    """Docstring."""
+    """Structured arguments for invoking the clp-json-s3 compression script."""
 
     script_path: Path
     config: Path
@@ -21,7 +21,7 @@ class CompressS3Args(CmdArgs):
     inputs: list[str]
 
     def to_cmd(self) -> list[str]:
-        """Docstring."""
+        """:return: The command-line invocation built from this argument set."""
         cmd: list[str] = [
             str(self.script_path),
             "--config",
@@ -47,7 +47,14 @@ def compress_s3_clp_package(
     clp_package: ClpPackage,
     dataset: SampleDataset,
 ) -> ClpAction:
-    """Docstring."""
+    """
+    Compresses `dataset` into `clp_package` by invoking the clp-json-s3 compression script with the
+    arguments required to ingest the dataset from S3.
+
+    :param clp_package:
+    :param dataset:
+    :return: The launched `ClpAction` representing the compression subprocess.
+    """
     log_msg = f"Compressing the '{dataset.dataset_name}' dataset with S3."
     logger.info(log_msg)
 
@@ -56,7 +63,12 @@ def compress_s3_clp_package(
 
 
 def _construct_compress_s3_args(clp_package: ClpPackage, dataset: SampleDataset) -> CompressS3Args:
-    """Docstring."""
+    """
+    :param clp_package:
+    :param dataset:
+    :return: `CompressS3Args` populated from `clp_package` and `dataset` to compress the dataset
+        from its S3 key prefix.
+    """
     path_config = clp_package.path_config
     metadata = dataset.metadata
     return CompressS3Args(

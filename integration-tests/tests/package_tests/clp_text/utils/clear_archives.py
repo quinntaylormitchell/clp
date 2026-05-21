@@ -1,4 +1,4 @@
-"""Docstring."""
+"""Helpers to clear all archives from a clp-text package between tests."""
 
 import logging
 
@@ -17,7 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
-    """Docstring."""
+    """
+    Deletes every archive in the given clp-text package by listing them via the archive-manager
+    `find` action and then removing them by ID.
+
+    :param clp_package:
+    """
     logger.info("Clearing the %s archives.", clp_package.mode_name)
 
     # Find all.

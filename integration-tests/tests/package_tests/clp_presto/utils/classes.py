@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PrestoClusterTestPathConfig(ClpPackageTestPathConfig):
-    """Docstring."""
+    """Path configuration for clp-presto integration tests."""
 
     #: Default Presto deployment directory.
     presto_deployment_dir: Path
 
     def __post_init__(self) -> None:
-        """Validate directories."""
+        """Validates directories."""
         super().__post_init__()
 
         # Ensure that the Presto deployment directory exists and that it is structured correctly.
@@ -55,7 +55,7 @@ class PrestoClusterTestPathConfig(ClpPackageTestPathConfig):
 
 @dataclass
 class PrestoCluster:
-    """Docstring."""
+    """Represents a running Presto cluster used by clp-presto integration tests."""
 
     # The `PrestoClusterTestPathConfig` object for this Presto cluster.
     path_config: PrestoClusterTestPathConfig
@@ -85,8 +85,8 @@ class PrestoAction(ExternalAction):
 
     def __post_init__(self) -> None:
         """
-        Validate `args`/`cmd` agreement when both are provided during construction. Then execute the
-        action.
+        Validates `args`/`cmd` agreement when both are provided during construction. Then executes
+        the action.
         """
         if self.args is not None and self.cmd != self.args.to_cmd():
             pytest.fail(
@@ -123,7 +123,7 @@ class PrestoAction(ExternalAction):
         supporting_action: PrestoAction | None = None,
     ) -> PrestoVerificationResult:
         """
-        Build a failed `PrestoVerificationResult` for this action and log a warning. When this
+        Builds a failed `PrestoVerificationResult` for this action and logs a warning. When this
         action's verification has failed as a direct result of some other `PrestoAction`, that
         action should be passed into `supporting_action` so that the path to its log file is
         included in the failure message.
@@ -162,5 +162,5 @@ class PrestoVerificationResult:
     failure_message: str = ""
 
     def __bool__(self) -> bool:
-        """Makes class truthy."""
+        """Makes the class truthy."""
         return self.success

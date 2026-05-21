@@ -118,7 +118,7 @@ def _construct_args(
     search_type: ClpPackageSearchType,
     wildcard_query: str,
 ) -> SearchArgs:
-    """Construct the `SearchArgs` object for the specified search on the dataset."""
+    """Constructs the `SearchArgs` object for the specified search on the dataset."""
     path_config = clp_package.path_config
     args = SearchArgs(
         script_path=path_config.search_path,

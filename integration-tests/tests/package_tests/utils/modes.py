@@ -21,7 +21,7 @@ from clp_py_utils.clp_config import (
 # TODO: This will eventually be replaced by a formalized mapping between component and service.
 def _to_docker_compose_service_name(name: str) -> str:
     """
-    Convert a component name to a Docker Compose service name.
+    Converts a component name to a Docker Compose service name.
 
     :param name:
     :return: Service name with underscores replaced by hyphens

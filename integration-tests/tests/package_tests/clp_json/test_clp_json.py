@@ -54,7 +54,11 @@ pytestmark = [
 
 @pytest.mark.startup
 def test_clp_json_startup(clp_package: ClpPackage) -> None:
-    """Docstring."""
+    """
+    Verifies that the clp-json package starts up successfully.
+
+    :param clp_package:
+    """
     logger.info("Starting test: 'test_clp_json_startup'")
 
     assert clp_package
@@ -67,7 +71,12 @@ def test_clp_json_compression_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the clp-json package can compress the `json_multifile` dataset.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_compression_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -86,7 +95,13 @@ def test_clp_json_search_basic_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a basic search on the compressed `json_multifile` dataset returns the expected
+    results.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_search_basic_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -114,7 +129,13 @@ def test_clp_json_search_ignore_case_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a case-insensitive search on the compressed `json_multifile` dataset returns the
+    expected results.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_search_ignore_case_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -142,7 +163,13 @@ def test_clp_json_search_count_results_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a count-results search on the compressed `json_multifile` dataset returns the
+    expected count.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_search_count_results_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -170,7 +197,13 @@ def test_clp_json_search_count_by_time_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a count-by-time search on the compressed `json_multifile` dataset returns the
+    expected aggregation.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_search_count_by_time_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -198,7 +231,13 @@ def test_clp_json_search_time_range_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that a time-range search on the compressed `json_multifile` dataset returns the
+    expected results.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_search_time_range_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -227,7 +266,12 @@ def test_clp_json_dataset_manager_list_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the dataset-manager `list` action reports the compressed `json_multifile` dataset.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_dataset_manager_list_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -253,7 +297,12 @@ def test_clp_json_dataset_manager_del_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the dataset-manager `del` action removes the compressed `json_multifile` dataset.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_dataset_manager_del_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -280,7 +329,13 @@ def test_clp_json_archive_manager_find_all_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `find` action lists all archives for the compressed
+    `json_multifile` dataset.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_archive_manager_find_all_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -309,7 +364,13 @@ def test_clp_json_archive_manager_find_range_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `find` action with a time-range filter lists the expected
+    archives for the compressed `json_multifile` dataset.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_archive_manager_find_range_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -340,7 +401,13 @@ def test_clp_json_archive_manager_del_by_ids_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `del` action removes archives identified by ID for the
+    compressed `json_multifile` dataset.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_archive_manager_del_by_ids_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)
@@ -375,7 +442,13 @@ def test_clp_json_archive_manager_del_by_filter_json_multifile(
     clp_package: ClpPackage,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that the archive-manager `del` action with a time-range filter removes the expected
+    archives for the compressed `json_multifile` dataset.
+
+    :param clp_package:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_json_archive_manager_del_by_filter_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)

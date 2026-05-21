@@ -48,7 +48,13 @@ pytestmark = [
 
 @pytest.mark.startup
 def test_clp_presto_startup(clp_package: ClpPackage, presto_cluster: PrestoCluster) -> None:
-    """Docstring."""
+    """
+    Verifies that both the clp-presto package and its companion Presto cluster start up
+    successfully.
+
+    :param clp_package:
+    :param presto_cluster:
+    """
     logger.info("Starting test: 'test_clp_presto_startup'")
 
     assert clp_package
@@ -64,7 +70,14 @@ def test_clp_presto_json_multifile(
     presto_cluster: PrestoCluster,
     json_multifile: SampleDataset,
 ) -> None:
-    """Docstring."""
+    """
+    Verifies that, after compressing the `json_multifile` dataset, the Presto cluster correctly
+    answers `SHOW TABLES`, `DESCRIBE`, and `SELECT *` queries against it.
+
+    :param clp_package:
+    :param presto_cluster:
+    :param json_multifile:
+    """
     logger.info("Starting test: 'test_clp_presto_json_multifile'")
 
     clear_package_archives_clp_json(clp_package)

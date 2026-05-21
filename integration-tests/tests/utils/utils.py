@@ -1,4 +1,4 @@
-"""Provide general utility functions used across `integration-tests`."""
+"""Provides general utility functions used across `integration-tests`."""
 
 import json
 import os
@@ -46,14 +46,6 @@ def get_env_var(var_name: str) -> str:
         err_msg = f"Environment variable {var_name} is not set."
         raise ValueError(err_msg)
     return value
-
-
-def get_rand_subdirectory_name(parent: Path) -> str:
-    """Docstring."""
-    for item in parent.iterdir():
-        if item.is_dir():
-            return item.name
-    return ""
 
 
 def load_yaml_to_dict(path: Path) -> dict[str, Any]:
@@ -112,7 +104,7 @@ def load_json_to_dict(path: Path) -> dict[str, Any]:
 
 def remove_path(path_to_remove: Path) -> None:
     """
-    Remove a file, directory, or symlink at `path_to_remove` if it exists.
+    Removes a file, directory, or symlink at `path_to_remove` if it exists.
 
     :param path_to_remove:
     :raise: Propagates `pathlib.Path.unlink`'s exceptions.
@@ -160,7 +152,7 @@ def validate_file_exists(file_path: Path) -> None:
 
 def write_dict_to_yaml(payload: dict[str, Any], file_path: Path) -> None:
     """
-    Write a dictionary to a YAML file.
+    Writes a dictionary to a YAML file.
 
     :param payload: The dictionary to write.
     :param file_path: The path to the YAML file.

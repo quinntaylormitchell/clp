@@ -56,7 +56,14 @@ def stop_presto_cluster(presto_cluster: PrestoCluster) -> PrestoAction:
 def verify_start_presto_action(
     start_presto_cluster_action: PrestoAction,
 ) -> PrestoVerificationResult:
-    """Docstring."""
+    """
+    Verifies that `start_presto_cluster_action` exited successfully and that every Presto component
+    is now running in a container.
+
+    :param start_presto_cluster_action:
+    :return: A successful `PrestoVerificationResult` if both checks pass; otherwise a failed
+        result describing which check did not pass.
+    """
     logger.info("Verifying the startup of the Presto cluster.")
     returncode_result = start_presto_cluster_action.verify_returncode()
     if not returncode_result:
@@ -72,7 +79,14 @@ def verify_start_presto_action(
 def verify_stop_presto_action(
     stop_presto_cluster_action: PrestoAction,
 ) -> PrestoVerificationResult:
-    """Docstring."""
+    """
+    Verifies that `stop_presto_cluster_action` exited successfully and that no Presto component is
+    still running in a container.
+
+    :param stop_presto_cluster_action:
+    :return: A successful `PrestoVerificationResult` if both checks pass; otherwise a failed
+        result describing which check did not pass.
+    """
     logger.info("Verifying the spindown of the Presto cluster.")
     returncode_result = stop_presto_cluster_action.verify_returncode()
     if not returncode_result:
@@ -87,7 +101,7 @@ def verify_stop_presto_action(
 
 def _validate_presto_cluster_running() -> str | None:
     """
-    Validate that a Presto cluster is running.
+    Validates that a Presto cluster is running.
 
     :return: `None` on success; otherwise a string describing the failure.
     """
@@ -107,7 +121,7 @@ def _validate_presto_cluster_running() -> str | None:
 
 def _validate_presto_cluster_not_running() -> str | None:
     """
-    Validate that a Presto cluster is not running.
+    Validates that a Presto cluster is not running.
 
     :return: `None` on success; otherwise a string describing the failure.
     """

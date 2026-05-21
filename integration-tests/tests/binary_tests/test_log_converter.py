@@ -25,7 +25,7 @@ def test_log_converter_transform(
     text_singlefile: SampleDataset,
 ) -> None:
     """
-    Validate that converted logs from the core binary `log-converter` can be ingested successfully
+    Validates that converted logs from the core binary `log-converter` can be ingested successfully
     by `clp-s`.
 
     :param clp_binary_test_path_config:

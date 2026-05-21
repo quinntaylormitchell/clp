@@ -1,4 +1,4 @@
-"""Docstring."""
+"""Helpers to clear all archives from a clp-json package between tests."""
 
 import logging
 
@@ -18,7 +18,12 @@ logger = logging.getLogger(__name__)
 def clear_package_archives_clp_json(
     clp_package: ClpPackage,
 ) -> None:
-    """Docstring."""
+    """
+    Deletes all datasets (and their archives) from the given clp-json package via the
+    dataset-manager.
+
+    :param clp_package:
+    """
     logger.info("Clearing the %s archives.", clp_package.mode_name)
     del_action = dataset_manager_del(
         clp_package=clp_package,

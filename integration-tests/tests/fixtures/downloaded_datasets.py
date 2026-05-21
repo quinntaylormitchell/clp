@@ -33,7 +33,7 @@ class DownloadedDataset:
     num_log_events: int | None = None
 
     def __post_init__(self, integration_test_path_config: IntegrationTestPathConfig) -> None:
-        """Initialize and set tarball and extraction paths for integration test logs."""
+        """Initializes and sets tarball and extraction paths for integration test logs."""
         dataset_name = self.dataset_name.strip()
         if 0 == len(dataset_name):
             err_msg = "`dataset_name` cannot be empty."
@@ -82,8 +82,8 @@ def _download_and_extract_gzip_dataset(
     keep_leading_dir: bool = False,
 ) -> DownloadedDataset:
     """
-    Download and extract a gzip-compressed dataset tarball for setting up the `DownloadedDataset`
-    fixture. Adjust its file permissions for test use.
+    Downloads and extracts a gzip-compressed dataset tarball for setting up the `DownloadedDataset`
+    fixture. Adjusts its file permissions for test use.
 
     :param request: Provides access to the pytest cache.
     :param integration_test_path_config: See `IntegrationTestPathConfig`.
