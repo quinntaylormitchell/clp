@@ -94,7 +94,7 @@ def test_clp_presto_json_multifile(
 
     select_logs_action = query_clp_presto(
         presto_cluster=presto_cluster,
-        query=f"SELECT * FROM {json_multifile.dataset_name};",
+        query=f"SELECT * FROM {json_multifile.dataset_name};",  # noqa: S608
     )
     select_logs_result = verify_select_logs_action_clp_presto(select_logs_action, json_multifile)
     assert select_logs_result, select_logs_result.failure_message

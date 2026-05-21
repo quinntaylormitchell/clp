@@ -19,7 +19,7 @@ def clear_package_archives_clp_json(
     clp_package: ClpPackage,
 ) -> None:
     """Docstring."""
-    logger.info(f"Clearing the {clp_package.mode_name} archives.")
+    logger.info("Clearing the %s archives.", clp_package.mode_name)
     del_action = dataset_manager_del(
         clp_package=clp_package,
         del_all=True,

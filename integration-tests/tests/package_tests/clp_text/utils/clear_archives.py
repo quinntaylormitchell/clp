@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def clear_package_archives_clp_text(clp_package: ClpPackage) -> None:
     """Docstring."""
-    logger.info(f"Clearing the {clp_package.mode_name} archives.")
+    logger.info("Clearing the %s archives.", clp_package.mode_name)
 
     # Find all.
     find_archive_manager_action = archive_manager_find(clp_package=clp_package)

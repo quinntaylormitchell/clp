@@ -51,7 +51,7 @@ def decompress_clp_package(
     :param paths:
     :return: The `ClpAction` instance that runs the decompression.
     """
-    logger.info(f"Decompressing '{clp_package.mode_name}' package.")
+    logger.info("Decompressing '%s' package.", clp_package.mode_name)
 
     path_config = clp_package.path_config
     args: DecompressArgs = DecompressArgs(

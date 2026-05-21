@@ -32,7 +32,7 @@ def query_clp_presto(
     query: str,
 ) -> PrestoAction:
     """Docstring."""
-    logger.info(f"Running Presto query: '{query}'")
+    logger.info("Running Presto query: '%s'", query)
 
     docker_compose_file_path = presto_cluster.path_config.docker_compose_file_path
     cmd: list[str] = [
@@ -158,7 +158,7 @@ def verify_select_logs_action_clp_presto(
         return select_logs_action.pass_verification()
 
     return select_logs_action.fail_verification(
-        f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"
+        f"Mismatch between output logs from `SELECT * FROM <dataset_name>;` query: '{actual}'"  # noqa: S608
         f" and expected logs: '{expected}'",
     )
 
