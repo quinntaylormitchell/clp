@@ -10,6 +10,7 @@ from tests.package_tests.classes import (
     ClpPackageModeConfig,
     ClpPackageTestPathConfig,
 )
+from tests.package_tests.utils.port_assignment import assign_ports_from_base
 from tests.package_tests.utils.start_stop import (
     start_clp_package,
     stop_clp_package,
@@ -17,7 +18,6 @@ from tests.package_tests.utils.start_stop import (
     verify_stop_clp_action,
 )
 from tests.utils.classes import ClpAction  # noqa: TC001
-from tests.utils.port_utils import assign_ports_from_base
 from tests.utils.utils import resolve_path_env_var, write_dict_to_yaml
 
 logger = logging.getLogger(__name__)
