@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from tests.package_tests.classes import ClpPackage
-from tests.utils.classes import ClpAction, CmdArgs, SampleDataset
+from tests.utils.classes import ClpAction, ClpVerificationResult, CmdArgs, SampleDataset
 
 logger = logging.getLogger(__name__)
 
@@ -82,3 +82,28 @@ def _construct_compress_s3_args(clp_package: ClpPackage, dataset: SampleDataset)
             "https://private-clp-test-bucket.s3.us-west-1.amazonaws.com/integration_tests/permanent/json_s3_multifile/"
         ],
     )
+
+
+def verify_compress_s3_action(
+    compress_s3_action: ClpAction,
+    clp_package: ClpPackage,
+    original_dataset: SampleDataset,
+) -> ClpVerificationResult:
+    """
+    Verifies the S3 compression action.
+
+    :param compress_s3_action:
+    :param clp_package:
+    :param original_dataset:
+    :return: A `ClpVerificationResult` indicating the success or failure of the verification.
+    """
+    logger.info("Verifying '%s' package S3 compression.", clp_package.mode_name)
+
+    returncode_result = compress_s3_action.verify_returncode()
+    if not returncode_result:
+        return returncode_result
+
+    # TODO: remove
+    assert original_dataset
+
+    return compress_s3_action.pass_verification()
