@@ -10,7 +10,9 @@ from tests.package_tests.classes import (
 from tests.package_tests.clp_json_s3.utils.compress_s3 import (
     compress_s3_clp_package,
 )
-from tests.package_tests.clp_json_s3.utils.mode import CLP_JSON_S3_MODE
+from tests.package_tests.clp_json_s3.utils.mode import (
+    ALL_CLP_JSON_S3_MODES,
+)
 from tests.utils.classes import (
     SampleDataset,
 )
@@ -22,16 +24,15 @@ logger = logging.getLogger(__name__)
 pytestmark = [
     pytest.mark.package,
     pytest.mark.clp_json_s3,
-    pytest.mark.parametrize(
-        "clp_package",
-        [CLP_JSON_S3_MODE],
-        indirect=True,
-        ids=[CLP_JSON_S3_MODE.mode_name],
-    ),
 ]
 
 
 @pytest.mark.startup
+@pytest.mark.parametrize(
+    "clp_package",
+    [*ALL_CLP_JSON_S3_MODES],
+    indirect=True,
+)
 def test_clp_json_s3_startup(clp_package: ClpPackage) -> None:
     """
     Verifies that the clp-json-s3 package starts up successfully.
@@ -47,6 +48,11 @@ def test_clp_json_s3_startup(clp_package: ClpPackage) -> None:
 
 @pytest.mark.compression_s3
 @pytest.mark.usefixtures("clear_package_archives")
+@pytest.mark.parametrize(
+    "clp_package",
+    [*ALL_CLP_JSON_S3_MODES],
+    indirect=True,
+)
 def test_clp_json_s3_compression_json_s3_multifile(
     clp_package: ClpPackage,
     json_s3_multifile: SampleDataset,
