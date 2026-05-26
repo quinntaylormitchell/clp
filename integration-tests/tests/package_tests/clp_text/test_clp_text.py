@@ -53,6 +53,7 @@ def test_clp_text_startup(clp_package: ClpPackage) -> None:
     logger.info("Starting test: 'test_clp_text_startup'")
 
     assert clp_package
+    assert clp_package
 
     logger.info("Test complete: 'test_clp_text_startup'")
 
@@ -66,6 +67,7 @@ def test_clp_text_compression_text_multifile(
     """
     Verifies that the clp-text package can compress the `text_multifile` dataset.
 
+    :param clp_package:
     :param clp_package:
     :param text_multifile:
     """

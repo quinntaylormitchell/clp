@@ -4,9 +4,7 @@ import logging
 
 import pytest
 
-from tests.package_tests.classes import (
-    ClpPackage,
-)
+from tests.package_tests.classes import ClpPackage
 from tests.package_tests.clp_json.utils.dataset_manager import (
     dataset_manager_del,
     dataset_manager_list,
