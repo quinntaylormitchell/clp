@@ -19,16 +19,6 @@ def json_multifile(
 
 
 @pytest.fixture(scope="session")
-def json_s3_multifile(
-    integration_test_path_config: IntegrationTestPathConfig,
-) -> SampleDataset:
-    """Returns an object corresponding to the `json_s3_multifile` test dataset."""
-    return SampleDataset(
-        dataset_root_dir=integration_test_path_config.test_data_dir / "json_s3_multifile",
-    )
-
-
-@pytest.fixture(scope="session")
 def text_multifile(
     integration_test_path_config: IntegrationTestPathConfig,
 ) -> SampleDataset:

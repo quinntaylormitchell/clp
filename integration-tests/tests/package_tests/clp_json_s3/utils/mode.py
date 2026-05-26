@@ -23,9 +23,7 @@ from clp_py_utils.clp_config import (
     StreamS3Storage,
 )
 
-from tests.package_tests.classes import (
-    ClpPackageModeConfig,
-)
+from tests.package_tests.classes import ClpPackageModeConfig
 from tests.package_tests.utils.modes import (
     CLP_API_SERVER_COMPONENT,
     CLP_BASE_COMPONENTS,
@@ -61,10 +59,9 @@ def _get_s3_credentials_from_quinn_file(cred_file_path: Path) -> S3Credentials:
 SHARED_S3_CONFIG = S3Config(
     region_code="us-west-1",
     bucket="private-clp-test-bucket",
-    key_prefix=f"integration_tests/testrun_{uuid.uuid4()}/",
+    key_prefix=f"integration_tests/{uuid.uuid4()}/",
     aws_authentication=_get_aws_authentication_obj(),
 )
-
 
 LOGS_INPUT_FS = FsIngestionConfig()
 LOGS_INPUT_S3 = S3IngestionConfig(aws_authentication=_get_aws_authentication_obj())
@@ -116,11 +113,15 @@ def make_s3_mode_param(
             ),
             component_list=components,
         ),
-        id=f"logs-{_logs_label(logs_input)}_archive-{_output_label(archive_output)}_stream-{_output_label(stream_output)}",
+        id=(
+            f"logs-{_logs_label(logs_input)}_"
+            f"archive-{_output_label(archive_output)}_"
+            f"stream-{_output_label(stream_output)}"
+        ),
     )
 
 
-ALL_CLP_JSON_S3_MODES = [
+ALL_S3_MODE_PARAMS = [
     make_s3_mode_param(LOGS_INPUT_FS, ARCHIVE_OUTPUT_FS, STREAM_OUTPUT_S3),
     make_s3_mode_param(LOGS_INPUT_FS, ARCHIVE_OUTPUT_S3, STREAM_OUTPUT_FS),
     make_s3_mode_param(LOGS_INPUT_FS, ARCHIVE_OUTPUT_S3, STREAM_OUTPUT_S3),

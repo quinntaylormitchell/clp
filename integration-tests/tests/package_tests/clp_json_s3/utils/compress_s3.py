@@ -3,7 +3,12 @@
 import logging
 from pathlib import Path
 
+from clp_py_utils.clp_config import (
+    ArchiveS3Storage,
+)
+
 from tests.package_tests.classes import ClpPackage
+from tests.package_tests.clp_json_s3.classes import S3Dataset
 from tests.utils.classes import ClpAction, ClpVerificationResult, CmdArgs, SampleDataset
 
 logger = logging.getLogger(__name__)
@@ -45,7 +50,7 @@ class CompressS3Args(CmdArgs):
 
 def compress_s3_clp_package(
     clp_package: ClpPackage,
-    dataset: SampleDataset,
+    dataset: S3Dataset,
 ) -> ClpAction:
     """
     Compresses `dataset` into `clp_package` by invoking the clp-json-s3 compression script with the
@@ -62,7 +67,7 @@ def compress_s3_clp_package(
     return ClpAction.from_args(args)
 
 
-def _construct_compress_s3_args(clp_package: ClpPackage, dataset: SampleDataset) -> CompressS3Args:
+def _construct_compress_s3_args(clp_package: ClpPackage, dataset: S3Dataset) -> CompressS3Args:
     """
     :param clp_package:
     :param dataset:
@@ -79,31 +84,35 @@ def _construct_compress_s3_args(clp_package: ClpPackage, dataset: SampleDataset)
         unstructured=metadata.unstructured,
         subcommand="s3-key-prefix",
         inputs=[
-            "https://private-clp-test-bucket.s3.us-west-1.amazonaws.com/integration_tests/permanent/json_s3_multifile/"
+            "https://private-clp-test-bucket.s3.us-west-1.amazonaws.com/integration_tests/s3_datasets/json_s3_multifile/"
         ],
     )
 
 
 def verify_compress_s3_action(
-    compress_s3_action: ClpAction,
+    action: ClpAction,
     clp_package: ClpPackage,
-    original_dataset: SampleDataset,
+    original_dataset: SampleDataset | S3Dataset,
 ) -> ClpVerificationResult:
     """
     Verifies the S3 compression action.
 
-    :param compress_s3_action:
+    :param action:
     :param clp_package:
     :param original_dataset:
     :return: A `ClpVerificationResult` indicating the success or failure of the verification.
     """
+    # TODO: log the specific subconfiguration for compression
     logger.info("Verifying '%s' package S3 compression.", clp_package.mode_name)
 
-    returncode_result = compress_s3_action.verify_returncode()
+    if isinstance(clp_package.clp_config.archive_output.storage, ArchiveS3Storage):
+        pass
+
+    returncode_result = action.verify_returncode()
     if not returncode_result:
         return returncode_result
 
     # TODO: remove
     assert original_dataset
 
-    return compress_s3_action.pass_verification()
+    return action.pass_verification()
